@@ -49,12 +49,20 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     [clearTimer],
   );
 
+  /** Callers of flush() waiting for the pending edits to reach the server (or fail). */
+  const waitersRef = useRef<(() => void)[]>([]);
+  const settle = () => {
+    const waiters = waitersRef.current;
+    waitersRef.current = [];
+    for (const resolve of waiters) resolve();
+  };
+
   flushRef.current = async (force = false, keepalive = false) => {
-    if (!mountedRef.current) return;
-    if (terminalRef.current) return;
-    if (conflictRef.current && !force) return;
     if (inFlightRef.current) return; // the running save re-schedules itself when dirty
-    if (!dirtyRef.current && !force) return;
+    if (!mountedRef.current || terminalRef.current || (conflictRef.current && !force) || (!dirtyRef.current && !force)) {
+      settle();
+      return;
+    }
 
     inFlightRef.current = true;
     dirtyRef.current = false;
@@ -87,7 +95,10 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       outcome = 'error';
     }
     inFlightRef.current = false;
-    if (!mountedRef.current) return;
+    if (!mountedRef.current) {
+      settle();
+      return;
+    }
 
     if (outcome === 'ok' && payload.draftUpdatedAt) {
       expectedRef.current = payload.draftUpdatedAt;
@@ -95,10 +106,15 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       retriesRef.current = 0;
       if (dirtyRef.current) {
         setStatus('saving');
-        schedule(DEBOUNCE_MS);
-      } else {
-        setStatus('saved');
+        if (waitersRef.current.length > 0) {
+          clearTimer();
+          void flushRef.current();
+        } else {
+          schedule(DEBOUNCE_MS);
+        }
+        return;
       }
+      setStatus('saved');
     } else if (outcome === 'conflict' && payload.conflict) {
       dirtyRef.current = true;
       conflictRef.current = payload.conflict;
@@ -121,12 +137,26 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
         schedule(RETRY_MS);
       }
     }
+    settle();
   };
+
+  /** Saves pending edits now; resolves once they are saved, or on failure/conflict (never rejects). */
+  const flush = useCallback((): Promise<void> => {
+    if (!dirtyRef.current && !inFlightRef.current) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      waitersRef.current.push(resolve);
+      if (!inFlightRef.current) {
+        clearTimer();
+        void flushRef.current();
+      }
+    });
+  }, [clearTimer]);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      settle();
       clearTimer();
     };
   }, [clearTimer]);
@@ -183,5 +213,5 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     void flushRef.current(true);
   }, [clearTimer]);
 
-  return { draft, draftUpdatedAt, setDraft, status, fatal, conflict, resolveConflict };
+  return { draft, draftUpdatedAt, setDraft, flush, status, fatal, conflict, resolveConflict };
 }

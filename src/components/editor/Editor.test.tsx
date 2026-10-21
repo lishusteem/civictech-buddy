@@ -107,6 +107,29 @@ describe('Editor', () => {
     expect(screen.getByRole('link', { name: 'Înapoi la început' }).getAttribute('href')).toBe('/');
   });
 
+  it('saves an accepted card before asking for alerts', async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>(async (url) => ({
+      ok: true,
+      status: 200,
+      json: async () => (url.endsWith('/alerts') ? { alerts: [] } : { draftUpdatedAt: '2026-10-21T10:00:05.000Z' }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    render(<Editor token="t" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Ana' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/e/t/alerts'));
+    const urls = fetchMock.mock.calls.map((c) => c[0]);
+    const put = urls.indexOf('/api/e/t');
+    expect(put).toBeGreaterThanOrEqual(0);
+    expect(put).toBeLessThan(urls.indexOf('/api/e/t/alerts'));
+    const saved = JSON.parse(fetchMock.mock.calls[put][1]!.body as string).draft;
+    expect(saved.team.map((m: { name: string }) => m.name)).toEqual(['Ana']);
+    expect(saved.steps.project.status).toBe('done');
+  });
+
   it('renders the step screen and moves on with Pasul următor, to the overview after step 10', async () => {
     const fetchMock = stubFetch(() => ({ alerts: [], text: '' }));
     const draft = createEmptyProject('P');

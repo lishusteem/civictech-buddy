@@ -20,6 +20,8 @@ type Props = {
   token: string;
   messages: Message[];
   setDraft: SetDraft;
+  /** Saves pending edits so the AI route sees the latest draft. */
+  flush: () => Promise<void>;
   onTurn: (turn: AiTurn) => void;
   onFormMode: () => void;
 };
@@ -69,7 +71,7 @@ const buttonBase =
   'rounded-lg px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60';
 const secondary = `${buttonBase} border border-teal-800 text-teal-900 hover:bg-teal-50`;
 
-export function ChatPanel({ step, token, messages, setDraft, onTurn, onFormMode }: Props) {
+export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFormMode }: Props) {
   const [text, setText] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export function ChatPanel({ step, token, messages, setDraft, onTurn, onFormMode 
     setPending(true);
     setError(null);
     try {
+      await flush();
       const res = await fetch(`/api/e/${token}/ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

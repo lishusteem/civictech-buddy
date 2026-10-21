@@ -188,6 +188,47 @@ describe('StepScreen', () => {
     expect(last().steps.actors.status).toBe('in_progress');
   });
 
+  it('keeps a done step done when a card is accepted', () => {
+    const draft = createEmptyProject('P');
+    draft.steps.actors.status = 'done';
+    const { last } = setup('actors', draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Primăria' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(last().actors).toHaveLength(1);
+    expect(last().steps.actors.status).toBe('done');
+  });
+
+  it('requires a feature for backlog items of kind feature', () => {
+    const draft = createEmptyProject('P');
+    draft.features = [{ id: 'f1', text: 'Harta sesizărilor' }];
+    const { spy, last } = setup('backlog', draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    fireEvent.change(screen.getByLabelText('Ce e de făcut'), { target: { value: 'Lansează harta' } });
+    fireEvent.change(screen.getByLabelText('Tip'), { target: { value: 'feature' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(screen.getByText('Alege funcția din listă.')).toBeTruthy();
+    expect(spy).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Funcția'), { target: { value: 'f1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(last().backlog).toEqual([
+      { id: 'b1', stage: 'start', kind: 'feature', featureId: 'f1', preconditionId: null, text: 'Lansează harta', order: 1 },
+    ]);
+  });
+
+  it('clears featureId for backlog items that are not features', () => {
+    const draft = createEmptyProject('P');
+    draft.features = [{ id: 'f1', text: 'Harta sesizărilor' }];
+    const { last } = setup('backlog', draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    fireEvent.change(screen.getByLabelText('Ce e de făcut'), { target: { value: 'Vorbește cu 3 vecini' } });
+    fireEvent.change(screen.getByLabelText('Tip'), { target: { value: 'test' } });
+    fireEvent.change(screen.getByLabelText('Funcția'), { target: { value: 'f1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(last().backlog[0]).toMatchObject({ kind: 'test', featureId: null });
+  });
+
   it('shows zod length errors inline', () => {
     setup('actors');
     fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
@@ -267,6 +308,7 @@ describe('StepScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
     expect(onNext).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(fetchMock.mock.calls[0][0]).toBe('/api/e/t/alerts');
     expect(bodyOf(fetchMock, 0)).toEqual({ step: 'preconditions' });
     await waitFor(() => expect(last().alerts).toContainEqual(llmAlert));

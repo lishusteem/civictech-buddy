@@ -295,6 +295,14 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
     for (const f of fields) {
       if ('required' in f && f.required && String(next[f.key] ?? '').trim() === '') errs[f.key] = 'Completează acest câmp.';
     }
+    // A backlog item of kind "feature" must point to one of the project's features; others have none.
+    if (kind === 'backlogItem' && 'kind' in next) {
+      if (next.kind === 'feature') {
+        if (!next.featureId) errs.featureId = 'Alege funcția din listă.';
+      } else {
+        next.featureId = null;
+      }
+    }
     const target = kind === 'direction' ? next.text : next;
     const parsed = ENTITY_SCHEMAS[kind].safeParse(target);
     if (!parsed.success) {

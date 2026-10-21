@@ -30,20 +30,24 @@ type Props = {
   token: string;
   /** Called after "Pasul următor"; the Editor moves to the next step (or the overview after step 10). */
   onNext: () => void;
+  /** useAutosave().flush: the AI routes read the server-saved draft, so pending edits are saved first. */
+  flush?: () => Promise<void>;
 };
+
+const noFlush = () => Promise.resolve();
 
 const withStatus = (p: Project, step: StepId, status: Project['steps'][StepId]['status']): Project => ({
   ...p,
   steps: { ...p.steps, [step]: { ...p.steps[step], status } },
 });
 
-/** Accepted cards enter the project and move the step to in_progress (ruling 7). */
+/** Accepted cards enter the project; an untouched step becomes in_progress, a done one stays done (ruling 7). */
 function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
   const next = normalizeCardIds(p, cards).reduce(upsertEntity, p);
-  return withStatus(next, step, 'in_progress');
+  return next.steps[step].status === 'untouched' ? withStatus(next, step, 'in_progress') : next;
 }
 
-export function StepScreen({ step, draft, setDraft, token, onNext }: Props) {
+export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush }: Props) {
   const [proposed, setProposed] = useState<Card[]>([]);
   const [editing, setEditing] = useState<Editing | null>(null);
   const stepId = step.id;
@@ -120,6 +124,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext }: Props) {
 
   async function refreshAlerts() {
     try {
+      await flush();
       const res = await fetch(`/api/e/${token}/alerts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,6 +160,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext }: Props) {
           token={token}
           messages={draft.steps[stepId].messages}
           setDraft={setDraft}
+          flush={flush}
           onTurn={onTurn}
           onFormMode={openForm}
         />

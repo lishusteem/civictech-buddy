@@ -32,7 +32,7 @@ const STATUS_TEXT: Partial<Record<SaveStatus, string>> = {
 const time = (iso: string) => Date.parse(iso);
 
 export function Editor({ token, initial, publishedAt: initialPublishedAt, renderStep }: Props) {
-  const { draft, draftUpdatedAt, setDraft, status, fatal, conflict, resolveConflict } = useAutosave(token, initial);
+  const { draft, draftUpdatedAt, setDraft, flush, status, fatal, conflict, resolveConflict } = useAutosave(token, initial);
   const [view, setView] = useState<View>(() =>
     STEPS.some((s) => initial.draft.steps[s.id].status === 'done') ? 'overview' : 'project',
   );
@@ -125,7 +125,7 @@ export function Editor({ token, initial, publishedAt: initialPublishedAt, render
           ) : renderStep ? (
             renderStep(stepDef, draft, setDraft, goNext)
           ) : (
-            <StepScreen key={stepDef.id} step={stepDef} draft={draft} setDraft={setDraft} token={token} onNext={goNext} />
+            <StepScreen key={stepDef.id} step={stepDef} draft={draft} setDraft={setDraft} token={token} onNext={goNext} flush={flush} />
           )}
         </main>
       </div>

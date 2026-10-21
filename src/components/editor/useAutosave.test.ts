@@ -67,6 +67,34 @@ describe('useAutosave', () => {
     expect(bodyOf(fetchMock).draft).toMatchObject({ direction: 'a', project: { area: 'Cluj' } });
   });
 
+  it('flush saves pending edits at once and resolves after the save', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
+    const { result, initial } = setup(fetchMock);
+    let done = false;
+    await act(async () => {
+      await result.current.flush();
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'a' }));
+    await act(async () => {
+      await result.current.flush().then(() => (done = true));
+    });
+    expect(done).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('saved');
+  });
+
+  it('flush resolves without throwing when the save fails', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('offline'));
+    const { result, initial } = setup(fetchMock);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'a' }));
+    await act(async () => {
+      await result.current.flush();
+    });
+    expect(result.current.status).toBe('error');
+  });
+
   it('uses the returned timestamp as expectedUpdatedAt for the next save', async () => {
     const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
     const { result, initial } = setup(fetchMock);
