@@ -23,6 +23,7 @@ export default async function EditPage({ params }: { params: Promise<{ token: st
   return (
     <Editor
       token={token}
+      slug={stored.slug}
       initial={{ draft: stored.draft, draftUpdatedAt: stored.draftUpdatedAt }}
       publishedAt={stored.publishedAt}
     />

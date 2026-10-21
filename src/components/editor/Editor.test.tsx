@@ -24,7 +24,7 @@ function stubFetch(handler: (url: string) => unknown) {
 describe('Editor', () => {
   it('opens on step 1 when no step is done and skips the summary call', () => {
     const fetchMock = stubFetch(() => ({}));
-    render(<Editor token="t" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeTruthy();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -33,7 +33,7 @@ describe('Editor', () => {
     stubFetch(() => ({ text: 'Un rezumat scurt.' }));
     const draft = createEmptyProject('P');
     draft.steps.project.status = 'done';
-    render(<Editor token="t" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Tot proiectul' })).toBeTruthy();
     expect(await screen.findByText('Un rezumat scurt.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Editează: Problema' }));
@@ -44,7 +44,7 @@ describe('Editor', () => {
     const fetchMock = stubFetch(() => ({ text: '' }));
     const draft = createEmptyProject('P');
     draft.steps.project.status = 'done';
-    render(<Editor token="t" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(screen.queryByTestId('summary')).toBeNull();
   });
@@ -53,7 +53,7 @@ describe('Editor', () => {
     const fetchMock = stubFetch((url) =>
       url.endsWith('/publish') ? { slug: 's', publishedAt: '2026-10-21T11:00:00.000Z' } : {},
     );
-    render(<Editor token="t" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T0} />);
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T0} />);
     expect(screen.getByText('Ai modificări nepublicate')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Actualizează pagina publică' }));
     await waitFor(() => expect(screen.queryByText('Ai modificări nepublicate')).toBeNull());
@@ -63,10 +63,10 @@ describe('Editor', () => {
   it('hides the bar when published and offers "Publică" when never published', () => {
     stubFetch(() => ({}));
     const initial = { draft: createEmptyProject('P'), draftUpdatedAt: T1 };
-    const { unmount } = render(<Editor token="t" initial={initial} publishedAt={T1} />);
+    const { unmount } = render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
     expect(screen.queryByText('Ai modificări nepublicate')).toBeNull();
     unmount();
-    render(<Editor token="t" initial={initial} publishedAt={null} />);
+    render(<Editor token="t" slug="s" initial={initial} publishedAt={null} />);
     expect(screen.getByRole('button', { name: 'Publică' })).toBeTruthy();
   });
 
@@ -75,6 +75,7 @@ describe('Editor', () => {
     render(
       <Editor
         token="t"
+        slug="s"
         initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }}
         publishedAt={T0}
         renderStep={(_s, draft, setDraft) => (
@@ -95,6 +96,7 @@ describe('Editor', () => {
     render(
       <Editor
         token="t"
+        slug="s"
         initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }}
         publishedAt={T1}
         renderStep={(_s, draft, setDraft) => (
@@ -114,7 +116,7 @@ describe('Editor', () => {
       json: async () => (url.endsWith('/alerts') ? { alerts: [] } : { draftUpdatedAt: '2026-10-21T10:00:05.000Z' }),
     }));
     vi.stubGlobal('fetch', fetchMock);
-    render(<Editor token="t" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
     fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
     fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Ana' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
@@ -133,13 +135,69 @@ describe('Editor', () => {
   it('renders the step screen and moves on with Pasul următor, to the overview after step 10', async () => {
     const fetchMock = stubFetch(() => ({ alerts: [], text: '' }));
     const draft = createEmptyProject('P');
-    render(<Editor token="t" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
-    expect(screen.getByRole('heading', { level: 1, name: 'Tot proiectul' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Rezumat' })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
+  });
+
+  it('appends organizing items when entering the backlog step, once', async () => {
+    stubFetch(() => ({ alerts: [], draftUpdatedAt: T1 }));
+    const draft = createEmptyProject('P');
+    draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Câți oameni?' }];
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    expect(screen.getAllByText('Află: Câți oameni?')).toHaveLength(1);
+  });
+
+  it('first publish shows KeepLinks with absolute links; later publishes only show a notice', async () => {
+    const fetchMock = stubFetch((url) =>
+      url.endsWith('/publish') ? { slug: 'proiect-abc', publishedAt: '2026-10-21T11:00:00.000Z' } : {},
+    );
+    render(<Editor token="tok" slug="proiect-abc" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Publică' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Păstrează-ți linkurile' })).toBeTruthy();
+    expect(screen.getByText(`${window.location.origin}/e/tok`)).toBeTruthy();
+    expect(screen.getByText(`${window.location.origin}/p/proiect-abc`)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
+    expect(screen.queryByRole('heading', { name: 'Păstrează-ți linkurile' })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith('/api/e/tok/publish', { method: 'POST' });
+  });
+
+  it('does not show KeepLinks again when updating an already published page', async () => {
+    stubFetch((url) => (url.endsWith('/publish') ? { slug: 's', publishedAt: '2026-10-21T11:00:00.000Z' } : {}));
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T0} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizează pagina publică' }));
+    expect(await screen.findByText('Pagina publică a fost actualizată.')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Păstrează-ți linkurile' })).toBeNull();
+  });
+
+  it('regenerates the edit link after confirmation and shows the new one', async () => {
+    const fetchMock = stubFetch((url) => (url.endsWith('/regenerate') ? { editToken: 'nou' } : {}));
+    const confirm = vi.fn().mockReturnValue(true);
+    vi.stubGlobal('confirm', confirm);
+    render(<Editor token="vechi" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Meniu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generează link nou' }));
+    expect(confirm).toHaveBeenCalledWith('Linkul vechi nu va mai funcționa.');
+    expect(await screen.findByText(`${window.location.origin}/e/nou`)).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledWith('/api/e/vechi/regenerate', { method: 'POST' });
+    expect(window.location.pathname).toBe('/e/nou');
+  });
+
+  it('does nothing when the regenerate confirmation is declined', () => {
+    const fetchMock = stubFetch(() => ({}));
+    vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Meniu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generează link nou' }));
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
