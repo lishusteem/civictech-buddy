@@ -4,6 +4,7 @@ import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
