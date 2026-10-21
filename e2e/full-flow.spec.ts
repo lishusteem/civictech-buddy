@@ -57,6 +57,9 @@ test('full flow: create, 10 steps, publish, update, conflict', async ({ page, br
   await page.getByRole('button', { name: 'Începe', exact: true }).click();
   await page.waitForURL(/\/e\/[^/]+$/);
   const token = new URL(page.url()).pathname.split('/')[2];
+  // A brand-new project shows the edit link once, before step 1.
+  await expect(page.getByText('Linkul de editare e singura cheie a proiectului.')).toBeVisible();
+  await page.getByRole('button', { name: 'Am salvat linkurile' }).click();
 
   // 2. Ten steps
   for (let i = 1; i <= STEP_COUNT; i++) {

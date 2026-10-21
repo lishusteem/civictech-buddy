@@ -67,6 +67,7 @@ describe('Editor', () => {
     expect(screen.queryByText('Ai modificări nepublicate')).toBeNull();
     unmount();
     render(<Editor token="t" slug="s" initial={initial} publishedAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
     expect(screen.getByRole('button', { name: 'Publică' })).toBeTruthy();
   });
 
@@ -191,6 +192,7 @@ describe('Editor', () => {
       url.endsWith('/publish') ? { slug: 'proiect-abc', publishedAt: '2026-10-21T11:00:00.000Z' } : {},
     );
     render(<Editor token="tok" slug="proiect-abc" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
     fireEvent.click(screen.getByRole('button', { name: 'Publică' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Păstrează-ți linkurile' })).toBeTruthy();
     expect(screen.getByText(`${window.location.origin}/e/tok`)).toBeTruthy();
@@ -230,11 +232,56 @@ describe('Editor', () => {
     stubFetch((url) => (url.endsWith('/regenerate') ? { editToken: 'nou' } : {}));
     vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
     render(<Editor token="v" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
     fireEvent.click(screen.getByRole('button', { name: 'Meniu' }));
     fireEvent.click(screen.getByRole('button', { name: 'Generează link nou' }));
     expect(await screen.findByText('Pagina publică apare după ce apeși Publică.')).toBeTruthy();
     expect(screen.queryByText(`${window.location.origin}/p/s`)).toBeNull();
     expect(screen.getByText(`${window.location.origin}/e/nou`)).toBeTruthy();
+  });
+
+  it('shows the links once on a brand-new project; dismissing it continues to step 1', () => {
+    stubFetch(() => ({}));
+    render(<Editor token="tok" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={null} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Păstrează-ți linkurile' })).toBeTruthy();
+    expect(screen.getByText(`${window.location.origin}/e/tok`)).toBeTruthy();
+    expect(screen.queryByText(`${window.location.origin}/p/s`)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeTruthy();
+  });
+
+  it('does not show the links on load once a step was started or the project was published', () => {
+    stubFetch(() => ({}));
+    const started = createEmptyProject('P');
+    started.steps.project.status = 'in_progress';
+    const { unmount } = render(<Editor token="t" slug="s" initial={{ draft: started, draftUpdatedAt: T1 }} publishedAt={null} />);
+    expect(screen.queryByRole('heading', { name: 'Păstrează-ți linkurile' })).toBeNull();
+    unmount();
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    expect(screen.queryByRole('heading', { name: 'Păstrează-ți linkurile' })).toBeNull();
+  });
+
+  it('hints to keep the address-bar link until the first publication', () => {
+    stubFetch(() => ({}));
+    const started = createEmptyProject('P');
+    started.steps.project.status = 'in_progress';
+    const hint = 'Păstrează linkul din bara de adrese — e singura cheie a proiectului.';
+    const { unmount } = render(<Editor token="t" slug="s" initial={{ draft: started, draftUpdatedAt: T1 }} publishedAt={null} />);
+    expect(screen.getByText(hint)).toBeTruthy();
+    unmount();
+    render(<Editor token="t" slug="s" initial={{ draft: started, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    expect(screen.queryByText(hint)).toBeNull();
+  });
+
+  it('copies the edit link from the menu', async () => {
+    stubFetch(() => ({}));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    render(<Editor token="tok" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Meniu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copiază linkul de editare' }));
+    expect(await screen.findByText('Copiat')).toBeTruthy();
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/e/tok`);
   });
 
   it('does nothing when the regenerate confirmation is declined', () => {
