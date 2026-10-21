@@ -57,13 +57,15 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   const neverPublished = publishedAt === null;
   const stepDef = view === 'overview' || view === 'summary' ? null : STEPS.find((s) => s.id === view)!;
 
-  /** Moves to a view. Entering the backlog step appends the organizing items (never removes anything). */
+  /** Moves to a view. The first entry into the backlog step appends the organizing items (never removes anything). */
   function go(next: View) {
-    if (next === 'backlog' && view !== 'backlog' && buildOrganizingItems(draft).length > 0) {
-      setDraft((prev) => {
-        const items = buildOrganizingItems(prev);
-        return items.length > 0 ? { ...prev, backlog: [...prev.backlog, ...items] } : prev;
-      });
+    if (next === 'backlog' && view !== 'backlog' && draft.steps.backlog.status === 'untouched') {
+      // First visit only; the step becomes in_progress so deleted items are not suggested again.
+      setDraft((prev) => ({
+        ...prev,
+        backlog: [...prev.backlog, ...buildOrganizingItems(prev)],
+        steps: { ...prev.steps, backlog: { ...prev.steps.backlog, status: 'in_progress' } },
+      }));
     }
     setView(next);
   }
@@ -207,6 +209,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
             <KeepLinks
               slug={keep.slug}
               editToken={keep.editToken}
+              published={publishedAt !== null}
               projectName={draft.project.name}
               onDone={() => {
                 setKeep(null);

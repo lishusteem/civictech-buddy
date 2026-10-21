@@ -145,15 +145,25 @@ describe('Editor', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
   });
 
-  it('appends organizing items when entering the backlog step, once', async () => {
+  it('appends organizing items on the first entry only; the button adds them back on demand', async () => {
     stubFetch(() => ({ alerts: [], draftUpdatedAt: T1 }));
     const draft = createEmptyProject('P');
     draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Câți oameni?' }];
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
-    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    const backlogBtn = () => screen.getByRole('button', { name: /Backlog de organizare/ });
+    fireEvent.click(backlogBtn());
     expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Șterge' })[0]);
+    expect(screen.queryByText('Află: Câți oameni?')).toBeNull();
+
     fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    fireEvent.click(backlogBtn());
+    expect(screen.queryByText('Află: Câți oameni?')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă pașii sugerați' }));
+    expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă pașii sugerați' }));
+    expect(screen.getByText('Nu sunt pași noi de adăugat.')).toBeTruthy();
     expect(screen.getAllByText('Află: Câți oameni?')).toHaveLength(1);
   });
 
@@ -190,6 +200,22 @@ describe('Editor', () => {
     expect(await screen.findByText(`${window.location.origin}/e/nou`)).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledWith('/api/e/vechi/regenerate', { method: 'POST' });
     expect(window.location.pathname).toBe('/e/nou');
+    fireEvent.click(screen.getByRole('button', { name: 'Am salvat linkurile' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Ana' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    await waitFor(() => expect((fetchMock.mock.calls as unknown[][]).some((c) => c[0] === '/api/e/nou' && (c[1] as RequestInit | undefined)?.method === 'PUT')).toBe(true), { timeout: 3000 });
+  });
+
+  it('hides the public link on KeepLinks when the project was never published', async () => {
+    stubFetch((url) => (url.endsWith('/regenerate') ? { editToken: 'nou' } : {}));
+    vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+    render(<Editor token="v" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Meniu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generează link nou' }));
+    expect(await screen.findByText('Pagina publică apare după ce apeși Publică.')).toBeTruthy();
+    expect(screen.queryByText(`${window.location.origin}/p/s`)).toBeNull();
+    expect(screen.getByText(`${window.location.origin}/e/nou`)).toBeTruthy();
   });
 
   it('does nothing when the regenerate confirmation is declined', () => {

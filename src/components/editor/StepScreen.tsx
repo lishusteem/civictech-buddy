@@ -18,6 +18,7 @@ import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
 import { CardsPanel, type Editing } from './CardsPanel';
+import { buildOrganizingItems } from '@/lib/backlog/organizing';
 import { ChatPanel } from './ChatPanel';
 
 /** useAutosave().setDraft: a draft, or an updater applied to the latest draft. */
@@ -50,6 +51,7 @@ function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
 export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush }: Props) {
   const [proposed, setProposed] = useState<Card[]>([]);
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [suggestNote, setSuggestNote] = useState(false);
   const stepId = step.id;
 
   const alerts = draft.alerts.filter((a) => a.step === step.number && a.status === 'open');
@@ -140,6 +142,13 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
     }
   }
 
+  /** On demand: appends the suggested organizing steps that are not in the backlog yet. */
+  function addSuggested() {
+    const none = buildOrganizingItems(draft).length === 0;
+    setSuggestNote(none);
+    if (!none) setDraft((p) => ({ ...p, backlog: [...p.backlog, ...buildOrganizingItems(p)] }));
+  }
+
   function next() {
     setDraft((p) => withStatus(p, stepId, 'done'));
     void refreshAlerts();
@@ -166,6 +175,22 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
         />
         <div className="min-w-0 space-y-4">
           <AlertList alerts={alerts} onWork={workOn} onDismiss={(a) => setAlertStatus(a, 'dismissed')} />
+          {stepId === 'backlog' && (
+            <div>
+              <button
+                type="button"
+                onClick={addSuggested}
+                className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+              >
+                Adaugă pașii sugerați
+              </button>
+              {suggestNote && (
+                <p role="status" className="mt-2 text-sm text-stone-700">
+                  Nu sunt pași noi de adăugat.
+                </p>
+              )}
+            </div>
+          )}
           <CardsPanel
             step={stepId}
             draft={draft}

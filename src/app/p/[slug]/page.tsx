@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { ProjectView, firstSentence } from '@/components/project/ProjectView';
 import { getRepo } from '@/lib/db/repo';
 
+export const dynamic = 'force-dynamic';
+
 type Params = { params: Promise<{ slug: string }> };
 
 /** Only the published version is ever returned; the draft stays on the server. */

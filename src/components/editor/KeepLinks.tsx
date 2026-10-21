@@ -7,13 +7,15 @@ type Props = {
   slug: string;
   editToken: string;
   projectName: string;
+  /** false: the public page does not exist yet, so its link is not shown. */
+  published?: boolean;
   onDone: () => void;
 };
 
 const btn =
   'rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
 
-export function KeepLinks({ slug, editToken, projectName, onDone }: Props) {
+export function KeepLinks({ slug, editToken, projectName, published = true, onDone }: Props) {
   const [copied, setCopied] = useState<'public' | 'edit' | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -52,7 +54,9 @@ export function KeepLinks({ slug, editToken, projectName, onDone }: Props) {
   }
 
   const rows = [
-    { key: 'public' as const, label: 'Pagina publică (o poți da oricui)', url: publicUrl, button: 'Copiază linkul public' },
+    ...(published
+      ? [{ key: 'public' as const, label: 'Pagina publică (o poți da oricui)', url: publicUrl, button: 'Copiază linkul public' }]
+      : []),
     { key: 'edit' as const, label: 'Linkul de editare (doar pentru echipă)', url: editUrl, button: 'Copiază linkul de editare' },
   ];
 
@@ -81,6 +85,8 @@ export function KeepLinks({ slug, editToken, projectName, onDone }: Props) {
           </li>
         ))}
       </ul>
+
+      {!published && <p className="mt-4 text-stone-700">Pagina publică apare după ce apeși Publică.</p>}
 
       <section aria-labelledby="send-links" className="mt-6">
         <h2 id="send-links" className="font-semibold">
