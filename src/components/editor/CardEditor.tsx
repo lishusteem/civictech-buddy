@@ -108,7 +108,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
   ],
   precondition: [
     { key: 'text', label: 'Precondiția', type: 'text', required: true },
-    { key: 'actorId', label: 'Cine face ceva diferit', type: 'ref', refs: ['actors'], nullable: true },
+    { key: 'actorId', label: 'Cine face ceva diferit', type: 'ref', refs: ['actors', 'team'], nullable: true },
     { key: 'stage', label: 'Etapa', type: 'enum', options: STAGE },
     { key: 'leadsTo', label: 'Duce la', type: 'ref', refs: ['preconditions', 'targetChanges'], required: true },
     { key: 'coveredByApp', label: 'O acoperă aplicația', type: 'checkbox' },
@@ -186,7 +186,8 @@ function refOptions(project: Project, sources: RefSource[], selfId: string): Opt
     for (const e of project[s] as ({ id: string } & Record<string, unknown>)[]) {
       if (e.id === selfId) continue;
       const label = s === 'relations' ? relationLabel(project, e) : String(e.name ?? e.text ?? e.id);
-      out.push([e.id, label || e.id]);
+      // When team members sit next to other kinds, mark them.
+      out.push([e.id, `${label || e.id}${s === 'team' && sources.length > 1 ? ' (echipa)' : ''}`]);
     }
   }
   return out;

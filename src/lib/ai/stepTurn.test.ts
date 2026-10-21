@@ -204,6 +204,92 @@ describe('runStepTurn', () => {
   });
 });
 
+describe('project step completeness', () => {
+  const info = { kind: 'projectInfo', data: { id: 'projectInfo', name: 'P', description: 'D', stage: 'idea', area: '', links: [], motivation: '', contact: '' } };
+  const member = { kind: 'teamMember', data: { id: 'm1', name: 'tu', skills: ['cod'], hoursPerWeek: 4 } };
+  const feature = { kind: 'feature', data: { id: 'f1', text: 'Hartă' } };
+  const proposal = (...cards: unknown[]) => JSON.stringify({ kind: 'proposal', text: 'x', cards });
+
+  it('retries a proposal with no feature card while the project has no features', async () => {
+    const { provider, calls } = scripted(proposal(info, member), proposal(info, member, feature));
+    const turn = await runStepTurn(createEmptyProject('x'), 'project', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('feature');
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('retries a proposal with no teamMember card while the team is empty', async () => {
+    const { provider, calls } = scripted(proposal(info, feature), proposal(info, member, feature));
+    const turn = await runStepTurn(createEmptyProject('x'), 'project', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('teamMember');
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('accepts a proposal without features/team when the project already has them', async () => {
+    const p = createEmptyProject('x');
+    p.features = [{ id: 'f1', text: 'Hartă' }];
+    p.team = [{ id: 'm1', name: 'tu', skills: [], hoursPerWeek: 4 }];
+    const { provider, calls } = scripted(proposal(info));
+    expect((await runStepTurn(p, 'project', [], provider)).kind).toBe('proposal');
+    expect(calls).toHaveLength(1);
+  });
+
+  it('rejects a teamMember with an empty name', async () => {
+    const blank = { kind: 'teamMember', data: { id: 'm1', name: '', skills: [], hoursPerWeek: 4 } };
+    const { provider, calls } = scripted(proposal(info, blank, feature), proposal(info, blank, feature));
+    expect((await runStepTurn(createEmptyProject('x'), 'project', [], provider)).kind).toBe('fallback');
+    expect(calls).toHaveLength(2);
+  });
+});
+
+describe('precondition actorId', () => {
+  it('accepts a team member id as actorId', async () => {
+    const p = withFeature();
+    p.team = [{ id: 'm1', name: 'Irina', skills: [], hoursPerWeek: 4 }];
+    const card = { kind: 'precondition', data: { id: 'p2', text: 'Irina scrie', actorId: 'm1', stage: 'start', leadsTo: 'p1', coveredByApp: false, assumption: '', risky: false, test: '' } };
+    const { provider, calls } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [card] }));
+    const turn = await runStepTurn(p, 'preconditions', [], provider);
+    expect(turn.kind).toBe('proposal');
+    expect(calls).toHaveLength(1);
+  });
+
+  it('still rejects an unknown actorId', async () => {
+    const card = { kind: 'precondition', data: { id: 'p2', text: 'x', actorId: 'zzz', stage: 'start', leadsTo: 'p1', coveredByApp: false, assumption: '', risky: false, test: '' } };
+    const { provider } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [card] }), 'nope');
+    expect((await runStepTurn(withFeature(), 'preconditions', [], provider)).kind).toBe('fallback');
+  });
+});
+
+describe('tolerant JSON parsing', () => {
+  it('extracts the first top-level object from surrounding text', async () => {
+    const obj = JSON.stringify({ kind: 'question', text: 'Ce {faci}?' });
+    const { provider, calls } = scripted(`Sigur! Iată răspunsul:
+\`\`\`json
+${obj}
+\`\`\`
+Sper că ajută.`);
+    const turn = await runStepTurn(createEmptyProject('x'), 'problem', [], provider);
+    expect(turn).toEqual({ kind: 'question', text: 'Ce {faci}?' });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('still fails when there is no object at all', async () => {
+    const { provider, calls } = scripted('doar text', '{ stricat');
+    expect((await runStepTurn(createEmptyProject('x'), 'problem', [], provider)).kind).toBe('fallback');
+    expect(calls).toHaveLength(2);
+  });
+});
+
+describe('backlog context', () => {
+  it('lists the project features with their ids', () => {
+    const msgs = buildMessages(withFeature(), 'backlog', []);
+    const ctx = msgs[1].content;
+    expect(ctx).toContain('"id":"f1"');
+    expect(ctx).toContain('Hartă cu parcuri');
+  });
+});
+
 describe('FakeProvider default', () => {
   it('proposes valid cards on every step', async () => {
     const p = withFeature();

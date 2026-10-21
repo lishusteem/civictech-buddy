@@ -92,7 +92,7 @@ function refError(card: Card, has: HasId): string | null {
       if (!has(d.to, 'actor')) return bad('to', 'actor');
       return null;
     case 'precondition':
-      if (d.actorId !== null && !has(d.actorId, 'actor')) return bad('actorId', 'actor');
+      if (d.actorId !== null && !has(d.actorId, 'actor', 'teamMember')) return bad('actorId', 'actor sau membru al echipei');
       if (d.leadsTo === d.id || !has(d.leadsTo, 'precondition', 'targetChange')) {
         return bad('leadsTo', 'precondiții sau al unei schimbări țintă');
       }
@@ -169,10 +169,50 @@ function dropUnanchoredRoles(p: Project, cards: Card[]): Card[] {
   });
 }
 
+/** The first balanced top-level `{...}` block of `text` (string-aware), or null. */
+function firstJsonObject(text: string): string | null {
+  const start = text.indexOf('{');
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (ch === '\\') i++;
+      else if (ch === '"') inString = false;
+    } else if (ch === '"') inString = true;
+    else if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
+}
+
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const block = firstJsonObject(raw);
+    if (block === null) throw new Error('no json');
+    return JSON.parse(block);
+  }
+}
+
+/** The project step must carry the functions and the team the dev named. */
+function projectStepErrors(p: Project, cards: Card[]): string[] {
+  const errors: string[] = [];
+  if (p.features.length === 0 && !cards.some((c) => c.kind === 'feature')) {
+    errors.push('Propunerea nu are niciun card "feature". Adaugă câte un card feature pentru fiecare funcție a aplicației pe care a spus-o dev-ul.');
+  }
+  if (p.team.length === 0 && !cards.some((c) => c.kind === 'teamMember')) {
+    errors.push('Propunerea nu are niciun card "teamMember". Adaugă câte un card teamMember pentru fiecare om din echipă, inclusiv dev-ul (name "tu" dacă nu și-a spus numele), cu skills și hoursPerWeek.');
+  }
+  return errors;
+}
+
 function parseTurn(raw: string, p: Project, step: StepId): Parsed {
   let obj: unknown;
   try {
-    obj = JSON.parse(raw);
+    obj = parseJson(raw);
   } catch {
     return { ok: false, error: 'Răspunsul nu e JSON valid.', cards: [] };
   }
@@ -197,6 +237,7 @@ function parseTurn(raw: string, p: Project, step: StepId): Parsed {
   }
   const batch = checkBatch(p, step, cards);
   errors.push(...batch.errors);
+  if (step === 'project') errors.push(...projectStepErrors(p, batch.cards));
   const text = typeof obj.text === 'string' ? obj.text : '';
   if (errors.length > 0) return { ok: false, error: errors.join(' '), cards: batch.cards };
   return { ok: true, turn: { kind: 'proposal', text, cards: batch.cards } };

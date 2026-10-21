@@ -73,7 +73,8 @@ function ExtLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 export function ProjectView({ project: p, publishedAt }: Props) {
-  const actorName = (id: string | null) => p.actors.find((a) => a.id === id)?.name ?? null;
+  const actorName = (id: string | null) =>
+    p.actors.find((a) => a.id === id)?.name ?? p.team.find((m) => m.id === id)?.name ?? null;
   const cardRoles = p.roles.filter((r) => r.status === 'seeking' || r.status === 'partner');
   const tableRoles = p.roles.filter((r) => r.status !== 'not_needed');
   const sentence = firstSentence(p.problem.statement);

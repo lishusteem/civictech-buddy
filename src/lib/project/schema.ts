@@ -68,7 +68,7 @@ export const ProjectSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        name: z.string().max(80),
+        name: z.string().min(1).max(80),
         skills: z.array(z.string().max(60)).max(20),
         hoursPerWeek: z.number().min(0).max(80),
       }),
