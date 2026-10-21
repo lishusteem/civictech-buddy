@@ -1,5 +1,6 @@
 import type { Project } from '@/lib/project/schema';
 import { createEmptyProject } from '@/lib/project/empty';
+import { toPublished } from '@/lib/project/published';
 import { generateEditToken, hashToken, makeSlug } from '@/lib/tokens';
 import type { ProjectRepo, StoredProject } from './repo';
 
@@ -55,16 +56,17 @@ export function createMemoryRepo(): ProjectRepo {
       return row ? toStored(row) : null;
     },
 
-    async getBySlug(slug) {
+    async getPublishedBySlug(slug) {
       const row = [...rows.values()].find((r) => r.slug === slug);
-      return row ? toStored(row) : null;
+      if (!row || row.published === null || row.publishedAt === null) return null;
+      return { slug: row.slug, published: structuredClone(row.published), publishedAt: row.publishedAt };
     },
 
     async saveDraft(token, draft: Project, expectedUpdatedAt, force) {
       const row = await findByToken(token);
       if (!row) return null;
       if (!force && row.draftUpdatedAt !== expectedUpdatedAt) {
-        return { ok: false, conflict: toStored(row) };
+        return { ok: false, conflict: { draft: structuredClone(row.draft), draftUpdatedAt: row.draftUpdatedAt } };
       }
       row.draft = structuredClone(draft);
       row.draftUpdatedAt = nextTimestamp();
@@ -74,9 +76,9 @@ export function createMemoryRepo(): ProjectRepo {
     async publish(token) {
       const row = await findByToken(token);
       if (!row) return null;
-      row.published = structuredClone(row.draft);
+      row.published = toPublished(row.draft);
       row.publishedAt = nextTimestamp();
-      return toStored(row);
+      return { slug: row.slug, publishedAt: row.publishedAt };
     },
 
     async regenerateToken(token) {

@@ -11,12 +11,11 @@ describe('memoryRepo', () => {
     expect(await repo.getByToken('nope')).toBeNull();
   });
 
-  it('getBySlug on an unpublished project has published === null', async () => {
+  it('getPublishedBySlug is null for an unpublished project or an unknown slug', async () => {
     const repo = createMemoryRepo();
     const { stored } = await repo.create('Proiect Test');
-    const found = await repo.getBySlug(stored.slug);
-    expect(found).not.toBeNull();
-    expect(found!.published).toBeNull();
+    expect(await repo.getPublishedBySlug(stored.slug)).toBeNull();
+    expect(await repo.getPublishedBySlug('nu-exista')).toBeNull();
   });
 
   it('saveDraft with correct expectedUpdatedAt succeeds with a new timestamp', async () => {
@@ -63,10 +62,26 @@ describe('memoryRepo', () => {
     const { stored, editToken } = await repo.create('A');
     await repo.saveDraft(editToken, { ...stored.draft, direction: 'dir' }, stored.draftUpdatedAt);
     const pub = await repo.publish(editToken);
-    expect(pub!.published?.direction).toBe('dir');
-    expect(pub!.publishedAt).not.toBeNull();
-    expect((await repo.getBySlug(stored.slug))!.published?.direction).toBe('dir');
+    expect(pub).toEqual({ slug: stored.slug, publishedAt: expect.any(String) });
+    const found = await repo.getPublishedBySlug(stored.slug);
+    expect(found).toEqual({ slug: stored.slug, published: expect.anything(), publishedAt: pub!.publishedAt });
+    expect(found!.published.direction).toBe('dir');
     expect(await repo.publish('bad')).toBeNull();
+  });
+
+  it('publish leaves out the chat messages and the stale ids', async () => {
+    const repo = createMemoryRepo();
+    const { stored, editToken } = await repo.create('A');
+    const draft = structuredClone(stored.draft);
+    draft.steps.problem.messages = [{ role: 'user', content: 'privat' }];
+    draft.stale = ['r1'];
+    await repo.saveDraft(editToken, draft, stored.draftUpdatedAt);
+    await repo.publish(editToken);
+    const { published } = (await repo.getPublishedBySlug(stored.slug))!;
+    expect(published.steps.problem.messages).toEqual([]);
+    expect(published.stale).toEqual([]);
+    // The draft keeps them.
+    expect((await repo.getByToken(editToken))!.draft.steps.problem.messages).toHaveLength(1);
   });
 
   it('regenerateToken invalidates the old token', async () => {

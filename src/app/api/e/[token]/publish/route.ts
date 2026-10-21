@@ -6,7 +6,7 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> },
 ): Promise<Response> {
   const { token } = await params;
-  const stored = await getRepo().publish(token);
-  if (!stored) return json(404, { error: INVALID_LINK });
-  return json(200, { slug: stored.slug, publishedAt: stored.publishedAt });
+  const result = await getRepo().publish(token);
+  if (!result) return json(404, { error: INVALID_LINK });
+  return json(200, { slug: result.slug, publishedAt: result.publishedAt });
 }

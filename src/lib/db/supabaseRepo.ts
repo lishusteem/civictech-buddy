@@ -13,7 +13,11 @@ type Row = {
   draft_updated_at: string;
 };
 
+/** A row returned by the save_draft SQL function. */
+type SaveDraftRow = { status: 'ok' | 'conflict' | 'invalid'; draft: Project | null; draft_updated_at: string | null };
+
 const COLUMNS = 'id, slug, draft, published, published_at, draft_updated_at';
+const PUBLIC_COLUMNS = 'slug, published, published_at';
 const UNIQUE_VIOLATION = '23505';
 
 function toStored(row: Row): StoredProject {
@@ -31,7 +35,7 @@ function fail(op: string, error: { message: string }): never {
   throw new Error(`Supabase ${op} failed: ${error.message}`);
 }
 
-export function createSupabaseRepo(): ProjectRepo {
+function defaultClient(): SupabaseClient {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -39,8 +43,11 @@ export function createSupabaseRepo(): ProjectRepo {
       'Supabase is not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or REPO=memory for local use).',
     );
   }
-  const db: SupabaseClient = createClient(url, key, { auth: { persistSession: false } });
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
+/** `db` is injectable for tests; by default a service-role client from the environment. */
+export function createSupabaseRepo(db: SupabaseClient = defaultClient()): ProjectRepo {
   async function rowByHash(hash: string): Promise<Row | null> {
     const { data, error } = await db
       .from('projects')
@@ -72,41 +79,35 @@ export function createSupabaseRepo(): ProjectRepo {
       return row ? toStored(row) : null;
     },
 
-    async getBySlug(slug) {
-      const { data, error } = await db.from('projects').select(COLUMNS).eq('slug', slug).maybeSingle();
+    async getPublishedBySlug(slug) {
+      const { data, error } = await db.from('projects').select(PUBLIC_COLUMNS).eq('slug', slug).maybeSingle();
       if (error) fail('select', error);
-      return data ? toStored(data as Row) : null;
+      const row = data as Pick<Row, 'slug' | 'published' | 'published_at'> | null;
+      if (!row || row.published === null || row.published_at === null) return null;
+      return { slug: row.slug, published: row.published, publishedAt: row.published_at };
     },
 
     async saveDraft(token, draft, expectedUpdatedAt, force) {
-      const hash = await hashToken(token);
-      let newTs = new Date().toISOString();
-      if (newTs === expectedUpdatedAt) newTs = new Date(Date.now() + 1).toISOString();
-      let query = db
-        .from('projects')
-        .update({ draft, draft_updated_at: newTs })
-        .eq('edit_token_hash', hash);
-      if (!force) query = query.eq('draft_updated_at', expectedUpdatedAt);
-      const { data, error } = await query.select('draft_updated_at');
-      if (error) fail('update', error);
-      if (data && data.length > 0) return { ok: true, draftUpdatedAt: data[0].draft_updated_at };
-
-      const current = await rowByHash(hash);
-      if (!current) return null;
-      return { ok: false, conflict: toStored(current) };
+      // The compare-and-set and the new timestamp (clock_timestamp()) happen in one statement in SQL.
+      const { data, error } = await db.rpc('save_draft', {
+        p_hash: await hashToken(token),
+        p_draft: draft,
+        p_expected: expectedUpdatedAt,
+        p_force: force === true,
+      });
+      if (error) fail('rpc save_draft', error);
+      const row = (data as SaveDraftRow[] | null)?.[0];
+      if (!row || row.status === 'invalid' || row.draft_updated_at === null) return null;
+      if (row.status === 'ok') return { ok: true, draftUpdatedAt: row.draft_updated_at };
+      if (row.draft === null) return null;
+      return { ok: false, conflict: { draft: row.draft, draftUpdatedAt: row.draft_updated_at } };
     },
 
     async publish(token) {
-      const hash = await hashToken(token);
-      const current = await rowByHash(hash);
-      if (!current) return null;
-      const { data, error } = await db
-        .from('projects')
-        .update({ published: current.draft, published_at: new Date().toISOString() })
-        .eq('edit_token_hash', hash)
-        .select(COLUMNS);
-      if (error) fail('update', error);
-      return data && data.length > 0 ? toStored(data[0] as Row) : null;
+      const { data, error } = await db.rpc('publish_project', { p_hash: await hashToken(token) });
+      if (error) fail('rpc publish_project', error);
+      const row = (data as { slug: string; published_at: string }[] | null)?.[0];
+      return row ? { slug: row.slug, publishedAt: row.published_at } : null;
     },
 
     async regenerateToken(token) {
