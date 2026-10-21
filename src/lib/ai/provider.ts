@@ -92,13 +92,16 @@ export function defaultProposal(step: StepId, context: Card[]): string {
     case 'relations':
       if (actors.length < 2) return question('Ce actori vrei să legi?');
       return proposal([{ kind: 'relation', data: { id: 'r1', from: actors[0], to: actors[1], type: 'influences', note: '' } }]);
-    case 'preconditions':
+    case 'preconditions': {
+      const target = ids('targetChange')[0];
+      if (!target) return question('Ce schimbare țintești?');
       return proposal([
         {
           kind: 'precondition',
-          data: { id: 'p1', text: 'Precondiție de test.', actorId: actors[0] ?? null, stage: 'start', leadsTo: ids('targetChange')[0] ?? 't1', coveredByApp: false, assumption: '', risky: false, test: '' },
+          data: { id: 'p1', text: 'Precondiție de test.', actorId: actors[0] ?? null, stage: 'start', leadsTo: target, coveredByApp: false, assumption: '', risky: false, test: '' },
         },
       ]);
+    }
     case 'risks': {
       const pre = ids('precondition')[0];
       if (!pre) return question('Ce precondiții ai?');

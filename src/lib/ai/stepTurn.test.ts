@@ -101,6 +101,75 @@ describe('runStepTurn', () => {
     expect(turn.kind).toBe('proposal');
   });
 
+  it('retries a backlog feature item with no featureId (an invented feature)', async () => {
+    const invented = { kind: 'backlogItem', data: { id: 'b1', stage: 'start', kind: 'feature', featureId: null, preconditionId: null, text: 'Notificări push', order: 1 } };
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [invented] }),
+      JSON.stringify({ kind: 'question', text: 'Ce funcții ai?' }),
+    );
+    const turn = await runStepTurn(withFeature(), 'backlog', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(turn.kind).toBe('question');
+  });
+
+  it('retries a test/organizing backlog item that carries a featureId', async () => {
+    const item = { kind: 'backlogItem', data: { id: 'b1', stage: 'start', kind: 'organizing', featureId: 'f1', preconditionId: null, text: 'Întâlnire', order: 1 } };
+    const { provider, calls } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [item] }), 'not json');
+    expect((await runStepTurn(withFeature(), 'backlog', [], provider)).kind).toBe('fallback');
+    expect(calls).toHaveLength(2);
+  });
+
+  it('retries a relation pointing to an unknown actor', async () => {
+    const p = withFeature();
+    p.actors = [{ id: 'a1', name: 'Părinți', type: 'user', power: 'low', stance: 'supports', excluded: false }];
+    const rel = (to: string) => ({ kind: 'relation', data: { id: 'r1', from: 'a1', to, type: 'influences', note: '' } });
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel('a99')] }),
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel('a1')] }),
+    );
+    const turn = await runStepTurn(p, 'relations', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('a99');
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('retries a precondition whose leadsTo is unknown, accepting refs to new cards in the batch', async () => {
+    const pre = (leadsTo: string) => ({
+      kind: 'precondition',
+      data: { id: 'p2', text: 'x', actorId: 'a9', stage: 'start', leadsTo, coveredByApp: false, assumption: '', risky: false, test: '' },
+    });
+    const newActor = { kind: 'actor', data: { id: 'a9', name: 'Școala', type: 'institution', power: 'medium', stance: 'unknown', excluded: false } };
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [pre('zz'), newActor] }),
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [pre('p1'), newActor] }),
+    );
+    const turn = await runStepTurn(withFeature(), 'preconditions', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(turn.kind).toBe('proposal');
+    if (turn.kind !== 'question') expect(turn.cards).toHaveLength(2);
+  });
+
+  it('retries a role covered by someone not in the team', async () => {
+    const role = { kind: 'role', data: { id: 'o1', name: 'Jurist', reason: 'x', reasonRefs: ['p1'], stage: 'mid', status: 'covered', coveredBy: 'm9' } };
+    const { provider, calls } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [role] }), 'not json');
+    expect((await runStepTurn(withFeature(), 'roles', [], provider)).kind).toBe('fallback');
+    expect(calls).toHaveLength(2);
+  });
+
+  it('retries a proposal that would push targetChanges over 3, but allows updates', async () => {
+    const p = withFeature();
+    p.targetChanges = [1, 2, 3].map((n) => ({ id: `t${n}`, text: 'x', signal: 'y' }));
+    const tc = (id: string) => ({ kind: 'targetChange', data: { id, text: 'nou', signal: 's' } });
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [tc('t4')] }),
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [tc('t2')] }),
+    );
+    const turn = await runStepTurn(p, 'target', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('targetChange');
+    expect(turn.kind).toBe('proposal');
+  });
+
   it('drops a role with empty reasonRefs', async () => {
     const role = (id: string, reasonRefs: string[]) => ({
       kind: 'role',
@@ -142,6 +211,7 @@ describe('FakeProvider default', () => {
       { id: 'a1', name: 'Părinți', type: 'user', power: 'low', stance: 'supports', excluded: false },
       { id: 'a2', name: 'Primăria', type: 'institution', power: 'high', stance: 'neutral', excluded: false },
     ];
+    p.targetChanges = [{ id: 't1', text: 'x', signal: 'y' }];
     for (const step of StepIdSchema.options) {
       const turn = await runStepTurn(p, step, [], new FakeProvider());
       expect(turn.kind, step).toBe('proposal');

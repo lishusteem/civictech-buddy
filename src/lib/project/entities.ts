@@ -52,7 +52,7 @@ export const STEP_ENTITIES: Record<StepId, EntityKind[]> = {
 };
 
 type SingletonKind = 'projectInfo' | 'problem' | 'direction';
-type ListKind = Exclude<EntityKind, SingletonKind>;
+export type ListKind = Exclude<EntityKind, SingletonKind>;
 type ListKey =
   | 'team'
   | 'features'
@@ -65,7 +65,7 @@ type ListKey =
   | 'backlog'
   | 'toFindOut';
 
-const LIST_KEY: Record<ListKind, ListKey> = {
+export const LIST_KEY: Record<ListKind, ListKey> = {
   teamMember: 'team',
   feature: 'features',
   existing: 'existing',
