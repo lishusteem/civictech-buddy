@@ -3,7 +3,7 @@ export type ShareMessage = { subject: string; body: string };
 
 export function buildShareMessage(l: ShareLinks): ShareMessage {
   return {
-    subject: `Linkurile proiectului ${l.projectName.slice(0, 80)}`,
+    subject: `Linkurile proiectului ${Array.from(l.projectName).slice(0, 80).join('')}`,
     body: [
       'Pagina publică (o poți da oricui):',
       l.publicUrl,

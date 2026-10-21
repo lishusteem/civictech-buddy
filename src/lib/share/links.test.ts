@@ -41,4 +41,10 @@ describe('share links', () => {
   it('builds a mailto url', () => {
     expect(mailtoUrl(buildShareMessage(links))).toMatch(/^mailto:\?subject=.+&body=/);
   });
+
+  it('does not throw when an emoji straddles the truncation point', () => {
+    const m = buildShareMessage({ ...links, projectName: 'n'.repeat(79) + '🚧' });
+    expect(() => gmailComposeUrl(m)).not.toThrow();
+    expect(() => mailtoUrl(m)).not.toThrow();
+  });
 });
