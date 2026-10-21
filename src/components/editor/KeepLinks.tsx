@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { buildShareMessage, gmailComposeUrl, mailtoUrl } from '@/lib/share/links';
 
 type Props = {
@@ -15,15 +15,22 @@ type Props = {
 const btn =
   'rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
 
+const noSubscribe = () => () => {};
+
+/** Browser-only values; on the server (a brand-new project opens on this screen) they start empty until hydration. */
+function useBrowser<T>(read: () => T, onServer: T): T {
+  return useSyncExternalStore(noSubscribe, read, () => onServer);
+}
+
 export function KeepLinks({ slug, editToken, projectName, published = true, onDone }: Props) {
   const [copied, setCopied] = useState<'public' | 'edit' | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const origin = window.location.origin;
+  const origin = useBrowser(() => window.location.origin, '');
   const publicUrl = `${origin}/p/${slug}`;
   const editUrl = `${origin}/e/${editToken}`;
   const message = buildShareMessage({ publicUrl, editUrl, projectName });
-  const canShare = typeof navigator.share === 'function';
+  const canShare = useBrowser(() => typeof navigator.share === 'function', false);
 
   // The browser asks for confirmation before the tab closes, until the links are saved.
   useEffect(() => {
