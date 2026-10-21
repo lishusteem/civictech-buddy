@@ -1,9 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { fakeQueue } from '@/lib/ai/provider';
 import { getRepo } from '@/lib/db/repo';
-import { POST as ai } from './e/[token]/ai/route';
-import { POST as alerts } from './e/[token]/alerts/route';
-import { POST as summary } from './e/[token]/summary/route';
+import * as aiRoute from './e/[token]/ai/route';
+import * as alertsRoute from './e/[token]/alerts/route';
+import * as summaryRoute from './e/[token]/summary/route';
+
+const ai = aiRoute.POST;
+const alerts = alertsRoute.POST;
+const summary = summaryRoute.POST;
 
 beforeAll(() => {
   process.env.REPO = 'memory';
@@ -95,5 +99,31 @@ describe('POST /api/e/:token/summary', () => {
     const res = await summary(post({}), ctx(token));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ text: '' });
+  });
+});
+
+describe('AI cost ceiling', () => {
+  it('lets the AI routes run up to 60 s', () => {
+    expect(aiRoute.maxDuration).toBe(60);
+    expect(alertsRoute.maxDuration).toBe(60);
+    expect(summaryRoute.maxDuration).toBe(60);
+  });
+
+  it('keys the daily project quota on the project, so a new edit link does not reset it', async () => {
+    const repo = getRepo();
+    const { stored, editToken } = await repo.create('Parcul');
+    for (let i = 0; i < 300; i++) await repo.hitRateLimit(`ai:${stored.id}`, 300, 86400);
+    const { editToken: fresh } = (await repo.regenerateToken(editToken))!;
+    const res = await ai(post({ step: 'problem', chat: [] }), ctx(fresh));
+    expect(res.status).toBe(429);
+  });
+
+  // Last: it exhausts the global bucket for this test file.
+  it('stops every project after 5000 AI calls a day in total', async () => {
+    const repo = getRepo();
+    for (let i = 0; i < 5000; i++) await repo.hitRateLimit('ai-global', 5000, 86400);
+    const token = await newToken();
+    const res = await summary(post({}), ctx(token));
+    expect(res.status).toBe(429);
   });
 });

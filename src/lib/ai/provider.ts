@@ -13,6 +13,9 @@ export const CONTEXT_MARKER = 'CONTEXT:';
 export const ALERTS_MARKER = 'SARCINA: alerte';
 export const RECAP_MARKER = 'SARCINA: rezumat';
 
+/** Per call; with one retry this stays inside the routes' 60 s maxDuration. */
+export const DEEPSEEK_TIMEOUT_MS = 25_000;
+
 export class DeepSeekProvider implements ChatProvider {
   async complete(messages: ChatMessage[]): Promise<string> {
     const base = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
@@ -27,7 +30,7 @@ export class DeepSeekProvider implements ChatProvider {
         messages,
         response_format: { type: 'json_object' },
       }),
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(DEEPSEEK_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`DeepSeek HTTP ${res.status}`);
     const body = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };

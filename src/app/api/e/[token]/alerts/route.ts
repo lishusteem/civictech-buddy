@@ -8,6 +8,9 @@ import { StepIdSchema } from '@/lib/project/schema';
 
 type Ctx = { params: Promise<{ token: string }> };
 
+/** One model call (25 s) plus its retry, with headroom. */
+export const maxDuration = 60;
+
 const BodySchema = z.object({ step: StepIdSchema });
 
 export async function POST(req: Request, { params }: Ctx): Promise<Response> {
@@ -24,7 +27,7 @@ export async function POST(req: Request, { params }: Ctx): Promise<Response> {
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) return json(422, { error: 'Corp invalid.', issues: parsed.error.issues });
 
-  if (!(await hitAiLimits(req, token))) return json(429, { error: AI_LIMIT_ERROR });
+  if (!(await hitAiLimits(req, stored.id))) return json(429, { error: AI_LIMIT_ERROR });
 
   try {
     const alerts = await runLlmAlerts(stored.draft, parsed.data.step, withRetry(getProvider()));
