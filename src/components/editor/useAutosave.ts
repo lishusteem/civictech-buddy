@@ -5,7 +5,7 @@ import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
 import { computeStale } from '@/lib/project/stale';
 import type { Project } from '@/lib/project/schema';
 
-export type SaveStatus = 'saved' | 'saving' | 'error' | 'conflict';
+export type SaveStatus = 'saved' | 'saving' | 'error' | 'conflict' | 'invalid';
 export type Conflict = { draft: Project; draftUpdatedAt: string };
 
 const DEBOUNCE_MS = 800;
@@ -33,7 +33,9 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
   const retriesRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
-  const flushRef = useRef<(force?: boolean) => Promise<void>>(async () => {});
+  const terminalRef = useRef(false);
+  const [fatal, setFatal] = useState(false);
+  const flushRef = useRef<(force?: boolean, keepalive?: boolean) => Promise<void>>(async () => {});
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -47,8 +49,9 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     [clearTimer],
   );
 
-  flushRef.current = async (force = false) => {
+  flushRef.current = async (force = false, keepalive = false) => {
     if (!mountedRef.current) return;
+    if (terminalRef.current) return;
     if (conflictRef.current && !force) return;
     if (inFlightRef.current) return; // the running save re-schedules itself when dirty
     if (!dirtyRef.current && !force) return;
@@ -56,11 +59,12 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     inFlightRef.current = true;
     dirtyRef.current = false;
     const sent = draftRef.current;
-    let outcome: 'ok' | 'conflict' | 'error' = 'error';
+    let outcome: 'ok' | 'conflict' | 'error' | 'invalid' | 'fatal' = 'error';
     let payload: { draftUpdatedAt?: string; conflict?: Conflict } = {};
     try {
       const res = await fetch(`/api/e/${token}`, {
         method: 'PUT',
+        ...(keepalive ? { keepalive: true } : {}),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           draft: sent,
@@ -71,6 +75,10 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       if (res.status === 409) {
         outcome = 'conflict';
         payload = await res.json().catch(() => ({}));
+      } else if (res.status === 404) {
+        outcome = 'invalid';
+      } else if (res.status >= 400 && res.status < 500) {
+        outcome = 'fatal';
       } else if (res.ok) {
         outcome = 'ok';
         payload = await res.json().catch(() => ({}));
@@ -96,6 +104,15 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       conflictRef.current = payload.conflict;
       setConflict(payload.conflict);
       setStatus('conflict');
+    } else if (outcome === 'invalid') {
+      dirtyRef.current = true;
+      terminalRef.current = true;
+      setStatus('invalid');
+    } else if (outcome === 'fatal') {
+      dirtyRef.current = true;
+      terminalRef.current = true;
+      setFatal(true);
+      setStatus('error');
     } else {
       dirtyRef.current = true;
       setStatus('error');
@@ -114,13 +131,32 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     };
   }, [clearTimer]);
 
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current && !inFlightRef.current) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden' || !dirtyRef.current) return;
+      clearTimer();
+      void flushRef.current(false, true);
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [clearTimer]);
+
   const setDraft = useCallback((next: Project) => {
     const derived = withDerived(draftRef.current, next);
     draftRef.current = derived;
     setDraftState(derived);
     dirtyRef.current = true;
     retriesRef.current = 0;
-    if (conflictRef.current) return; // keep the conflict dialog; the choice decides what is sent
+    if (conflictRef.current || terminalRef.current) return; // keep the conflict dialog; the choice decides what is sent
     setStatus('saving');
     schedule(DEBOUNCE_MS);
   }, [schedule]);
@@ -145,5 +181,5 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     void flushRef.current(true);
   }, [clearTimer]);
 
-  return { draft, draftUpdatedAt, setDraft, status, conflict, resolveConflict };
+  return { draft, draftUpdatedAt, setDraft, status, fatal, conflict, resolveConflict };
 }

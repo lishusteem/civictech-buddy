@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, cleanup } from '@testing-library/react';
 import { createEmptyProject } from '@/lib/project/empty';
 import { removeEntity, upsertEntity } from '@/lib/project/entities';
 import { useAutosave } from './useAutosave';
@@ -25,6 +25,7 @@ const bodyOf = (fetchMock: ReturnType<typeof vi.fn>, call = 0) =>
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -198,5 +199,63 @@ describe('useAutosave', () => {
     await act(() => vi.advanceTimersByTimeAsync(800));
     await act(() => vi.advanceTimersByTimeAsync(3000));
     expect(result.current.status).toBe('saved');
+  });
+
+  it('prevents unload while edits are unsaved, not after the save completes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
+    const { result, initial } = setup(fetchMock);
+    const fire = () => {
+      const e = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    expect(fire()).toBe(false);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+    expect(fire()).toBe(true);
+    await act(() => vi.advanceTimersByTimeAsync(800));
+    expect(fire()).toBe(false);
+  });
+
+  it('flushes immediately with keepalive when the page becomes hidden', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
+    const { result, initial } = setup(fetchMock);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+    const spy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    spy.mockRestore();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].keepalive).toBe(true);
+  });
+
+  it('treats 404 as terminal: status invalid, a single PUT', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(404, { error: 'x' }));
+    const { result, initial } = setup(fetchMock);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+    await act(() => vi.advanceTimersByTimeAsync(800));
+    await act(() => vi.advanceTimersByTimeAsync(20000));
+    expect(result.current.status).toBe('invalid');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry 422', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(422, { error: 'x' }));
+    const { result, initial } = setup(fetchMock);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+    await act(() => vi.advanceTimersByTimeAsync(800));
+    await act(() => vi.advanceTimersByTimeAsync(20000));
+    expect(result.current.status).toBe('error');
+    expect(result.current.fatal).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries 5xx', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(500, {}));
+    const { result, initial } = setup(fetchMock);
+    act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+    await act(() => vi.advanceTimersByTimeAsync(800));
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

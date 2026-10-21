@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import type { Project, StepId } from '@/lib/project/schema';
@@ -39,7 +40,7 @@ function StepPlaceholder({ step }: { step: StepDef }) {
 const time = (iso: string) => Date.parse(iso);
 
 export function Editor({ token, initial, publishedAt: initialPublishedAt, renderStep }: Props) {
-  const { draft, draftUpdatedAt, setDraft, status, conflict, resolveConflict } = useAutosave(token, initial);
+  const { draft, draftUpdatedAt, setDraft, status, fatal, conflict, resolveConflict } = useAutosave(token, initial);
   const [view, setView] = useState<View>(() =>
     STEPS.some((s) => initial.draft.steps[s.id].status === 'done') ? 'overview' : 'project',
   );
@@ -66,12 +67,25 @@ export function Editor({ token, initial, publishedAt: initialPublishedAt, render
     setPublishing(false);
   }
 
+  if (status === 'invalid') {
+    return (
+      <main className="mx-auto w-full max-w-2xl px-4 py-16 text-stone-900">
+        <h1 className="text-2xl font-semibold">Linkul nu mai e valid.</h1>
+        <p className="mt-4">
+          <Link href="/" className="font-medium text-teal-900 underline underline-offset-2">
+            Înapoi la început
+          </Link>
+        </p>
+      </main>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col text-stone-900">
       <header className="flex items-center justify-between gap-4 border-b border-stone-300 px-4 py-3">
         <p className="font-semibold">{draft.project.name || 'Proiect fără nume'}</p>
         <p role="status" aria-live="polite" className="text-sm text-stone-600">
-          {STATUS_TEXT[status] ?? ''}
+          {fatal ? 'Nu am putut salva. Reîncarcă pagina.' : (STATUS_TEXT[status] ?? '')}
         </p>
       </header>
 
@@ -87,7 +101,7 @@ export function Editor({ token, initial, publishedAt: initialPublishedAt, render
             <button
               type="button"
               onClick={publish}
-              disabled={publishing || status === 'saving' || status === 'conflict'}
+              disabled={publishing || status !== 'saved'}
               className="rounded-lg bg-teal-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60"
             >
               {neverPublished ? 'Publică' : 'Actualizează pagina publică'}

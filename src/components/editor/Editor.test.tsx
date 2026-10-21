@@ -69,4 +69,41 @@ describe('Editor', () => {
     render(<Editor token="t" initial={initial} publishedAt={null} />);
     expect(screen.getByRole('button', { name: 'Publică' })).toBeTruthy();
   });
+
+  it('disables publish while saving has failed or edits are pending', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    render(
+      <Editor
+        token="t"
+        initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }}
+        publishedAt={T0}
+        renderStep={(_s, draft, setDraft) => (
+          <button onClick={() => setDraft({ ...draft, direction: 'x' })}>edit</button>
+        )}
+      />,
+    );
+    const publish = () => screen.getByRole('button', { name: 'Actualizează pagina publică' }) as HTMLButtonElement;
+    expect(publish().disabled).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'edit' }));
+    expect(publish().disabled).toBe(true); // pending edit
+    await waitFor(() => expect(screen.getByText('Eroare la salvare — reîncercăm')).toBeTruthy(), { timeout: 3000 });
+    expect(publish().disabled).toBe(true); // error
+  });
+
+  it('shows the invalid-link page when saving returns 404', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({}) }));
+    render(
+      <Editor
+        token="t"
+        initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }}
+        publishedAt={T1}
+        renderStep={(_s, draft, setDraft) => (
+          <button onClick={() => setDraft({ ...draft, direction: 'x' })}>edit</button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'edit' }));
+    expect(await screen.findByText('Linkul nu mai e valid.', {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Înapoi la început' }).getAttribute('href')).toBe('/');
+  });
 });
