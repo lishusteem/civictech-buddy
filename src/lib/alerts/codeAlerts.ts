@@ -2,8 +2,8 @@ import { STEPS } from '../steps/definitions';
 import type { Alert, AlertCode, Project } from '../project/schema';
 import { ALERT_MESSAGES } from './messages';
 
-// Alerts marked "Cod" or "Cod + LLM" in PRD section 5. The rest are LLM-only
-// and are never touched by mergeAlerts.
+// Alerts marked "Cod" or "Cod + LLM" in PRD section 5. The rest are LLM-only;
+// mergeAlerts only replaces them when a step's LLM alerts are refreshed.
 export const CODE_ALERT_CODES: AlertCode[] = [
   'team_no_time',
   'no_evidence',
@@ -97,22 +97,34 @@ export function computeCodeAlerts(p: Project): Project['alerts'] {
   return out;
 }
 
-const keyOf = (a: Alert) => a.code + [...a.refs].sort().join(',');
+const isCodeAlert = (a: Alert) => CODE_ALERT_CODES.includes(a.code);
 
-export function mergeAlerts(previous: Alert[], fresh: Alert[]): Alert[] {
+/** Code alerts are keyed by code and refs; LLM alerts by code and step, so a refresh replaces them. */
+const keyOf = (a: Alert) => (isCodeAlert(a) ? `${a.code}:${[...a.refs].sort().join(',')}` : `${a.code}@${a.step}`);
+
+/**
+ * Merges freshly computed alerts into the stored ones, keeping dismissed statuses.
+ * Code alerts that vanish become resolved. LLM alerts are left as they are, except with
+ * `llmStep`: the fresh list then holds that step's new LLM alerts, which replace its open ones.
+ */
+export function mergeAlerts(previous: Alert[], fresh: Alert[], opts: { llmStep?: number } = {}): Alert[] {
   const prevByKey = new Map(previous.map((a) => [keyOf(a), a]));
-  const freshKeys = new Set(fresh.map(keyOf));
+  const freshByKey = new Map<string, Alert>();
+  for (const a of fresh) if (!freshByKey.has(keyOf(a))) freshByKey.set(keyOf(a), a);
 
-  const merged: Alert[] = fresh.map((a) => {
+  const merged: Alert[] = [...freshByKey.values()].map((a) => {
     const prev = prevByKey.get(keyOf(a));
     if (!prev) return a;
     return { ...a, status: prev.status === 'resolved' ? 'open' : prev.status };
   });
 
   for (const prev of previous) {
-    if (freshKeys.has(keyOf(prev))) continue;
-    const isCode = CODE_ALERT_CODES.includes(prev.code);
-    merged.push(isCode && prev.status === 'open' ? { ...prev, status: 'resolved' } : prev);
+    if (freshByKey.has(keyOf(prev))) continue;
+    if (isCodeAlert(prev)) {
+      merged.push(prev.status === 'open' ? { ...prev, status: 'resolved' } : prev);
+    } else if (!(prev.step === opts.llmStep && prev.status === 'open')) {
+      merged.push(prev);
+    }
   }
   return merged;
 }

@@ -162,6 +162,39 @@ describe('mergeAlerts', () => {
     expect(CODE_ALERT_CODES).not.toContain('magic_leap');
   });
 
+  it('de-duplicates fresh alerts by key', () => {
+    const out = mergeAlerts([], [al('no_evidence', 'open'), al('no_evidence', 'open')]);
+    expect(out).toHaveLength(1);
+  });
+
+  describe('refreshing a step\'s LLM alerts', () => {
+    const llm = (code: Alert['code'], step: number, refs: string[], status: Alert['status'] = 'open', message = 'm'): Alert => ({
+      code, step, refs, status, message,
+    });
+
+    it('replaces the open LLM alert of the same code on that step instead of adding another', () => {
+      const out = mergeAlerts([llm('magic_leap', 7, ['p1'], 'open', 'vechi')], [llm('magic_leap', 7, ['p2'], 'open', 'nou')], { llmStep: 7 });
+      expect(out).toEqual([llm('magic_leap', 7, ['p2'], 'open', 'nou')]);
+    });
+
+    it('drops the open LLM alerts of that step that the refresh no longer raises, keeping other steps', () => {
+      const other = llm('abstract_change', 4, []);
+      const out = mergeAlerts([llm('magic_leap', 7, ['p1']), other], [], { llmStep: 7 });
+      expect(out).toEqual([other]);
+    });
+
+    it('keeps a dismissed LLM alert dismissed', () => {
+      const out = mergeAlerts([llm('magic_leap', 7, ['p1'], 'dismissed')], [llm('magic_leap', 7, ['p2'])], { llmStep: 7 });
+      expect(out).toHaveLength(1);
+      expect(out[0]).toMatchObject({ refs: ['p2'], status: 'dismissed' });
+    });
+
+    it('keeps one LLM alert per code and step from the fresh list', () => {
+      const out = mergeAlerts([], [llm('magic_leap', 7, ['p1']), llm('magic_leap', 7, ['p2'])], { llmStep: 7 });
+      expect(out).toHaveLength(1);
+    });
+  });
+
   it('does not touch dismissed code alerts that vanish', () => {
     expect(mergeAlerts([al('no_evidence', 'dismissed')], [])[0].status).toBe('dismissed');
   });

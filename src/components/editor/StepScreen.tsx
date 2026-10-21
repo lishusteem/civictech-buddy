@@ -140,7 +140,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
       const data = await res.json();
       if (!Array.isArray(data?.alerts)) return;
       const llm = data.alerts as Alert[];
-      setDraft((p) => ({ ...p, alerts: mergeAlerts(p.alerts, [...llm, ...computeCodeAlerts(p)]) }));
+      setDraft((p) => ({ ...p, alerts: mergeAlerts(p.alerts, [...llm, ...computeCodeAlerts(p)], { llmStep: step.number }) }));
     } catch {
       // Background check: on failure the step simply shows no new LLM alerts.
     }

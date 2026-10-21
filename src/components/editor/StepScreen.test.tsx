@@ -352,6 +352,18 @@ describe('StepScreen', () => {
     expect(last().steps.preconditions.status).toBe('done');
   });
 
+  it('a second alerts refresh replaces the step\'s LLM alert instead of piling up', async () => {
+    const draft = createEmptyProject('P');
+    draft.alerts = [{ code: 'magic_leap', step: 7, refs: ['p1'], status: 'open', message: 'Vechi.' }];
+    const fresh = { code: 'magic_leap', step: 7, refs: ['p2'], status: 'open', message: 'Nou.' };
+    const fetchMock = stubFetch([], { body: { alerts: [fresh] } });
+    const { last } = setup('preconditions', draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await waitFor(() => expect(last().alerts).toContainEqual(fresh));
+    expect(last().alerts.filter((a) => a.code === 'magic_leap')).toHaveLength(1);
+  });
+
   it('ignores a failed alerts call', async () => {
     const fetchMock = stubFetch([], { status: 502, body: { error: 'AI-ul nu răspunde acum.' } });
     const { spy } = setup('preconditions');
