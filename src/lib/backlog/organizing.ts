@@ -1,3 +1,4 @@
+import { remainingCapacity } from '../project/entities';
 import type { Project } from '../project/schema';
 
 type Item = Project['backlog'][number];
@@ -41,4 +42,10 @@ export function buildOrganizingItems(p: Project): Project['backlog'] {
     out.push({ ...d, id: `b${++nextId}`, order: ++nextOrder });
   }
   return out;
+}
+
+/** Appends the organizing items not in the backlog yet, as many as the backlog cap leaves room for. */
+export function appendOrganizingItems(p: Project): Project {
+  const items = buildOrganizingItems(p).slice(0, remainingCapacity(p, 'backlogItem'));
+  return items.length === 0 ? p : { ...p, backlog: [...p.backlog, ...items] };
 }

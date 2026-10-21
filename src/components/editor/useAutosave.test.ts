@@ -281,13 +281,49 @@ describe('useAutosave', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('does not retry 422', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(reply(422, { error: 'x' }));
+  for (const code of [413, 422]) {
+    it(`treats ${code} as recoverable: error with a message, no auto-retry, saves again on the next edit`, async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply(code, { error: 'x' }))
+        .mockResolvedValueOnce(reply(200, { draftUpdatedAt: T2 }));
+      const { result, initial } = setup(fetchMock);
+      act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      await act(() => vi.advanceTimersByTimeAsync(20000));
+      expect(result.current.status).toBe('error');
+      expect(result.current.fatal).toBe(false);
+      expect(result.current.rejected).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      act(() => result.current.setDraft({ ...initial.draft, direction: 'y' }));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(bodyOf(fetchMock, 1).draft.direction).toBe('y');
+      expect(result.current.status).toBe('saved');
+      expect(result.current.rejected).toBe(false);
+    });
+  }
+
+  for (const code of [408, 429]) {
+    it(`retries ${code} like a server error`, async () => {
+      const fetchMock = vi.fn().mockResolvedValue(reply(code, {}));
+      const { result, initial } = setup(fetchMock);
+      act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(result.current.status).toBe('error');
+      expect(result.current.fatal).toBe(false);
+      await act(() => vi.advanceTimersByTimeAsync(3000));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  }
+
+  it('treats other 4xx as fatal', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(400, {}));
     const { result, initial } = setup(fetchMock);
     act(() => result.current.setDraft({ ...initial.draft, direction: 'x' }));
     await act(() => vi.advanceTimersByTimeAsync(800));
     await act(() => vi.advanceTimersByTimeAsync(20000));
-    expect(result.current.status).toBe('error');
     expect(result.current.fatal).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

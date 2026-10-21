@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
-import { buildOrganizingItems } from '@/lib/backlog/organizing';
+import { appendOrganizingItems } from '@/lib/backlog/organizing';
 import type { Project, StepId } from '@/lib/project/schema';
 import { ConflictDialog } from './ConflictDialog';
 import { KeepLinks } from './KeepLinks';
@@ -11,7 +11,7 @@ import { Overview } from './Overview';
 import { StepScreen, type SetDraft } from './StepScreen';
 import { StepSidebar } from './StepSidebar';
 import { Summary } from './Summary';
-import { useAutosave, type SaveStatus } from './useAutosave';
+import { REJECTED_TEXT, useAutosave, type SaveStatus } from './useAutosave';
 
 export type RenderStep = (step: StepDef, draft: Project, setDraft: SetDraft, onNext: () => void) => ReactNode;
 
@@ -41,7 +41,7 @@ const time = (iso: string) => Date.parse(iso);
 export function Editor({ token: initialToken, slug, initial, publishedAt: initialPublishedAt, renderStep }: Props) {
   // The token changes when the edit link is regenerated.
   const [token, setToken] = useState(initialToken);
-  const { draft, draftUpdatedAt, setDraft, flush, status, fatal, conflict, resolveConflict } = useAutosave(token, initial);
+  const { draft, draftUpdatedAt, setDraft, flush, status, fatal, rejected, conflict, resolveConflict } = useAutosave(token, initial);
   const [view, setView] = useState<View>(() =>
     STEPS.some((s) => initial.draft.steps[s.id].status === 'done') ? 'overview' : 'project',
   );
@@ -61,11 +61,10 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   function go(next: View) {
     if (next === 'backlog' && view !== 'backlog' && draft.steps.backlog.status === 'untouched') {
       // First visit only; the step becomes in_progress so deleted items are not suggested again.
-      setDraft((prev) => ({
-        ...prev,
-        backlog: [...prev.backlog, ...buildOrganizingItems(prev)],
-        steps: { ...prev.steps, backlog: { ...prev.steps.backlog, status: 'in_progress' } },
-      }));
+      setDraft((prev) => {
+        const withItems = appendOrganizingItems(prev);
+        return { ...withItems, steps: { ...withItems.steps, backlog: { ...withItems.steps.backlog, status: 'in_progress' } } };
+      });
     }
     setView(next);
   }
@@ -136,7 +135,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
         <p className="font-semibold">{draft.project.name || 'Proiect fără nume'}</p>
         <div className="flex items-center gap-4">
           <p role="status" aria-live="polite" className="text-sm text-stone-600">
-            {fatal ? 'Nu am putut salva. Reîncarcă pagina.' : (STATUS_TEXT[status] ?? '')}
+            {fatal ? 'Nu am putut salva. Reîncarcă pagina.' : rejected && status === 'error' ? REJECTED_TEXT : (STATUS_TEXT[status] ?? '')}
           </p>
           <div className="relative">
             <button

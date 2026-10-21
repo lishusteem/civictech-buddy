@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/empty';
-import { buildOrganizingItems } from './organizing';
+import { appendOrganizingItems, buildOrganizingItems } from './organizing';
 
 function sample() {
   const p = createEmptyProject('T');
@@ -51,5 +51,22 @@ describe('buildOrganizingItems', () => {
     p.roles = [{ id: 'r1', name: 'X', reason: '', reasonRefs: [], stage: 'start', status: 'covered', coveredBy: 'm1' }];
     p.preconditions = [{ id: 'p1', text: 't', actorId: null, stage: 'start', leadsTo: '', coveredByApp: true, assumption: '', risky: false, test: 'abc' }];
     expect(buildOrganizingItems(p)).toEqual([]);
+  });
+});
+
+describe('appendOrganizingItems', () => {
+  it('appends the new items to the backlog', () => {
+    const p = appendOrganizingItems(sample());
+    expect(p.backlog).toHaveLength(3);
+  });
+
+  it('adds only as many items as the backlog cap leaves room for', () => {
+    const p = sample();
+    p.backlog = Array.from({ length: 149 }, (_, i) => ({
+      id: `x${i}`, stage: 'start' as const, kind: 'organizing' as const, featureId: null, preconditionId: null, text: `Pas ${i}`, order: i + 1,
+    }));
+    const next = appendOrganizingItems(p);
+    expect(next.backlog).toHaveLength(150);
+    expect(appendOrganizingItems(next).backlog).toHaveLength(150);
   });
 });

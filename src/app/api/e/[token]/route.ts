@@ -4,7 +4,7 @@ import { ProjectSchema } from '@/lib/project/schema';
 
 type Ctx = { params: Promise<{ token: string }> };
 
-const MAX_BODY_BYTES = 512 * 1024;
+const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const TOO_LARGE = { error: 'Conținutul e prea mare.' };
 
 export async function GET(_req: Request, { params }: Ctx): Promise<Response> {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { entitiesForStep, isSingleton, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
+import { entitiesForStep, isSingleton, remainingCapacity, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
 import type { Project, StepId } from '@/lib/project/schema';
 import { CardEditor, FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
 
@@ -97,6 +97,7 @@ export function CardsPanel(props: Props) {
   const accepted = entitiesForStep(draft, step);
   const risks = step === 'risks';
   const stale = new Set(draft.stale);
+  const full = addKind !== undefined && !isSingleton(addKind) && remainingCapacity(draft, addKind) === 0;
 
   return (
     <section aria-labelledby="cards-heading" className="min-w-0 space-y-4">
@@ -198,9 +199,13 @@ export function CardsPanel(props: Props) {
               ))}
             </select>
           )}
-          <button type="button" onClick={() => props.onAddManual(addKind)} className={secondary}>
-            Adaugă manual
-          </button>
+          {full ? (
+            <p className="text-sm text-stone-700">Ai atins numărul maxim pentru această listă.</p>
+          ) : (
+            <button type="button" onClick={() => props.onAddManual(addKind)} className={secondary}>
+              Adaugă manual
+            </button>
+          )}
         </div>
       )}
     </section>

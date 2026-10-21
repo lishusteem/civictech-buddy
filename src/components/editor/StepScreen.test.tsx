@@ -188,6 +188,43 @@ describe('StepScreen', () => {
     expect(last().steps.actors.status).toBe('in_progress');
   });
 
+  it('hides Adaugă manual when the list is full and says why', () => {
+    const draft = createEmptyProject('P');
+    draft.targetChanges = ['t1', 't2', 't3'].map((id) => ({ id, text: `Schimbare ${id}`, signal: '' }));
+    setup('target', draft);
+    expect(screen.queryByRole('button', { name: 'Adaugă manual' })).toBeNull();
+    expect(screen.getByText('Ai atins numărul maxim pentru această listă.')).toBeTruthy();
+  });
+
+  it('does not add a new card past the list cap when a proposal is accepted', async () => {
+    const draft = createEmptyProject('P');
+    draft.targetChanges = ['t1', 't2', 't3'].map((id) => ({ id, text: `Schimbare ${id}`, signal: '' }));
+    stubFetch([{ body: { kind: 'proposal', text: '', cards: [{ kind: 'targetChange', data: { id: 't9', text: 'A patra', signal: '' } }] } }]);
+    const { last } = setup('target', draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Propune rezumatul acum' }));
+    await screen.findByText('A patra');
+    fireEvent.click(screen.getByRole('button', { name: 'Acceptă' }));
+    expect(last().targetChanges).toHaveLength(3);
+  });
+
+  it('keeps at most the last 40 messages of a step', async () => {
+    const fetchMock = stubFetch([{ body: { kind: 'question', text: 'Și apoi?' } }]);
+    const draft = createEmptyProject('P');
+    draft.steps.actors.messages = Array.from({ length: 40 }, (_, i) => ({
+      role: i % 2 === 0 ? ('assistant' as const) : ('user' as const),
+      content: `m${i}`,
+    }));
+    const { last } = setup('actors', draft);
+    fireEvent.change(screen.getByLabelText('Răspunsul tău'), { target: { value: 'nou' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Trimite' }));
+    await screen.findByText('Și apoi?');
+    expect(bodyOf(fetchMock, 0).chat).toHaveLength(40);
+    const messages = last().steps.actors.messages;
+    expect(messages).toHaveLength(40);
+    expect(messages.at(-1)).toEqual({ role: 'assistant', content: 'Și apoi?' });
+    expect(messages.at(-2)).toEqual({ role: 'user', content: 'nou' });
+  });
+
   it('keeps a done step done when a card is accepted', () => {
     const draft = createEmptyProject('P');
     draft.steps.actors.status = 'done';

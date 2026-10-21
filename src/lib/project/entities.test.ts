@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from './empty';
 import {
   entitiesForStep,
+  listMax,
   normalizeCardIds,
+  remainingCapacity,
   removeEntity,
   upsertEntity,
   type Card,
@@ -114,5 +116,25 @@ describe('normalizeCardIds', () => {
     };
     const out = normalizeCardIds(p, [role, actor('x')]);
     expect(out[0].data.reasonRefs).toEqual(['a1', 'p1']);
+  });
+});
+
+describe('listMax / remainingCapacity', () => {
+  it('reads the list caps from the project schema', () => {
+    expect(listMax('targetChange')).toBe(3);
+    expect(listMax('backlogItem')).toBe(150);
+    expect(listMax('actor')).toBe(40);
+  });
+
+  it('is the room left in a list, never negative', () => {
+    const p = createEmptyProject('P');
+    expect(remainingCapacity(p, 'targetChange')).toBe(3);
+    p.targetChanges = [
+      { id: 't1', text: 'a', signal: '' },
+      { id: 't2', text: 'b', signal: '' },
+    ];
+    expect(remainingCapacity(p, 'targetChange')).toBe(1);
+    p.targetChanges.push({ id: 't3', text: 'c', signal: '' }, { id: 't4', text: 'd', signal: '' });
+    expect(remainingCapacity(p, 'targetChange')).toBe(0);
   });
 });

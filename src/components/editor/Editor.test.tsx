@@ -109,6 +109,25 @@ describe('Editor', () => {
     expect(screen.getByRole('link', { name: 'Înapoi la început' }).getAttribute('href')).toBe('/');
   });
 
+  it('shows the limit message when a save is rejected with 413', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 413, json: async () => ({}) }));
+    render(
+      <Editor
+        token="t"
+        slug="s"
+        initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }}
+        publishedAt={T1}
+        renderStep={(_s, draft, setDraft) => (
+          <button onClick={() => setDraft({ ...draft, direction: 'x' })}>edit</button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'edit' }));
+    expect(
+      await screen.findByText('Proiectul a depășit o limită. Șterge ceva și încearcă din nou.', {}, { timeout: 3000 }),
+    ).toBeTruthy();
+  });
+
   it('saves an accepted card before asking for alerts', async () => {
     const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>(async (url) => ({
       ok: true,

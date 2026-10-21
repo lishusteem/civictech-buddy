@@ -12,6 +12,12 @@ const DEBOUNCE_MS = 800;
 const RETRY_MS = 3000;
 const MAX_RETRIES = 3;
 
+/** Shown when the server rejects the draft (413 too large, 422 invalid); the next edit tries again. */
+export const REJECTED_TEXT = 'Proiectul a depășit o limită. Șterge ceva și încearcă din nou.';
+
+/** Timeouts and rate limits are transient, like server errors. */
+const RETRYABLE_4XX = [408, 429];
+
 /** Applies the derived fields (stale ids, code alerts) that must accompany every change. */
 function withDerived(prev: Project, next: Project): Project {
   const stale = [...new Set([...next.stale, ...computeStale(prev, next)])];
@@ -35,6 +41,7 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
   const mountedRef = useRef(true);
   const terminalRef = useRef(false);
   const [fatal, setFatal] = useState(false);
+  const [rejected, setRejected] = useState(false);
   const flushRef = useRef<(force?: boolean, keepalive?: boolean) => Promise<void>>(async () => {});
 
   const clearTimer = useCallback(() => {
@@ -67,7 +74,7 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     inFlightRef.current = true;
     dirtyRef.current = false;
     const sent = draftRef.current;
-    let outcome: 'ok' | 'conflict' | 'error' | 'invalid' | 'fatal' = 'error';
+    let outcome: 'ok' | 'conflict' | 'error' | 'invalid' | 'rejected' | 'fatal' = 'error';
     let payload: { draftUpdatedAt?: string; conflict?: Conflict } = {};
     try {
       const res = await fetch(`/api/e/${token}`, {
@@ -85,7 +92,9 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
         payload = await res.json().catch(() => ({}));
       } else if (res.status === 404) {
         outcome = 'invalid';
-      } else if (res.status >= 400 && res.status < 500) {
+      } else if (res.status === 413 || res.status === 422) {
+        outcome = 'rejected';
+      } else if (res.status >= 400 && res.status < 500 && !RETRYABLE_4XX.includes(res.status)) {
         outcome = 'fatal';
       } else if (res.ok) {
         outcome = 'ok';
@@ -100,6 +109,7 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       return;
     }
 
+    setRejected(outcome === 'rejected');
     if (outcome === 'ok' && payload.draftUpdatedAt) {
       expectedRef.current = payload.draftUpdatedAt;
       setDraftUpdatedAt(payload.draftUpdatedAt);
@@ -124,6 +134,10 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       dirtyRef.current = true;
       terminalRef.current = true;
       setStatus('invalid');
+    } else if (outcome === 'rejected') {
+      // Not terminal and not retried as is: the same draft would be rejected again. The next edit saves.
+      dirtyRef.current = true;
+      setStatus('error');
     } else if (outcome === 'fatal') {
       dirtyRef.current = true;
       terminalRef.current = true;
@@ -213,5 +227,5 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     void flushRef.current(true);
   }, [clearTimer]);
 
-  return { draft, draftUpdatedAt, setDraft, flush, status, fatal, conflict, resolveConflict };
+  return { draft, draftUpdatedAt, setDraft, flush, status, fatal, rejected, conflict, resolveConflict };
 }

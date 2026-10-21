@@ -8,7 +8,8 @@ import type { SetDraft } from './StepScreen';
 
 export const MAX_CHARS = 4000;
 const COUNTER_FROM = 3500;
-const MAX_MESSAGES = 60;
+/** Messages kept per step (the schema allows 60); older ones are dropped so drafts stay small. */
+export const MAX_MESSAGES = 40;
 const DONT_KNOW = 'Nu știu';
 const PROPOSE_NOW = 'Propune rezumatul acum.';
 const AI_DOWN = 'AI-ul nu răspunde acum.';

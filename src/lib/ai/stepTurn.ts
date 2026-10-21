@@ -1,16 +1,16 @@
-import type { z, ZodError } from 'zod';
+import type { ZodError } from 'zod';
 import {
   allListEntities,
   ENTITY_SCHEMAS,
   isSingleton,
-  LIST_KEY,
+  listMax,
   normalizeCardIds,
   STEP_ENTITIES,
   type Card,
   type EntityKind,
   type ListKind,
 } from '../project/entities';
-import { ProjectSchema, type Message, type Project, type StepId } from '../project/schema';
+import type { Message, Project, StepId } from '../project/schema';
 import { buildMessages, contextMessage, loadPrompt } from './prompts';
 import { RECAP_MARKER, type ChatMessage, type ChatProvider } from './provider';
 
@@ -114,9 +114,6 @@ function refError(card: Card, has: HasId): string | null {
       return null;
   }
 }
-
-const listMax = (kind: ListKind): number =>
-  (ProjectSchema.shape[LIST_KEY[kind]] as z.ZodArray<z.ZodTypeAny>)._def.maxLength?.value ?? Infinity;
 
 /** Keeps the new cards of each list kind within the ProjectSchema max; the excess is invalid. */
 function capErrors(p: Project, cards: Card[]): { kept: Card[]; errors: string[] } {

@@ -74,9 +74,11 @@ describe('project API', () => {
     expect((await res.json()).issues.length).toBeGreaterThan(0);
   });
 
-  it('returns 413 for a 600 KB body', async () => {
+  it('accepts bodies up to 2 MB and returns 413 above', async () => {
     const { editToken } = await setup();
-    const res = await put(editToken, JSON.stringify({ pad: 'x'.repeat(600 * 1024) }));
+    const big = await put(editToken, JSON.stringify({ pad: 'x'.repeat(600 * 1024) }));
+    expect(big.status).toBe(422); // under the limit: parsed, then rejected as an invalid draft
+    const res = await put(editToken, JSON.stringify({ pad: 'x'.repeat(2 * 1024 * 1024) }));
     expect(res.status).toBe(413);
     expect((await res.json()).error).toBe('Conținutul e prea mare.');
   });

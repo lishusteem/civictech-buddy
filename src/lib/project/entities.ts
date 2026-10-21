@@ -122,6 +122,23 @@ export function allListEntities(p: Project): { kind: ListKind; entity: AnyEntity
   return out;
 }
 
+/** The ProjectSchema max length of a list kind. */
+export function listMax(kind: ListKind): number {
+  return (shape[LIST_KEY[kind]] as z.ZodArray<z.ZodTypeAny>)._def.maxLength?.value ?? Infinity;
+}
+
+/** How many more entities of this kind fit in the project (never negative). */
+export function remainingCapacity(p: Project, kind: ListKind): number {
+  return Math.max(0, listMax(kind) - listOf(p, kind).length);
+}
+
+/** False when the card would add a new entity to a list that is already full. */
+export function fitsInList(p: Project, card: Card): boolean {
+  if (isSingleton(card.kind)) return true;
+  if (listOf(p, card.kind).some((e) => e.id === card.data.id)) return true;
+  return remainingCapacity(p, card.kind) > 0;
+}
+
 export function upsertEntity(p: Project, card: Card): Project {
   const next: Project = structuredClone(p);
   const { kind, data } = card;

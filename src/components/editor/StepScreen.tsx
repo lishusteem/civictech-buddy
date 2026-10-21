@@ -5,6 +5,7 @@ import type { AiTurn } from '@/lib/ai/stepTurn';
 import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
 import { ALERT_MESSAGES } from '@/lib/alerts/messages';
 import {
+  fitsInList,
   isSingleton,
   normalizeCardIds,
   removeEntity,
@@ -18,8 +19,8 @@ import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
 import { CardsPanel, type Editing } from './CardsPanel';
-import { buildOrganizingItems } from '@/lib/backlog/organizing';
-import { ChatPanel } from './ChatPanel';
+import { appendOrganizingItems, buildOrganizingItems } from '@/lib/backlog/organizing';
+import { ChatPanel, MAX_MESSAGES } from './ChatPanel';
 
 /** useAutosave().setDraft: a draft, or an updater applied to the latest draft. */
 export type SetDraft = (update: Project | ((prev: Project) => Project)) => void;
@@ -42,9 +43,12 @@ const withStatus = (p: Project, step: StepId, status: Project['steps'][StepId]['
   steps: { ...p.steps, [step]: { ...p.steps[step], status } },
 });
 
-/** Accepted cards enter the project; an untouched step becomes in_progress, a done one stays done (ruling 7). */
+/**
+ * Accepted cards enter the project; an untouched step becomes in_progress, a done one stays done (ruling 7).
+ * New cards for a list that is already full are skipped, so the draft always stays within the schema.
+ */
 function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
-  const next = normalizeCardIds(p, cards).reduce(upsertEntity, p);
+  const next = normalizeCardIds(p, cards).reduce((acc, card) => (fitsInList(acc, card) ? upsertEntity(acc, card) : acc), p);
   return next.steps[step].status === 'untouched' ? withStatus(next, step, 'in_progress') : next;
 }
 
@@ -118,7 +122,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
         ...p.steps,
         [stepId]: {
           ...p.steps[stepId],
-          messages: [...p.steps[stepId].messages, { role: 'assistant' as const, content: alert.message || ALERT_MESSAGES[alert.code].message }].slice(-60),
+          messages: [...p.steps[stepId].messages, { role: 'assistant' as const, content: alert.message || ALERT_MESSAGES[alert.code].message }].slice(-MAX_MESSAGES),
         },
       },
     }));
@@ -146,7 +150,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   function addSuggested() {
     const none = buildOrganizingItems(draft).length === 0;
     setSuggestNote(none);
-    if (!none) setDraft((p) => ({ ...p, backlog: [...p.backlog, ...buildOrganizingItems(p)] }));
+    if (!none) setDraft(appendOrganizingItems);
   }
 
   function next() {
