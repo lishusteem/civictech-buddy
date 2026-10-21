@@ -63,6 +63,10 @@ function validateCard(raw: unknown, p: Project, step: StepId): CardResult {
     };
   }
 
+  if (kind === 'teamMember' && (typeof data.name !== 'string' || data.name.trim() === '')) {
+    return { error: `Cardul teamMember (${String(data.id ?? '')}) trebuie să aibă un "name" nenul; folosește "tu" pentru dev dacă nu și-a spus numele.` };
+  }
+
   const candidate = isSingleton(kind) ? data : { ...data, id: typeof data.id === 'string' ? data.id : '' };
   const r = ENTITY_SCHEMAS[kind].safeParse(candidate);
   if (!r.success) return { error: issuesText(kind, data.id, r.error) };
@@ -197,12 +201,9 @@ function parseJson(raw: string): unknown {
   }
 }
 
-/** The project step must carry the functions and the team the dev named. */
+/** The project step must carry the team (the dev is always a member). */
 function projectStepErrors(p: Project, cards: Card[]): string[] {
   const errors: string[] = [];
-  if (p.features.length === 0 && !cards.some((c) => c.kind === 'feature')) {
-    errors.push('Propunerea nu are niciun card "feature". Adaugă câte un card feature pentru fiecare funcție a aplicației pe care a spus-o dev-ul.');
-  }
   if (p.team.length === 0 && !cards.some((c) => c.kind === 'teamMember')) {
     errors.push('Propunerea nu are niciun card "teamMember". Adaugă câte un card teamMember pentru fiecare om din echipă, inclusiv dev-ul (name "tu" dacă nu și-a spus numele), cu skills și hoursPerWeek.');
   }

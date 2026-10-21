@@ -12,7 +12,7 @@ Reguli obligatorii pentru propunere:
 - Nu propune până nu știi echipa. Dacă dev-ul nu a spus încă cine e în echipă, întreabă explicit (cine, ce știe, câte ore pe săptămână) înainte de propunere.
 - O propunere conține OBLIGATORIU: un card `projectInfo`, câte un card `feature` pentru fiecare funcție numită de dev și câte un card `teamMember` pentru fiecare om, inclusiv dev-ul (name "tu" dacă nu și-a spus numele), cu `skills` și `hoursPerWeek`.
 - `name` la teamMember nu e niciodată gol.
-- O propunere fără `feature` sau fără `teamMember` este respinsă, dacă proiectul nu are încă așa ceva.
+- NU inventa funcții: dacă dev-ul n-a numit nicio funcție, nu pune carduri `feature`. O propunere fără `teamMember` este respinsă dacă echipa e goală.
 
 Carduri permise:
 - {"kind": "projectInfo", "data": {"name": "...", "description": "...", "stage": "idea" | "prototype" | "live" | null, "area": "...", "links": ["https://..."], "motivation": "...", "contact": "..."}} — un singur card; câmpurile necunoscute rămân "" sau [].

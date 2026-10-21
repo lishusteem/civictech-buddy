@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/empty';
-import { StepIdSchema, type Project } from '../project/schema';
+import { ProjectSchema, StepIdSchema, type Project } from '../project/schema';
 import { FakeProvider, type ChatMessage, type ChatProvider } from './provider';
 import { buildMessages } from './prompts';
 import { runStepTurn, summarizeProject } from './stepTurn';
@@ -210,12 +210,10 @@ describe('project step completeness', () => {
   const feature = { kind: 'feature', data: { id: 'f1', text: 'Hartă' } };
   const proposal = (...cards: unknown[]) => JSON.stringify({ kind: 'proposal', text: 'x', cards });
 
-  it('retries a proposal with no feature card while the project has no features', async () => {
-    const { provider, calls } = scripted(proposal(info, member), proposal(info, member, feature));
-    const turn = await runStepTurn(createEmptyProject('x'), 'project', [], provider);
-    expect(calls).toHaveLength(2);
-    expect(calls[1][calls[1].length - 1].content).toContain('feature');
-    expect(turn.kind).toBe('proposal');
+  it('does not force feature cards (the AI must not invent functions)', async () => {
+    const { provider, calls } = scripted(proposal(info, member));
+    expect((await runStepTurn(createEmptyProject('x'), 'project', [], provider)).kind).toBe('proposal');
+    expect(calls).toHaveLength(1);
   });
 
   it('retries a proposal with no teamMember card while the team is empty', async () => {
@@ -240,6 +238,20 @@ describe('project step completeness', () => {
     const { provider, calls } = scripted(proposal(info, blank, feature), proposal(info, blank, feature));
     expect((await runStepTurn(createEmptyProject('x'), 'project', [], provider)).kind).toBe('fallback');
     expect(calls).toHaveLength(2);
+  });
+
+  it('retries on a whitespace-only teamMember name', async () => {
+    const blank = { kind: 'teamMember', data: { id: 'm1', name: '  ', skills: [], hoursPerWeek: 4 } };
+    const { provider, calls } = scripted(proposal(info, blank), proposal(info, member));
+    expect((await runStepTurn(createEmptyProject('x'), 'project', [], provider)).kind).toBe('proposal');
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('teamMember');
+  });
+
+  it('ProjectSchema still accepts a stored draft with an empty team member name', () => {
+    const p = createEmptyProject('x');
+    p.team = [{ id: 'm1', name: '', skills: [], hoursPerWeek: 0 }];
+    expect(ProjectSchema.safeParse(p).success).toBe(true);
   });
 });
 
