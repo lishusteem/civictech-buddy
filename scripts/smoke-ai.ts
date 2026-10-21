@@ -1,6 +1,6 @@
 // Manual smoke test against the real DeepSeek API (not run in CI).
 // Usage: put DEEPSEEK_API_KEY (and optionally DEEPSEEK_MODEL, DEEPSEEK_BASE_URL)
-// in .env.local, then: npx tsx scripts/smoke-ai.ts
+// in .env.local, then: npx tsx --env-file=.env.local scripts/smoke-ai.ts
 // Expected: a `question` turn in Romanian for the `problem` step.
 import fs from 'node:fs';
 import { createEmptyProject } from '../src/lib/project/empty';

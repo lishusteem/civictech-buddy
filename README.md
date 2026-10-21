@@ -16,7 +16,7 @@ Variabile de mediu (vezi `.env.example`):
 
 | Variabilă | Rol |
 | --- | --- |
-| `REPO` | `memory` (local, teste) sau `supabase` (producție) |
+| `REPO` | `memory` (local, teste) sau `supabase` (producție); în producția Vercel (`VERCEL_ENV=production`) aplicația refuză `memory` |
 | `AI_PROVIDER` | `fake` (local, teste) sau `deepseek` (producție) |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | necesare când `REPO=supabase` |
 | `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `DEEPSEEK_BASE_URL` | necesare când `AI_PROVIDER=deepseek` |
@@ -34,7 +34,7 @@ npx playwright test    # test end-to-end (pornește singur serverul pe portul 31
 ### 1. Supabase
 
 1. Creează un proiect Supabase.
-2. Aplică migrarea `supabase/migrations/0001_init.sql`: fie lipește-o în SQL editor, fie rulează `npx supabase db push` (după `npx supabase link`).
+2. Aplică migrarea `supabase/migrations/0001_init.sql`: fie lipește-o în SQL editor, fie rulează `npx supabase db push` (după `npx supabase link`). Migrarea creează tabelele, funcțiile `hit_rate_limit`, `save_draft` și `publish_project` și dă drepturi doar rolului `service_role`.
 3. Din setările proiectului ia **Project URL** și cheia **service_role** (Project Settings, API). Cheia service_role se folosește doar pe server; nu o pune în cod și nu o publica.
 
 ### 2. Vercel
@@ -54,13 +54,21 @@ npx playwright test    # test end-to-end (pornește singur serverul pe portul 31
 
 3. Fă deploy.
 
+> **Jurnalele de cereri conțin linkuri de editare.** Tokenul de editare face parte din URL (`/e/<token>`, `/api/e/<token>/…`), deci apare în jurnalele Vercel (și ale oricărui proxy). Cine vede jurnalele poate edita proiectele: dă acces la jurnale doar celor care au nevoie.
+
 ### 3. Verificare înainte de lansare
 
-Cu variabilele reale în mediu (de exemplu într-un `.env.local` local, necomis), rulează:
+Pune variabilele reale într-un `.env.local` local (necomis) și rulează:
 
 ```bash
-npx tsx scripts/smoke-repo.ts
-npx tsx scripts/smoke-ai.ts
+npx tsx --env-file=.env.local scripts/smoke-repo.ts
+npx tsx --env-file=.env.local scripts/smoke-ai.ts
 ```
 
-Primul verifică scrierea și citirea în Supabase, al doilea un apel real către DeepSeek. Lansează aplicația doar dacă ambele trec.
+Primul verifică scrierea și citirea în Supabase (inclusiv funcțiile `save_draft` și `publish_project`), al doilea un apel real către DeepSeek. Lansează aplicația doar dacă ambele trec.
+
+`smoke-repo` lasă în bază un proiect numit „Smoke test”. Șterge-l de mână după verificare, de exemplu în SQL editor:
+
+```sql
+delete from projects where draft -> 'project' ->> 'name' = 'Smoke test';
+```
