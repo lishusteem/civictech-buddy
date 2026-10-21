@@ -6,17 +6,18 @@ import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import type { Project, StepId } from '@/lib/project/schema';
 import { ConflictDialog } from './ConflictDialog';
 import { Overview } from './Overview';
+import { StepScreen, type SetDraft } from './StepScreen';
 import { StepSidebar } from './StepSidebar';
 import { useAutosave, type SaveStatus } from './useAutosave';
 
-export type RenderStep = (step: StepDef, draft: Project, setDraft: (next: Project) => void) => ReactNode;
+export type RenderStep = (step: StepDef, draft: Project, setDraft: SetDraft, onNext: () => void) => ReactNode;
 
 type Props = {
   token: string;
   initial: { draft: Project; draftUpdatedAt: string };
   /** ISO timestamp of the last publication, null if never published. */
   publishedAt: string | null;
-  /** Task 11 plugs StepScreen in here. */
+  /** Overrides the step screen (defaults to StepScreen). */
   renderStep?: RenderStep;
 };
 
@@ -27,15 +28,6 @@ const STATUS_TEXT: Partial<Record<SaveStatus, string>> = {
   saving: 'Se salvează…',
   error: 'Eroare la salvare — reîncercăm',
 };
-
-function StepPlaceholder({ step }: { step: StepDef }) {
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">{step.title}</h1>
-      <p className="mt-2 text-stone-700">{step.summary}</p>
-    </div>
-  );
-}
 
 const time = (iso: string) => Date.parse(iso);
 
@@ -51,6 +43,12 @@ export function Editor({ token, initial, publishedAt: initialPublishedAt, render
   const unpublished = publishedAt === null || time(draftUpdatedAt) > time(publishedAt);
   const neverPublished = publishedAt === null;
   const stepDef = view === 'overview' ? null : STEPS.find((s) => s.id === view)!;
+
+  /** After "Pasul următor": the next step, or the overview after the last one (Task 12 shows the summary there). */
+  function goNext() {
+    const i = STEPS.findIndex((s) => s.id === view);
+    setView(i >= 0 && i < STEPS.length - 1 ? STEPS[i + 1].id : 'overview');
+  }
 
   // PLACEHOLDER for Task 12: the full publish flow (KeepLinks, summary) replaces this handler.
   async function publish() {
@@ -119,13 +117,15 @@ export function Editor({ token, initial, publishedAt: initialPublishedAt, render
             onOverview={() => setView('overview')}
           />
         </div>
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
+        <main className="w-full min-w-0 flex-1 px-4 py-6">
           {stepDef === null ? (
-            <Overview token={token} project={draft} onEditStep={setView} />
+            <div className="mx-auto max-w-3xl">
+              <Overview token={token} project={draft} onEditStep={setView} />
+            </div>
           ) : renderStep ? (
-            renderStep(stepDef, draft, setDraft)
+            renderStep(stepDef, draft, setDraft, goNext)
           ) : (
-            <StepPlaceholder step={stepDef} />
+            <StepScreen key={stepDef.id} step={stepDef} draft={draft} setDraft={setDraft} token={token} onNext={goNext} />
           )}
         </main>
       </div>

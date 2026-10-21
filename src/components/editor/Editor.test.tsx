@@ -106,4 +106,17 @@ describe('Editor', () => {
     expect(await screen.findByText('Linkul nu mai e valid.', {}, { timeout: 3000 })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Înapoi la început' }).getAttribute('href')).toBe('/');
   });
+
+  it('renders the step screen and moves on with Pasul următor, to the overview after step 10', async () => {
+    const fetchMock = stubFetch(() => ({ alerts: [], text: '' }));
+    const draft = createEmptyProject('P');
+    render(<Editor token="t" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Tot proiectul' })).toBeTruthy();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
+  });
 });

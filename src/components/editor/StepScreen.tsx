@@ -1,0 +1,191 @@
+'use client';
+
+import { useState } from 'react';
+import type { AiTurn } from '@/lib/ai/stepTurn';
+import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
+import { ALERT_MESSAGES } from '@/lib/alerts/messages';
+import {
+  isSingleton,
+  normalizeCardIds,
+  removeEntity,
+  STEP_ENTITIES,
+  upsertEntity,
+  type Card,
+  type EntityKind,
+} from '@/lib/project/entities';
+import type { Alert, Project, StepId } from '@/lib/project/schema';
+import { STEPS, type StepDef } from '@/lib/steps/definitions';
+import { AlertList, alertKey } from './AlertList';
+import { defaultData } from './CardEditor';
+import { CardsPanel, type Editing } from './CardsPanel';
+import { ChatPanel } from './ChatPanel';
+
+/** useAutosave().setDraft: a draft, or an updater applied to the latest draft. */
+export type SetDraft = (update: Project | ((prev: Project) => Project)) => void;
+
+type Props = {
+  step: StepDef;
+  draft: Project;
+  setDraft: SetDraft;
+  token: string;
+  /** Called after "Pasul următor"; the Editor moves to the next step (or the overview after step 10). */
+  onNext: () => void;
+};
+
+const withStatus = (p: Project, step: StepId, status: Project['steps'][StepId]['status']): Project => ({
+  ...p,
+  steps: { ...p.steps, [step]: { ...p.steps[step], status } },
+});
+
+/** Accepted cards enter the project and move the step to in_progress (ruling 7). */
+function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
+  const next = normalizeCardIds(p, cards).reduce(upsertEntity, p);
+  return withStatus(next, step, 'in_progress');
+}
+
+export function StepScreen({ step, draft, setDraft, token, onNext }: Props) {
+  const [proposed, setProposed] = useState<Card[]>([]);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  const stepId = step.id;
+
+  const alerts = draft.alerts.filter((a) => a.step === step.number && a.status === 'open');
+
+  function onTurn(turn: AiTurn) {
+    if (turn.kind === 'question') return;
+    setProposed(turn.cards);
+    if (turn.kind === 'fallback' && turn.cards.length === 0) openForm();
+  }
+
+  function startNew(kind: EntityKind) {
+    setEditing({ origin: 'new', card: { kind, data: defaultData(kind, draft, stepId) } });
+  }
+
+  /** Form mode without AI: the step's first entity kind. */
+  function openForm() {
+    const kind = STEP_ENTITIES[stepId][0];
+    if (stepId === 'risks') {
+      const first = draft.preconditions[0];
+      setEditing(first ? { origin: 'accepted', card: { kind: 'precondition', data: { ...first } } } : null);
+    } else if (isSingleton(kind)) {
+      setEditing({ origin: 'accepted', card: { kind, data: defaultData(kind, draft, stepId) } });
+    } else {
+      startNew(kind);
+    }
+  }
+
+  function saveEdit(e: Editing, data: Card['data']) {
+    setDraft((p) => acceptCards(p, stepId, [{ kind: e.card.kind, data }]));
+    if (e.origin === 'proposed') setProposed((list) => list.filter((_, i) => i !== e.index));
+    setEditing(null);
+  }
+
+  function accept(index: number) {
+    const card = proposed[index];
+    setDraft((p) => acceptCards(p, stepId, [card]));
+    setProposed((list) => list.filter((_, i) => i !== index));
+    if (editing?.origin === 'proposed') setEditing(null);
+  }
+
+  function acceptAll() {
+    const cards = proposed;
+    setDraft((p) => acceptCards(p, stepId, cards));
+    setProposed([]);
+    if (editing?.origin === 'proposed') setEditing(null);
+  }
+
+  function discard(index: number) {
+    setProposed((list) => list.filter((_, i) => i !== index));
+    if (editing?.origin === 'proposed') setEditing(null);
+  }
+
+  const setAlertStatus = (target: Alert, status: Alert['status']) =>
+    setDraft((p) => ({
+      ...p,
+      alerts: p.alerts.map((a) => (a.step === target.step && alertKey(a) === alertKey(target) ? { ...a, status } : a)),
+    }));
+
+  /** "Lucrez la asta acum": back to the conversation, with the alert's question. */
+  function workOn(alert: Alert) {
+    setDraft((p) => ({
+      ...p,
+      steps: {
+        ...p.steps,
+        [stepId]: {
+          ...p.steps[stepId],
+          messages: [...p.steps[stepId].messages, { role: 'assistant' as const, content: alert.message || ALERT_MESSAGES[alert.code].message }].slice(-60),
+        },
+      },
+    }));
+  }
+
+  async function refreshAlerts() {
+    try {
+      const res = await fetch(`/api/e/${token}/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: stepId }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data?.alerts)) return;
+      const llm = data.alerts as Alert[];
+      setDraft((p) => ({ ...p, alerts: mergeAlerts(p.alerts, [...llm, ...computeCodeAlerts(p)]) }));
+    } catch {
+      // Background check: on failure the step simply shows no new LLM alerts.
+    }
+  }
+
+  function next() {
+    setDraft((p) => withStatus(p, stepId, 'done'));
+    void refreshAlerts();
+    onNext();
+  }
+
+  return (
+    <div>
+      <p className="text-sm font-medium text-teal-900">
+        Pasul {step.number} din {STEPS.length}
+      </p>
+      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">{step.title}</h1>
+      <p className="mt-1 text-stone-700">{step.summary}</p>
+
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <ChatPanel
+          step={stepId}
+          token={token}
+          messages={draft.steps[stepId].messages}
+          setDraft={setDraft}
+          onTurn={onTurn}
+          onFormMode={openForm}
+        />
+        <div className="min-w-0 space-y-4">
+          <AlertList alerts={alerts} onWork={workOn} onDismiss={(a) => setAlertStatus(a, 'dismissed')} />
+          <CardsPanel
+            step={stepId}
+            draft={draft}
+            proposed={proposed}
+            editing={editing}
+            setEditing={setEditing}
+            onSaveEdit={saveEdit}
+            onAccept={accept}
+            onAcceptAll={acceptAll}
+            onDiscard={discard}
+            onRemove={(card) => setDraft((p) => removeEntity(p, card.kind, card.data.id))}
+            onKeep={(id) => setDraft((p) => ({ ...p, stale: p.stale.filter((s) => s !== id) }))}
+            onAddManual={startNew}
+          />
+        </div>
+      </div>
+
+      <div className="mt-8 flex justify-end border-t border-stone-300 pt-4">
+        <button
+          type="button"
+          onClick={next}
+          className="rounded-lg bg-teal-800 px-5 py-2 font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+        >
+          Pasul următor →
+        </button>
+      </div>
+    </div>
+  );
+}

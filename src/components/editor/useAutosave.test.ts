@@ -53,6 +53,20 @@ describe('useAutosave', () => {
     expect(result.current.draftUpdatedAt).toBe(T2);
   });
 
+  it('applies updater functions to the latest draft, even twice in one tick', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
+    const { result } = setup(fetchMock);
+
+    act(() => {
+      result.current.setDraft((p) => ({ ...p, direction: 'a' }));
+      result.current.setDraft((p) => ({ ...p, project: { ...p.project, area: 'Cluj' } }));
+    });
+    expect(result.current.draft.direction).toBe('a');
+    expect(result.current.draft.project.area).toBe('Cluj');
+    await act(() => vi.advanceTimersByTimeAsync(900));
+    expect(bodyOf(fetchMock).draft).toMatchObject({ direction: 'a', project: { area: 'Cluj' } });
+  });
+
   it('uses the returned timestamp as expectedUpdatedAt for the next save', async () => {
     const fetchMock = vi.fn().mockResolvedValue(reply(200, { draftUpdatedAt: T2 }));
     const { result, initial } = setup(fetchMock);

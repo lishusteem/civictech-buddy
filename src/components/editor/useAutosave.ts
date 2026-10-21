@@ -150,7 +150,9 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
     };
   }, [clearTimer]);
 
-  const setDraft = useCallback((next: Project) => {
+  /** Accepts a draft or an updater of the latest draft (safe for several updates in one tick). */
+  const setDraft = useCallback((update: Project | ((prev: Project) => Project)) => {
+    const next = typeof update === 'function' ? update(draftRef.current) : update;
     const derived = withDerived(draftRef.current, next);
     draftRef.current = derived;
     setDraftState(derived);
