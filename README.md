@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ghidul de pornire
 
-## Getting Started
+Aplicație web în română care îl ghidează pe un inițiator de proiect civic prin 10 pași (context, teoria schimbării, organizare), cu ajutorul unui AI. La final rezultă o pagină publică a proiectului, iar proiectul se editează doar cu un link secret de editare (fără cont).
 
-First, run the development server:
+## Dezvoltare locală
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Cu `REPO=memory` și `AI_PROVIDER=fake` (valorile din `.env.example`) aplicația merge fără nicio cheie: datele sunt ținute în memorie (se pierd la repornire), iar AI-ul este unul fals, cu răspunsuri fixe pentru teste. Deschide <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Variabile de mediu (vezi `.env.example`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variabilă | Rol |
+| --- | --- |
+| `REPO` | `memory` (local, teste) sau `supabase` (producție) |
+| `AI_PROVIDER` | `fake` (local, teste) sau `deepseek` (producție) |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | necesare când `REPO=supabase` |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `DEEPSEEK_BASE_URL` | necesare când `AI_PROVIDER=deepseek` |
 
-## Learn More
+## Teste
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test               # teste unitare și de componente (Vitest)
+npx playwright install chromium   # o singură dată
+npx playwright test    # test end-to-end (pornește singur serverul pe portul 3100, cu REPO=memory și AI_PROVIDER=fake)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Publicare (deploy)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Supabase
 
-## Deploy on Vercel
+1. Creează un proiect Supabase.
+2. Aplică migrarea `supabase/migrations/0001_init.sql`: fie lipește-o în SQL editor, fie rulează `npx supabase db push` (după `npx supabase link`).
+3. Din setările proiectului ia **Project URL** și cheia **service_role** (Project Settings, API). Cheia service_role se folosește doar pe server; nu o pune în cod și nu o publica.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2. Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Creează un proiect Vercel legat de repository-ul GitHub.
+2. Adaugă variabilele de mediu de producție:
+
+   ```
+   REPO=supabase
+   AI_PROVIDER=deepseek
+   SUPABASE_URL=<Project URL din Supabase>
+   SUPABASE_SERVICE_ROLE_KEY=<cheia service_role>
+   DEEPSEEK_API_KEY=<cheia DeepSeek>
+   DEEPSEEK_MODEL=deepseek-flash
+   DEEPSEEK_BASE_URL=https://api.deepseek.com
+   ```
+
+3. Fă deploy.
+
+### 3. Verificare înainte de lansare
+
+Cu variabilele reale în mediu (de exemplu într-un `.env.local` local, necomis), rulează:
+
+```bash
+npx tsx scripts/smoke-repo.ts
+npx tsx scripts/smoke-ai.ts
+```
+
+Primul verifică scrierea și citirea în Supabase, al doilea un apel real către DeepSeek. Lansează aplicația doar dacă ambele trec.
