@@ -14,6 +14,7 @@ const DONT_KNOW = 'Nu știu';
 const PROPOSE_NOW = 'Propune rezumatul acum.';
 const AI_DOWN = 'AI-ul nu răspunde acum.';
 const NOTED = 'Am notat întrebarea ca «de aflat». Mergi mai departe.';
+const ACCEPT_HINT = 'Ca să salvezi propunerea, apasă «Acceptă tot» sau «Acceptă» pe fiecare card.';
 const PROPOSAL_TEXT = 'Uite ce am înțeles. Verifică propunerile de lângă conversație.';
 
 type Props = {
@@ -25,6 +26,8 @@ type Props = {
   flush: () => Promise<void>;
   onTurn: (turn: AiTurn) => void;
   onFormMode: () => void;
+  /** The step has unaccepted AI proposals (shown next to the chat). */
+  hasPending: boolean;
 };
 
 const isDontKnow = (text: string) =>
@@ -72,7 +75,7 @@ const buttonBase =
   'rounded-lg px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60';
 const secondary = `${buttonBase} border border-teal-800 text-teal-900 hover:bg-teal-50`;
 
-export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFormMode }: Props) {
+export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFormMode, hasPending }: Props) {
   const [text, setText] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +83,9 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
   const inputId = useId();
   const lastAiRef = useRef<HTMLLIElement>(null);
   const seenAi = useRef<number | null>(null);
+  const autoAsked = useRef(false);
+  // User messages sent while proposals were pending (a hint under them; never stored).
+  const [hinted, setHinted] = useState<Message[]>([]);
 
   const aiCount = messages.filter((m) => m.role === 'assistant').length;
   const lastAiIndex = messages.findLastIndex((m) => m.role === 'assistant');
@@ -118,6 +124,7 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
 
   function send(content: string) {
     const userMessage: Message = { role: 'user', content };
+    if (hasPending) setHinted((h) => [...h, userMessage]);
     const chat = [...messages, userMessage].slice(-MAX_MESSAGES);
     setNotice(false);
     const streak = dontKnowStreak(chat);
@@ -132,6 +139,14 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
     void ask(chat);
   }
 
+  // The AI asks first: a step opened without messages gets its first question right away (once per mount).
+  useEffect(() => {
+    if (messages.length > 0 || autoAsked.current) return;
+    autoAsked.current = true;
+    void ask([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!canSend) return;
@@ -144,14 +159,7 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
 
   return (
     <section aria-label="Conversația" className="flex min-w-0 flex-col gap-4">
-      {messages.length === 0 ? (
-        <div className="rounded-xl border border-stone-300 bg-stone-50 p-4 text-stone-800">
-          <p>Scrie liber ce știi despre pasul ăsta sau lasă AI-ul să pună prima întrebare.</p>
-          <button type="button" onClick={() => void ask([])} disabled={pending} className={`${secondary} mt-3`}>
-            Începe conversația
-          </button>
-        </div>
-      ) : (
+      {messages.length > 0 && (
         <ol className="flex flex-col gap-3">
           {messages.map((m, i) =>
             m.role === 'assistant' ? (
@@ -168,15 +176,24 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
               <li key={i} className="max-w-[90%] self-end whitespace-pre-wrap rounded-xl bg-teal-50 p-3 text-stone-900">
                 <span className="sr-only">Tu: </span>
                 {m.content}
+                {hasPending && hinted.includes(m) && (
+                  <span className="mt-1 block text-sm text-amber-900">{ACCEPT_HINT}</span>
+                )}
               </li>
             ),
           )}
         </ol>
       )}
 
+      {hasPending && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+        <p className="text-sm text-teal-900">
+          Propunerea e în «Rezultatul pasului»<span className="hidden md:inline"> (în dreapta)</span> → verifică și apasă Acceptă.
+        </p>
+      )}
+
       {pending && (
         <p role="status" className="text-sm text-stone-600">
-          AI-ul se gândește…
+          {messages.length === 0 ? 'AI-ul pregătește prima întrebare…' : 'AI-ul se gândește…'}
         </p>
       )}
       {notice && (

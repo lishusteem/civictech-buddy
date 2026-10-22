@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PHASES, STEPS, minutesLeft } from '@/lib/steps/definitions';
 import type { Project, StepId } from '@/lib/project/schema';
+import { effectiveStatus, isStepUnlocked } from '@/lib/steps/completion';
 
 type Props = {
   project: Project;
@@ -63,18 +64,21 @@ export function StepSidebar({ project, current, onSelect, onOverview }: Props) {
             <h2 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-teal-800">{phase.title}</h2>
             <ol>
               {STEPS.filter((s) => s.phase === phase.id).map((s) => {
-                const status = project.steps[s.id].status;
+                const status = effectiveStatus(project, s.id);
+                const locked = !isStepUnlocked(project, s.id);
                 const isCurrent = s.id === current;
                 const hasAlert = project.alerts.some((a) => a.status === 'open' && a.step === s.number);
                 return (
                   <li key={s.id} data-step={s.id} data-alert={hasAlert ? 'true' : undefined} aria-current={isCurrent ? 'step' : undefined}>
                     <button
                       type="button"
+                      disabled={locked}
+                      title={locked ? 'Termină întâi pașii anteriori.' : undefined}
                       onClick={() => {
                         onSelect(s.id);
                         setOpen(false);
                       }}
-                      className={`${itemClass} ${isCurrent ? 'bg-teal-100 font-medium text-teal-950' : 'text-stone-800'}`}
+                      className={`${itemClass} ${isCurrent ? 'bg-teal-100 font-medium text-teal-950' : 'text-stone-800'} ${locked ? 'cursor-not-allowed opacity-50 hover:bg-transparent' : ''}`}
                     >
                       <span
                         aria-hidden

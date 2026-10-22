@@ -6,6 +6,7 @@ import {
   normalizeCardIds,
   remainingCapacity,
   removeEntity,
+  savedEntitiesForStep,
   upsertEntity,
   type Card,
 } from './entities';
@@ -136,5 +137,18 @@ describe('listMax / remainingCapacity', () => {
     expect(remainingCapacity(p, 'targetChange')).toBe(1);
     p.targetChanges.push({ id: 't3', text: 'c', signal: '' }, { id: 't4', text: 'd', signal: '' });
     expect(remainingCapacity(p, 'targetChange')).toBe(0);
+  });
+});
+
+describe('savedEntitiesForStep', () => {
+  it('does not count an empty singleton, but counts a filled one', () => {
+    const p = createEmptyProject('P');
+    expect(savedEntitiesForStep(p, 'problem')).toEqual([]);
+    expect(savedEntitiesForStep(p, 'project')).toEqual([]);
+    expect(savedEntitiesForStep(p, 'target')).toEqual([]);
+    p.problem.statement = 'Sesizările se pierd.';
+    p.project.area = 'Cluj';
+    expect(savedEntitiesForStep(p, 'problem')).toHaveLength(1);
+    expect(savedEntitiesForStep(p, 'project')).toHaveLength(1);
   });
 });

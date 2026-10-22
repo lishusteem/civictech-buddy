@@ -91,6 +91,7 @@ export function defaultProposal(step: StepId, context: Card[]): string {
     case 'actors':
       return proposal([
         { kind: 'actor', data: { id: 'a1', name: 'Actor de test', type: 'user', power: 'low', stance: 'unknown', excluded: false } },
+        { kind: 'actor', data: { id: 'a2', name: 'Al doilea actor de test', type: 'institution', power: 'high', stance: 'unknown', excluded: false } },
       ]);
     case 'relations':
       if (actors.length < 2) return question('Ce actori vrei să legi?');

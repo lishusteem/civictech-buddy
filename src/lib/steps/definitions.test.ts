@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/empty';
+import { fillSteps } from './completion.fixtures';
 import { STEPS, minutesLeft } from './definitions';
 
 describe('step definitions', () => {
@@ -20,8 +21,15 @@ describe('step definitions', () => {
 
   it('minutesLeft skips done steps', () => {
     const p = createEmptyProject('x');
+    fillSteps(p, ['project', 'problem']);
     p.steps.project.status = 'done';
     p.steps.problem.status = 'done';
     expect(minutesLeft(p)).toBe(23);
+  });
+
+  it('minutesLeft ignores a done status without saved content', () => {
+    const p = createEmptyProject('x');
+    p.steps.project.status = 'done';
+    expect(minutesLeft(p)).toBe(30);
   });
 });

@@ -185,6 +185,16 @@ export function entitiesForStep(p: Project, step: StepId): Card[] {
   return STEP_ENTITIES[step].flatMap((kind) => cardsOfKind(p, kind));
 }
 
+/** Like entitiesForStep, but a singleton (project info, problem, direction) that is still empty does not count. */
+export function savedEntitiesForStep(p: Project, step: StepId): Card[] {
+  const empty = createEmptyProject(p.project.name);
+  return entitiesForStep(p, step).filter((card) => {
+    if (!isSingleton(card.kind)) return true;
+    const blank = cardsOfKind(empty, card.kind)[0].data;
+    return JSON.stringify(card.data) !== JSON.stringify(blank);
+  });
+}
+
 function mapRef(value: unknown, renames: Map<string, string>): unknown {
   if (typeof value === 'string') return renames.get(value) ?? value;
   if (Array.isArray(value)) return value.map((v) => mapRef(v, renames));

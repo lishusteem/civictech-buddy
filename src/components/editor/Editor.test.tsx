@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import { createEmptyProject } from '@/lib/project/empty';
+import { fillSteps } from '@/lib/steps/completion.fixtures';
+import { STEPS } from '@/lib/steps/definitions';
 import { Editor } from './Editor';
 
 const T1 = '2026-10-21T10:00:00.000Z';
@@ -21,6 +23,9 @@ function stubFetch(handler: (url: string) => unknown) {
   return fn;
 }
 
+const ALL = STEPS.map((s) => s.id);
+const BEFORE_BACKLOG = ALL.slice(0, -1);
+
 describe('Editor', () => {
   it('opens on step 1 when no step is done and skips the summary call', () => {
     const fetchMock = stubFetch(() => ({}));
@@ -31,7 +36,7 @@ describe('Editor', () => {
 
   it('opens on the overview with the AI summary when a step is done', async () => {
     stubFetch(() => ({ text: 'Un rezumat scurt.' }));
-    const draft = createEmptyProject('P');
+    const draft = fillSteps(createEmptyProject('P'), ALL);
     draft.steps.project.status = 'done';
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Tot proiectul' })).toBeTruthy();
@@ -40,9 +45,31 @@ describe('Editor', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
   });
 
+  it('reopens a legacy draft (steps marked done but empty) at its first incomplete step', () => {
+    stubFetch(() => ({ text: '' }));
+    const draft = fillSteps(createEmptyProject('P'), ['project']);
+    draft.steps.project.status = 'done';
+    draft.steps.problem.status = 'done';
+    draft.steps.existing.status = 'done';
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+    expect(screen.getByText(/Încă nimic salvat/)).toBeTruthy();
+  });
+
+  it('does not let the sidebar jump past the first incomplete step, but allows going back', () => {
+    stubFetch(() => ({ text: '' }));
+    const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+    render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
+    expect((screen.getByRole('button', { name: /^Ce există deja/ }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /^Ce există deja/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeTruthy();
+  });
+
   it('shows no summary when the call returns empty text', async () => {
     const fetchMock = stubFetch(() => ({ text: '' }));
-    const draft = createEmptyProject('P');
+    const draft = fillSteps(createEmptyProject('P'), ALL);
     draft.steps.project.status = 'done';
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -136,11 +163,13 @@ describe('Editor', () => {
       json: async () => (url.endsWith('/alerts') ? { alerts: [] } : { draftUpdatedAt: '2026-10-21T10:00:05.000Z' }),
     }));
     vi.stubGlobal('fetch', fetchMock);
-    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    const draft = createEmptyProject('P');
+    draft.project.description = 'O descriere';
+    render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
     fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Ana' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
 
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/e/t/alerts'));
     const urls = fetchMock.mock.calls.map((c) => c[0]);
@@ -152,28 +181,47 @@ describe('Editor', () => {
     expect(saved.steps.project.status).toBe('done');
   });
 
-  it('renders the step screen and moves on with Pasul următor, to the overview after step 10', async () => {
+  it('renders the step screen and moves on when the step is complete, to the summary after step 10', async () => {
     const fetchMock = stubFetch(() => ({ alerts: [], text: '' }));
-    const draft = createEmptyProject('P');
+    const draft = fillSteps(createEmptyProject('P'), ALL);
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editează: Proiectul și echipa' }));
+    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Pasul următor →' }));
+    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
     expect(screen.getByRole('heading', { level: 1, name: 'Rezumat' })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
   });
 
+  it('keeps unaccepted proposals when switching to another step and back', async () => {
+    const card = { kind: 'teamMember', data: { id: 'm1', name: 'Ana', skills: [], hoursPerWeek: 5 } };
+    stubFetch((url) => (url.endsWith('/ai') ? { kind: 'proposal', text: 'Uite.', cards: [card] } : { alerts: [] }));
+    const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+    render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+    expect(await screen.findByText('propus')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Problema/ }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Propuneri neacceptate' })).toBeTruthy();
+    expect(screen.getByText('propus')).toBeTruthy();
+  });
+
   it('appends organizing items on the first entry only; the button adds them back on demand', async () => {
     stubFetch(() => ({ alerts: [], draftUpdatedAt: T1 }));
-    const draft = createEmptyProject('P');
+    // Steps 1-9 complete: the editor opens on the backlog, which is entered "for the first time" through the sidebar.
+    const draft = fillSteps(createEmptyProject('P'), BEFORE_BACKLOG);
     draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Câți oameni?' }];
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     const backlogBtn = () => screen.getByRole('button', { name: /Backlog de organizare/ });
+    fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
     fireEvent.click(backlogBtn());
     expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Șterge' })[0]);
+    const card = screen.getByText('Află: Câți oameni?').closest('li')!;
+    fireEvent.click(within(card).getByRole('button', { name: 'Șterge' }));
     expect(screen.queryByText('Află: Câți oameni?')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));

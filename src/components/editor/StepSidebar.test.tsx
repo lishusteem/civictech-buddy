@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { createEmptyProject } from '@/lib/project/empty';
+import { fillSteps } from '@/lib/steps/completion.fixtures';
 import { StepSidebar } from './StepSidebar';
 
 afterEach(cleanup);
@@ -17,7 +18,7 @@ describe('StepSidebar', () => {
   });
 
   it('shows remaining minutes (30 minus done steps)', () => {
-    const p = createEmptyProject('P');
+    const p = fillSteps(createEmptyProject('P'), ['project', 'problem']);
     p.steps.project.status = 'done';
     p.steps.problem.status = 'done';
     render(<StepSidebar project={p} current="existing" onSelect={() => {}} />);
@@ -38,7 +39,8 @@ describe('StepSidebar', () => {
 
   it('groups 10 steps in 3 phases and reports selection', () => {
     const onSelect = vi.fn();
-    render(<StepSidebar project={createEmptyProject('P')} current="project" onSelect={onSelect} />);
+    const p = fillSteps(createEmptyProject('P'), ['project', 'problem', 'existing', 'target', 'actors', 'relations', 'preconditions']);
+    render(<StepSidebar project={p} current="project" onSelect={onSelect} />);
     for (const t of ['Contextul', 'Teoria schimbării', 'Organizarea']) {
       expect(screen.getByText(t)).toBeTruthy();
     }
@@ -53,5 +55,26 @@ describe('StepSidebar', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('blocks steps after the first incomplete one, allows earlier ones, and ✓ needs saved content', () => {
+    const onSelect = vi.fn();
+    const p = fillSteps(createEmptyProject('P'), ['project', 'problem']);
+    p.steps.project.status = 'done';
+    p.steps.problem.status = 'done';
+    p.steps.existing.status = 'done'; // done but empty: not a ✓
+    const { container } = render(<StepSidebar project={p} current="existing" onSelect={onSelect} />);
+    const btn = (name: RegExp) => screen.getByRole('button', { name }) as HTMLButtonElement;
+    expect(btn(/Proiectul și echipa/).disabled).toBe(false);
+    expect(btn(/Ce există deja/).disabled).toBe(false);
+    const blocked = btn(/Schimbarea țintă/);
+    expect(blocked.disabled).toBe(true);
+    expect(blocked.getAttribute('title')).toBe('Termină întâi pașii anteriori.');
+    fireEvent.click(blocked);
+    expect(onSelect).not.toHaveBeenCalled();
+    fireEvent.click(btn(/Proiectul și echipa/));
+    expect(onSelect).toHaveBeenCalledWith('project');
+    expect(container.querySelector('[data-step="existing"]')!.textContent).not.toContain('✓');
+    expect(container.querySelector('[data-step="problem"]')!.textContent).toContain('✓');
   });
 });

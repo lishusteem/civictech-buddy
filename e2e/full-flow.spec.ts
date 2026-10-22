@@ -34,20 +34,23 @@ test.beforeAll(async ({ browser, playwright }) => {
   await page.close();
 });
 
-/** One step: send an answer, accept the fake proposal if there is one, go to the next step. */
+/** One step: the AI asks first on its own, answer it, accept the fake proposal if there is one, finish the step. */
 async function completeStep(page: Page) {
+  const replies = page.getByRole('listitem').filter({ hasText: /^AI:/ });
+  await expect(replies.first()).toBeVisible();
+  await expect(page.getByText('AI-ul pregătește prima întrebare…')).toBeHidden();
+  const before = await replies.count();
   await page.getByLabel('Răspunsul tău').fill('Un răspuns de test.');
   await page.getByRole('button', { name: 'Trimite', exact: true }).click();
   // The fake may answer with a question instead of a proposal (e.g. relations with one actor).
-  const acceptAll = page.getByRole('button', { name: 'Acceptă tot' });
-  const reply = page.getByRole('listitem').filter({ hasText: /^AI:/ });
-  await expect(reply.first()).toBeVisible();
+  await expect(replies).toHaveCount(before + 1);
   await expect(page.getByText('AI-ul se gândește…')).toBeHidden();
+  const acceptAll = page.getByRole('region', { name: 'Propuneri', exact: true }).getByRole('button', { name: 'Acceptă tot' });
   if (await acceptAll.isVisible()) {
     await acceptAll.click();
     await expect(acceptAll).toBeHidden();
   }
-  await page.getByRole('button', { name: /Pasul următor/ }).click();
+  await page.getByRole('button', { name: /Am terminat pasul/ }).click();
 }
 
 test('full flow: create, 10 steps, publish, update, conflict', async ({ page, browser }) => {

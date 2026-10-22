@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { STEPS } from '@/lib/steps/definitions';
+import { effectiveStatus, isStepUnlocked } from '@/lib/steps/completion';
 import { entitiesForStep, type Card } from '@/lib/project/entities';
 import type { Project, StepId } from '@/lib/project/schema';
 
@@ -59,7 +60,7 @@ function useSummary(token: string, enabled: boolean): string {
 }
 
 export function Overview({ token, project, onEditStep }: Props) {
-  const anyDone = STEPS.some((s) => project.steps[s.id].status === 'done');
+  const anyDone = STEPS.some((s) => effectiveStatus(project, s.id) === 'done');
   const summary = useSummary(token, anyDone);
 
   return (
@@ -85,13 +86,14 @@ export function Overview({ token, project, onEditStep }: Props) {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 id={`overview-${s.id}`} className="font-semibold text-stone-900">
                   {s.number}. {s.title}{' '}
-                  <span className="text-sm font-normal text-stone-600">· {STATUS_LABEL[project.steps[s.id].status]}</span>
+                  <span className="text-sm font-normal text-stone-600">· {STATUS_LABEL[effectiveStatus(project, s.id)]}</span>
                 </h2>
                 <button
                   type="button"
                   onClick={() => onEditStep(s.id)}
+                  disabled={!isStepUnlocked(project, s.id)}
                   aria-label={`Editează: ${s.title}`}
-                  className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+                  className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
                 >
                   Editează
                 </button>

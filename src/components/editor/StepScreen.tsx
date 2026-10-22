@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import type { AiTurn } from '@/lib/ai/stepTurn';
 import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
 import { ALERT_MESSAGES } from '@/lib/alerts/messages';
 import {
+  savedEntitiesForStep,
   fitsInList,
   isSingleton,
   normalizeCardIds,
@@ -15,6 +16,7 @@ import {
   type EntityKind,
 } from '@/lib/project/entities';
 import type { Alert, Project, StepId } from '@/lib/project/schema';
+import { effectiveStatus, isStepComplete, missingForStep } from '@/lib/steps/completion';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
@@ -34,6 +36,9 @@ type Props = {
   onNext: () => void;
   /** useAutosave().flush: the AI routes read the server-saved draft, so pending edits are saved first. */
   flush?: () => Promise<void>;
+  /** Unaccepted AI proposals of this step; the Editor keeps them per step for the session. */
+  proposed: Card[];
+  setProposed: Dispatch<SetStateAction<Card[]>>;
 };
 
 const noFlush = () => Promise.resolve();
@@ -52,8 +57,8 @@ function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
   return next.steps[step].status === 'untouched' ? withStatus(next, step, 'in_progress') : next;
 }
 
-export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush }: Props) {
-  const [proposed, setProposed] = useState<Card[]>([]);
+export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush, proposed, setProposed }: Props) {
+  const [confirmingNext, setConfirmingNext] = useState(false);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [suggestNote, setSuggestNote] = useState(false);
   const stepId = step.id;
@@ -153,11 +158,44 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
     if (!none) setDraft(appendOrganizingItems);
   }
 
-  function next() {
-    setDraft((p) => withStatus(p, stepId, 'done'));
+  /** The existing-initiatives step can be completed by saying that nothing similar was found. */
+  function noneFound() {
+    setDraft((p) =>
+      acceptCards(p, stepId, [
+        {
+          kind: 'existing',
+          data: { id: '', name: 'Nimic similar găsit', url: null, difference: 'Dev-ul a căutat și n-a găsit inițiative similare.' },
+        },
+      ]),
+    );
+  }
+
+  /** A step counts as done only when it is complete (the sidebar ✓ means saved content). */
+  function finish() {
+    setDraft((p) => (isStepComplete(p, stepId) ? withStatus(p, stepId, 'done') : p));
     void refreshAlerts();
     onNext();
   }
+
+  function next() {
+    if (proposed.length > 0) setConfirmingNext(true);
+    else finish();
+  }
+
+  function acceptAllAndContinue() {
+    acceptAll();
+    finish();
+  }
+
+  const savedCount = savedEntitiesForStep(draft, stepId).length;
+  const done = effectiveStatus(draft, stepId) === 'done';
+  const complete = isStepComplete(draft, stepId);
+  const completeAfterAccept = proposed.length > 0 && isStepComplete(acceptCards(draft, stepId, proposed), stepId);
+  const canFinish = complete || completeAfterAccept;
+  const hint = canFinish ? '' : missingForStep(draft, stepId);
+  const nextTitle = STEPS[step.number]?.title ?? 'Rezumat';
+  const primaryBtn =
+    'rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
 
   return (
     <div>
@@ -175,10 +213,22 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
           setDraft={setDraft}
           flush={flush}
           onTurn={onTurn}
+          hasPending={proposed.length > 0}
           onFormMode={openForm}
         />
         <div className="min-w-0 space-y-4">
           <AlertList alerts={alerts} onWork={workOn} onDismiss={(a) => setAlertStatus(a, 'dismissed')} />
+          {stepId === 'existing' && (
+            <div>
+              <button
+                type="button"
+                onClick={noneFound}
+                className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+              >
+                Nu am găsit nimic similar
+              </button>
+            </div>
+          )}
           {stepId === 'backlog' && (
             <div>
               <button
@@ -212,14 +262,68 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end border-t border-stone-300 pt-4">
-        <button
-          type="button"
-          onClick={next}
-          className="rounded-lg bg-teal-800 px-5 py-2 font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+      {proposed.length > 0 && (
+        <section
+          aria-label="Propuneri neacceptate"
+          className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3"
         >
-          Pasul următor →
-        </button>
+          <p className="text-sm font-medium text-amber-950">
+            Ai {proposed.length} {proposed.length === 1 ? 'propunere neacceptată' : 'propuneri neacceptate'}. Nu se salvează până nu le accepți.
+          </p>
+          <button type="button" onClick={acceptAll} className={primaryBtn}>
+            Acceptă tot
+          </button>
+        </section>
+      )}
+
+      <p
+        className={`${proposed.length > 0 ? 'mt-3' : 'mt-8'} text-sm ${
+          savedCount > 0 ? 'font-medium text-teal-900' : 'text-amber-900'
+        }`}
+      >
+        {done ? 'Pas încheiat · ' : ''}
+        {savedCount > 0
+          ? `✓ Salvat pentru acest pas: ${savedCount} elemente.`
+          : 'Încă nimic salvat la acest pas. Acceptă propunerile AI-ului sau adaugă manual.'}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-3 border-t border-stone-300 pt-4">
+        {confirmingNext && proposed.length > 0 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmingNext(false);
+                setProposed([]);
+                finish();
+              }}
+              disabled={!complete}
+              className="rounded-lg border border-teal-800 px-4 py-2 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-50"
+            >
+              Continuă fără ele
+            </button>
+            <button type="button" onClick={acceptAllAndContinue} disabled={!completeAfterAccept} className={`${primaryBtn} disabled:opacity-50`}>
+              Acceptă tot și continuă
+            </button>
+          </>
+        ) : (
+          <>
+            {hint && (
+              <p id="finish-hint" className="text-sm text-amber-900">
+                {hint}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={next}
+              disabled={!canFinish}
+              aria-describedby={hint ? 'finish-hint' : undefined}
+              className={`${primaryBtn} px-5 disabled:opacity-50`}
+            >
+              Am terminat pasul → {nextTitle}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

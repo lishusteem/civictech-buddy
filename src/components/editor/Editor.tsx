@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import type { Card } from '@/lib/project/entities';
+import { firstIncompleteStep, isStepUnlocked } from '@/lib/steps/completion';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import { appendOrganizingItems } from '@/lib/backlog/organizing';
 import type { Project, StepId } from '@/lib/project/schema';
@@ -42,9 +44,8 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   // The token changes when the edit link is regenerated.
   const [token, setToken] = useState(initialToken);
   const { draft, draftUpdatedAt, setDraft, flush, status, fatal, rejected, conflict, resolveConflict } = useAutosave(token, initial);
-  const [view, setView] = useState<View>(() =>
-    STEPS.some((s) => initial.draft.steps[s.id].status === 'done') ? 'overview' : 'project',
-  );
+  // Reopens at the first step that is not complete (a stored 'done' without saved content does not count).
+  const [view, setView] = useState<View>(() => firstIncompleteStep(initial.draft) ?? 'overview');
   const [publishedAt, setPublishedAt] = useState(initialPublishedAt);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState(false);
@@ -55,6 +56,8 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
       : null,
   );
   const [updatedNotice, setUpdatedNotice] = useState(false);
+  // Unaccepted AI proposals per step; kept while the user moves between steps (lost on reload).
+  const [proposals, setProposals] = useState<Partial<Record<StepId, Card[]>>>({});
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuError, setMenuError] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -64,7 +67,10 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   const stepDef = view === 'overview' || view === 'summary' ? null : STEPS.find((s) => s.id === view)!;
 
   /** Moves to a view. The first entry into the backlog step appends the organizing items (never removes anything). */
-  function go(next: View) {
+  function go(next: View, afterFinish = false) {
+    // Steps open in order: a step is reachable once every step before it is complete.
+    // (After finishing a step the draft in this closure is one update behind, and the button was gated already.)
+    if (!afterFinish && next !== 'overview' && next !== 'summary' && !isStepUnlocked(draft, next)) return;
     if (next === 'backlog' && view !== 'backlog' && draft.steps.backlog.status === 'untouched') {
       // First visit only; the step becomes in_progress so deleted items are not suggested again.
       setDraft((prev) => {
@@ -78,7 +84,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   /** After "Pasul următor": the next step, or the summary after the last one. */
   function goNext() {
     const i = STEPS.findIndex((s) => s.id === view);
-    go(i >= 0 && i < STEPS.length - 1 ? STEPS[i + 1].id : 'summary');
+    go(i >= 0 && i < STEPS.length - 1 ? STEPS[i + 1].id : 'summary', true);
   }
 
   /** Shared by the summary and the unpublished bar: save, publish, then show the links on the first publication. */
@@ -262,7 +268,22 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
           ) : renderStep ? (
             renderStep(stepDef, draft, setDraft, goNext)
           ) : (
-            <StepScreen key={stepDef.id} step={stepDef} draft={draft} setDraft={setDraft} token={token} onNext={goNext} flush={flush} />
+            <StepScreen
+              key={stepDef.id}
+              step={stepDef}
+              draft={draft}
+              setDraft={setDraft}
+              token={token}
+              onNext={goNext}
+              flush={flush}
+              proposed={proposals[stepDef.id] ?? []}
+              setProposed={(update) =>
+                setProposals((all) => ({
+                  ...all,
+                  [stepDef.id]: typeof update === 'function' ? update(all[stepDef.id] ?? []) : update,
+                }))
+              }
+            />
           )}
         </main>
       </div>

@@ -1,4 +1,5 @@
 import type { Project, StepId } from '../project/schema';
+import { effectiveStatus } from './completion';
 
 export type Phase = 'context' | 'toc' | 'organize';
 
@@ -31,5 +32,5 @@ export const PHASES: { id: Phase; title: 'Contextul' | 'Teoria schimbării' | 'O
 ];
 
 export function minutesLeft(project: Project): number {
-  return STEPS.reduce((sum, s) => (project.steps[s.id].status === 'done' ? sum : sum + s.minutes), 0);
+  return STEPS.reduce((sum, s) => (effectiveStatus(project, s.id) === 'done' ? sum : sum + s.minutes), 0);
 }
