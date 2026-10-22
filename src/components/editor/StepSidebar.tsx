@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PHASES, STEPS, minutesLeft } from '@/lib/steps/definitions';
 import type { Project, StepId } from '@/lib/project/schema';
 import { effectiveStatus, isStepUnlocked } from '@/lib/steps/completion';
+import { isQuestionAlert } from '@/lib/alerts/messages';
 
 type Props = {
   project: Project;
@@ -67,7 +68,8 @@ export function StepSidebar({ project, current, onSelect, onOverview }: Props) {
                 const status = effectiveStatus(project, s.id);
                 const locked = !isStepUnlocked(project, s.id);
                 const isCurrent = s.id === current;
-                const hasAlert = project.alerts.some((a) => a.status === 'open' && a.step === s.number);
+                // Only open questions are flagged; checklist alerts show up in the step's "Ce cere pasul" rows.
+                const hasAlert = project.alerts.some((a) => a.status === 'open' && a.step === s.number && isQuestionAlert(a.code));
                 return (
                   <li key={s.id} data-step={s.id} data-alert={hasAlert ? 'true' : undefined} aria-current={isCurrent ? 'step' : undefined}>
                     <button
@@ -95,11 +97,12 @@ export function StepSidebar({ project, current, onSelect, onOverview }: Props) {
                       <span className="flex-1">
                         {s.title}
                         <span className="sr-only"> ({STATUS_LABEL[status]})</span>
+                        {locked && <span className="block text-xs text-stone-600">nu poți începe încă</span>}
                       </span>
                       {hasAlert && (
-                        <span className="rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-900">
-                          <span aria-hidden>!</span>
-                          <span className="sr-only">are puncte deschise</span>
+                        <span className="rounded-full bg-sky-100 px-2 text-xs font-semibold text-sky-800">
+                          <span aria-hidden>?</span>
+                          <span className="sr-only">are întrebări deschise</span>
                         </span>
                       )}
                     </button>

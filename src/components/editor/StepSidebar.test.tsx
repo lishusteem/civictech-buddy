@@ -25,16 +25,28 @@ describe('StepSidebar', () => {
     expect(screen.getByText('~23 min rămase')).toBeTruthy();
   });
 
-  it('flags only steps with an open alert', () => {
+  it('flags only steps with an open question with a ?, not checklist alerts', () => {
     const p = createEmptyProject('P');
     p.alerts = [
       { code: 'no_evidence', step: 2, refs: [], status: 'open', message: 'm' },
-      { code: 'first_in_world', step: 3, refs: [], status: 'dismissed', message: 'm' },
+      { code: 'solution_in_problem', step: 2, refs: [], status: 'open', message: 'm' },
+      { code: 'nobody_excluded', step: 5, refs: [], status: 'open', message: 'm' },
+      { code: 'team_no_time', step: 1, refs: [], status: 'dismissed', message: 'm' },
     ];
     const { container } = render(<StepSidebar project={p} current="project" onSelect={() => {}} />);
     const flagged = container.querySelectorAll('[data-alert="true"]');
     expect(flagged).toHaveLength(1);
     expect(flagged[0].textContent).toContain('Problema');
+    expect(flagged[0].textContent).toContain('?');
+    expect(flagged[0].textContent).toContain('are întrebări deschise');
+  });
+
+  it('says in visible text that a locked step cannot be started yet', () => {
+    const p = fillSteps(createEmptyProject('P'), ['project']);
+    const { container } = render(<StepSidebar project={p} current="problem" onSelect={() => {}} />);
+    expect(container.querySelector('[data-step="existing"]')!.textContent).toContain('nu poți începe încă');
+    expect(container.querySelector('[data-step="problem"]')!.textContent).not.toContain('nu poți începe încă');
+    expect(screen.getAllByText('nu poți începe încă')).toHaveLength(8);
   });
 
   it('groups 10 steps in 3 phases and reports selection', () => {
