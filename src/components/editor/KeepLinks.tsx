@@ -60,37 +60,51 @@ export function KeepLinks({ slug, editToken, projectName, published = true, onDo
     }
   }
 
-  const rows = [
-    ...(published
-      ? [{ key: 'public' as const, label: 'Pagina publică (o poți da oricui)', url: publicUrl, button: 'Copiază linkul public' }]
-      : []),
-    { key: 'edit' as const, label: 'Linkul de editare (doar pentru echipă)', url: editUrl, button: 'Copiază linkul de editare' },
-  ];
+  const copiedNote = (which: 'public' | 'edit') =>
+    copied === which && (
+      <span role="status" className="text-sm text-teal-900">
+        Copiat
+      </span>
+    );
 
   return (
     <div className="mx-auto max-w-2xl text-stone-900">
       <h1 className="text-2xl font-semibold tracking-tight">Păstrează-ți linkurile</h1>
-      <p role="note" className="mt-4 rounded-xl border border-amber-400 bg-amber-50 p-4 font-medium text-amber-950">
-        Linkul de editare e singura cheie a proiectului. Dacă îl pierzi, nu-l putem recupera.
-      </p>
 
       <ul className="mt-6 space-y-4">
-        {rows.map((r) => (
-          <li key={r.key} className="rounded-xl border border-stone-300 bg-white p-4">
-            <p className="text-sm font-medium text-stone-700">{r.label}</p>
-            <p className="mt-1 break-all font-mono text-sm">{r.url}</p>
-            <div className="mt-2 flex items-center gap-3">
-              <button type="button" onClick={() => copy(r.key, r.url)} aria-label={r.button} className={btn}>
+        {published && (
+          <li className="rounded-xl border-2 border-teal-700 bg-white p-4">
+            <p className="font-semibold text-teal-900">Pagina publică — pentru grup</p>
+            <p className="mt-1 break-all font-mono text-sm">{publicUrl}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <button type="button" onClick={() => copy('public', publicUrl)} aria-label="Copiază linkul public" className={btn}>
                 Copiază
               </button>
-              {copied === r.key && (
-                <span role="status" className="text-sm text-teal-900">
-                  Copiat
-                </span>
-              )}
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={btn}>
+                Deschide ↗
+              </a>
+              {copiedNote('public')}
             </div>
           </li>
-        ))}
+        )}
+        <li className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+          <p className="flex items-center gap-2 font-semibold text-amber-950">
+            <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current">
+              <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 6H6V4.5a2 2 0 1 1 4 0V7Z" />
+            </svg>
+            Linkul de editare — doar pentru tine și echipă
+          </p>
+          <p role="note" className="mt-2 font-medium text-amber-950">
+            Linkul de editare e singura cheie a proiectului. Dacă îl pierzi, nu-l putem recupera.
+          </p>
+          <p className="mt-2 break-all font-mono text-sm">{editUrl}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <button type="button" onClick={() => copy('edit', editUrl)} aria-label="Copiază linkul de editare" className={btn}>
+              Copiază
+            </button>
+            {copiedNote('edit')}
+          </div>
+        </li>
       </ul>
 
       {!published && <p className="mt-4 text-stone-700">Pagina publică apare după ce apeși Publică.</p>}

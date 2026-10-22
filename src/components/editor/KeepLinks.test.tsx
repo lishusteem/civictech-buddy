@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, within } from '@testing-library/react';
 import { KeepLinks } from './KeepLinks';
 
 afterEach(() => {
@@ -22,6 +22,29 @@ describe('KeepLinks', () => {
     expect(
       screen.getByText('Linkul de editare e singura cheie a proiectului. Dacă îl pierzi, nu-l putem recupera.'),
     ).toBeTruthy();
+  });
+
+  it('separates the public card (Copiază, Deschide ↗) from the edit card that holds the warning', () => {
+    setup();
+    const publicCard = screen.getByText('Pagina publică — pentru grup').closest('li')!;
+    expect(publicCard.className).toContain('border-teal');
+    expect(within(publicCard).getByRole('button', { name: 'Copiază linkul public' })).toBeTruthy();
+    const open = within(publicCard).getByRole('link', { name: 'Deschide ↗' });
+    expect(open.getAttribute('href')).toBe(`${window.location.origin}/p/proiect-abc`);
+    expect(open.getAttribute('target')).toBe('_blank');
+
+    const editCard = screen.getByText('Linkul de editare — doar pentru tine și echipă').closest('li')!;
+    expect(editCard.className).toContain('border-amber');
+    expect(within(editCard).getByText(/Linkul de editare e singura cheie a proiectului/)).toBeTruthy();
+    expect(within(editCard).queryByRole('link', { name: 'Deschide ↗' })).toBeNull();
+  });
+
+  it('keeps the warning in the edit card when the page is not published yet', () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn() } });
+    render(<KeepLinks slug="s" editToken="t" projectName="P" published={false} onDone={() => {}} />);
+    expect(screen.queryByText('Pagina publică — pentru grup')).toBeNull();
+    const editCard = screen.getByText('Linkul de editare — doar pentru tine și echipă').closest('li')!;
+    expect(within(editCard).getByText(/Linkul de editare e singura cheie a proiectului/)).toBeTruthy();
   });
 
   it('shows both absolute links', () => {
