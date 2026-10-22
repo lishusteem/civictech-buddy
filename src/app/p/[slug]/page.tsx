@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ProjectView, firstSentence } from '@/components/project/ProjectView';
+import { ProjectView } from '@/components/project/ProjectView';
+import { pitchOf } from '@/components/project/publicPage';
 import { getRepo } from '@/lib/db/repo';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const found = await loadPublished(slug);
   if (!found) return { title: 'Ghidul de pornire' };
   const p = found.published;
-  const description = p.targetChanges[0]?.text || firstSentence(p.problem.statement);
+  const description = pitchOf(p).text;
   return {
     title: `${p.project.name} — Ghidul de pornire`,
     ...(description ? { description } : {}),
