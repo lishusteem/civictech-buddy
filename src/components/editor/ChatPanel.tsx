@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
 import type { AiTurn } from '@/lib/ai/stepTurn';
 import { normalizeCardIds, upsertEntity } from '@/lib/project/entities';
 import type { Message, Project, StepId } from '@/lib/project/schema';
+import { isAffirmative, normalizeReply } from '@/lib/steps/affirm';
 import type { SetDraft } from './StepScreen';
 
 export const MAX_CHARS = 4000;
@@ -11,11 +12,17 @@ const COUNTER_FROM = 3500;
 /** Messages kept per step (the schema allows 60); older ones are dropped so drafts stay small. */
 export const MAX_MESSAGES = 40;
 const DONT_KNOW = 'Nu știu';
-const PROPOSE_NOW = 'Propune rezumatul acum.';
+export const PROPOSE_NOW = 'Propune rezumatul acum.';
 const AI_DOWN = 'AI-ul nu răspunde acum.';
-const NOTED = 'Am notat întrebarea ca «de aflat». Mergi mai departe.';
+const NOTED = 'Am notat întrebarea ca «de aflat» — apare pe pagina publică la «Întrebări la care ne poți ajuta». Mergem mai departe.';
 const ACCEPT_HINT = 'Ca să salvezi propunerea, apasă «Acceptă tot» sau «Acceptă» pe fiecare card.';
 const PROPOSAL_TEXT = 'Uite ce am înțeles. Verifică propunerile de lângă conversație.';
+const PLACEHOLDER = 'Scrie răspunsul tău…';
+const LOADING = {
+  first: 'Pregătesc prima întrebare…',
+  question: 'Mă gândesc…',
+  proposal: 'Pregătesc propunerile pentru pas…',
+} as const;
 
 /**
  * Per-session AI state per step, owned by the Editor so it survives step remounts:
@@ -50,6 +57,16 @@ export class AskTracker {
   }
 }
 
+/** What the step screen can ask of the conversation (the action bar, the open questions, a "da"). */
+export type ChatHandle = {
+  /** Sends a user message, as if typed. */
+  send: (content: string) => void;
+  /** Asks the AI with this chat (already stored), without adding a user message. */
+  ask: (chat: Message[]) => void;
+  /** Focuses the input, optionally with a placeholder that names the topic. */
+  focusInput: (placeholder?: string) => void;
+};
+
 type Props = {
   step: StepId;
   tracker: AskTracker;
@@ -62,15 +79,14 @@ type Props = {
   onFormMode: () => void;
   /** The step has unaccepted AI proposals (shown next to the chat). */
   hasPending: boolean;
+  /** A short "da" while proposals are pending: the message is stored, the AI is not called (UX spec P0-3). */
+  onAffirm: (chat: Message[]) => void;
+  /** The proposal digest and the system line, under the last message. */
+  footer?: ReactNode;
+  ref?: Ref<ChatHandle>;
 };
 
-const isDontKnow = (text: string) =>
-  text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z ]/g, '')
-    .trim() === 'nu stiu';
+const isDontKnow = (text: string) => normalizeReply(text) === 'nu stiu';
 
 /** Number of consecutive "Nu știu" answers at the end of the chat (AI messages in between don't break it). */
 function dontKnowStreak(chat: Message[]): number {
@@ -105,17 +121,21 @@ function addToFindOut(p: Project, step: StepId, text: string): Project {
   return upsertEntity(p, card);
 }
 
-const buttonBase =
-  'rounded-lg px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60';
-const secondary = `${buttonBase} border border-teal-800 text-teal-900 hover:bg-teal-50`;
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
+const secondary = `rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-60 ${focusRing}`;
+const chip = `rounded-full border border-stone-400 px-3 py-1 text-sm text-stone-800 hover:bg-stone-100 disabled:opacity-60 ${focusRing}`;
 
-export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending }: Props) {
+export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending, onAffirm, footer, ref }: Props) {
   const [text, setText] = useState('');
   const [, rerender] = useState(0);
   const pending = tracker.isPending(step);
   const error = tracker.errorOf(step);
   const [notice, setNotice] = useState(false);
+  const [loading, setLoading] = useState<'question' | 'proposal'>('question');
+  const [placeholder, setPlaceholder] = useState(PLACEHOLDER);
   const inputId = useId();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const focusInputNext = useRef(false);
   const lastAiRef = useRef<HTMLLIElement>(null);
   const seenAi = useRef<number | null>(null);
   useEffect(() => tracker.subscribe(() => rerender((n) => n + 1)), [tracker]);
@@ -130,6 +150,13 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
     if (seenAi.current === null || aiCount > seenAi.current) lastAiRef.current?.focus();
     seenAi.current = aiCount;
   }, [aiCount]);
+
+  // "Discută cu AI-ul" adds an AI message and then wants the input focused: this runs after the effect above.
+  useEffect(() => {
+    if (!focusInputNext.current) return;
+    focusInputNext.current = false;
+    inputRef.current?.focus();
+  });
 
   async function ask(chat: Message[]) {
     tracker.start(step);
@@ -158,9 +185,15 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
 
   function send(content: string) {
     const userMessage: Message = { role: 'user', content };
-    if (hasPending) setHinted((h) => [...h, userMessage]);
     const chat = [...messages, userMessage].slice(-MAX_MESSAGES);
     setNotice(false);
+    setPlaceholder(PLACEHOLDER);
+    if (hasPending && isAffirmative(content)) {
+      setDraft((p) => withMessages(p, step, [userMessage]));
+      onAffirm(chat);
+      return;
+    }
+    if (hasPending) setHinted((h) => [...h, userMessage]);
     const streak = dontKnowStreak(chat);
     if (streak > 0 && streak % 3 === 0 && lastAiIndex >= 0) {
       // F3: after the hint and the example, the question becomes "de aflat" and the dev moves on.
@@ -170,8 +203,22 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
       return;
     }
     setDraft((p) => withMessages(p, step, [userMessage]));
+    setLoading(content === PROPOSE_NOW ? 'proposal' : 'question');
     void ask(chat);
   }
+
+  useImperativeHandle(ref, () => ({
+    send,
+    ask: (chat) => {
+      setLoading('question');
+      void ask(chat);
+    },
+    focusInput: (topic) => {
+      if (topic) setPlaceholder(topic);
+      focusInputNext.current = true;
+      inputRef.current?.focus();
+    },
+  }));
 
   // The AI asks first: the first time a step without messages is opened in this session. Never again for that
   // step (not while a call is in flight, not after an error: "Reîncearcă" is the way).
@@ -195,14 +242,14 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
   return (
     <section aria-label="Conversația" className="flex min-w-0 flex-col gap-4">
       {messages.length > 0 && (
-        <ol className="flex flex-col gap-3">
+        <ol className="flex flex-col gap-3 lg:max-h-[60vh] lg:overflow-y-auto lg:pr-1">
           {messages.map((m, i) =>
             m.role === 'assistant' ? (
               <li
                 key={i}
                 ref={i === lastAiIndex ? lastAiRef : undefined}
                 tabIndex={i === lastAiIndex ? -1 : undefined}
-                className="max-w-[90%] whitespace-pre-wrap rounded-xl border border-stone-300 bg-white p-3 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+                className={`max-w-[90%] whitespace-pre-wrap rounded-xl border border-stone-300 bg-white p-3 text-stone-900 ${focusRing}`}
               >
                 <span className="sr-only">AI: </span>
                 {m.content}
@@ -211,26 +258,19 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
               <li key={i} className="max-w-[90%] self-end whitespace-pre-wrap rounded-xl bg-teal-50 p-3 text-stone-900">
                 <span className="sr-only">Tu: </span>
                 {m.content}
-                {hasPending && hinted.includes(m) && (
-                  <span className="mt-1 block text-sm text-amber-900">{ACCEPT_HINT}</span>
-                )}
+                {hasPending && hinted.includes(m) && <span className="mt-1 block text-sm text-amber-900">{ACCEPT_HINT}</span>}
               </li>
             ),
           )}
         </ol>
       )}
 
-      {hasPending && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
-        <p className="text-sm text-teal-900">
-          Propunerea e în «Rezultatul pasului»<span className="hidden md:inline"> (în dreapta)</span> → verifică și apasă Acceptă.
-        </p>
-      )}
-
       {pending && (
-        <p role="status" className="text-sm text-stone-600">
-          {messages.length === 0 ? 'AI-ul pregătește prima întrebare…' : 'AI-ul se gândește…'}
+        <p role="status" className="max-w-[90%] animate-pulse rounded-xl border border-dashed border-stone-300 bg-stone-50 p-3 text-stone-600">
+          {messages.length === 0 ? LOADING.first : LOADING[loading]}
         </p>
       )}
+      {footer}
       {notice && (
         <p role="status" className="rounded-lg bg-teal-50 p-3 text-sm text-teal-950">
           {NOTED}
@@ -239,6 +279,7 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
       {error && (
         <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4">
           <p className="text-red-900">{error}</p>
+          <p className="mt-1 text-sm text-red-900">Ce ai scris e salvat.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button type="button" onClick={() => void ask(messages.slice(-MAX_MESSAGES))} className={secondary}>
               Reîncearcă
@@ -256,35 +297,34 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
         </label>
         <textarea
           id={inputId}
+          ref={inputRef}
           rows={3}
           value={text}
+          disabled={pending && messages.length > 0}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit();
           }}
           aria-describedby={text.length > COUNTER_FROM ? `${inputId}-count` : undefined}
-          placeholder="Scrie răspunsul tău…"
-          className="w-full rounded-lg border border-stone-400 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-800"
+          placeholder={placeholder}
+          className="w-full rounded-lg border border-stone-400 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-800 disabled:bg-stone-100 max-md:h-[4.5rem]"
         />
         {text.length > COUNTER_FROM && (
           <p id={`${inputId}-count`} className={`text-right text-sm ${tooLong ? 'text-red-800' : 'text-stone-600'}`}>
             {text.length} / {MAX_CHARS}
           </p>
         )}
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            disabled={!canSend}
-            className={`${buttonBase} bg-teal-800 text-white hover:bg-teal-900`}
-          >
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="submit" disabled={!canSend} className={secondary}>
             Trimite
           </button>
-          <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={secondary}>
+          <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={chip}>
             Nu știu
           </button>
-          <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={secondary}>
-            Propune rezumatul acum
+          <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
+            Propune acum
           </button>
+          <span className="ml-auto hidden text-xs text-stone-500 md:inline">Ctrl+Enter trimite</span>
         </div>
       </form>
     </section>

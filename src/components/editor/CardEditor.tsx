@@ -406,7 +406,7 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
       <div className="flex gap-2 pt-1">
         <button
           type="submit"
-          className="rounded-lg bg-teal-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="rounded-lg border border-teal-800 bg-white px-4 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
         >
           Salvează
         </button>

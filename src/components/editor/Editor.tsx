@@ -232,7 +232,8 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
               type="button"
               onClick={publish}
               disabled={publishing || status !== 'saved'}
-              className="rounded-lg bg-teal-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60"
+              // Outlined: on a step screen the action bar holds the single filled button.
+              className="rounded-lg border border-teal-800 bg-white px-4 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60"
             >
               {neverPublished ? 'Publică' : 'Actualizează pagina publică'}
             </button>

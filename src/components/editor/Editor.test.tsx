@@ -53,7 +53,7 @@ describe('Editor', () => {
     draft.steps.existing.status = 'done';
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
-    expect(screen.getByText(/Încă nimic salvat/)).toBeTruthy();
+    expect(screen.getByText(/Nimic salvat încă/)).toBeTruthy();
   });
 
   it('does not let the sidebar jump past the first incomplete step, but allows going back', () => {
@@ -85,6 +85,14 @@ describe('Editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Actualizează pagina publică' }));
     await waitFor(() => expect(screen.queryByText('Ai modificări nepublicate')).toBeNull());
     expect(fetchMock).toHaveBeenCalledWith('/api/e/t/publish', { method: 'POST' });
+  });
+
+  it('keeps the step action bar the only filled button while the unpublished bar shows', () => {
+    stubFetch(() => ({}));
+    render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T0} />);
+    expect(screen.getByText('Ai modificări nepublicate')).toBeTruthy();
+    expect(document.querySelectorAll('button.bg-teal-800')).toHaveLength(1);
+    expect(screen.getByTestId('bar-primary').classList.contains('bg-teal-800')).toBe(true);
   });
 
   it('hides the bar when published and offers "Publică" when never published', () => {
@@ -197,7 +205,7 @@ describe('Editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
     fireEvent.change(screen.getByLabelText('Nume'), { target: { value: 'Ana' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
-    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+    fireEvent.click(screen.getByTestId('bar-primary'));
 
     await waitFor(() => expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/e/t/alerts'));
     const urls = fetchMock.mock.calls.map((c) => c[0]);
@@ -214,11 +222,11 @@ describe('Editor', () => {
     const draft = fillSteps(createEmptyProject('P'), ALL);
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
     fireEvent.click(screen.getByRole('button', { name: 'Editează: Proiectul și echipa' }));
-    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+    fireEvent.click(screen.getByTestId('bar-primary'));
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+    fireEvent.click(screen.getByTestId('bar-primary'));
     expect(screen.getByRole('heading', { level: 1, name: 'Rezumat' })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
   });
@@ -234,7 +242,7 @@ describe('Editor', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /^Problema/ }));
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
-    expect(screen.getByRole('region', { name: 'Propuneri neacceptate' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Propuneri în conversație' })).toBeTruthy();
     expect(screen.getByText('propus')).toBeTruthy();
   });
 
@@ -252,11 +260,11 @@ describe('Editor', () => {
       vi.stubGlobal('fetch', fetchMock);
       const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
       render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
-      expect(screen.getByText('AI-ul pregătește prima întrebare…')).toBeTruthy();
+      expect(screen.getByText('Pregătesc prima întrebare…')).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
       fireEvent.click(screen.getByRole('button', { name: /^Problema/ }));
       expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
-      expect(screen.getByText('AI-ul pregătește prima întrebare…')).toBeTruthy();
+      expect(screen.getByText('Pregătesc prima întrebare…')).toBeTruthy();
       release();
       expect(await screen.findByText('Prima întrebare.')).toBeTruthy();
       expect(aiCalls(fetchMock)).toBe(2); // one for the project step, one for the problem step; none repeated

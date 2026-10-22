@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { entitiesForStep, isSingleton, remainingCapacity, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
+import { useState, type ReactNode, type Ref } from 'react';
+import { entitiesForStep, isSingleton, savedEntitiesForStep, remainingCapacity, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
 import type { Project, StepId } from '@/lib/project/schema';
 import { CardEditor, FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
 
@@ -25,6 +25,12 @@ type Props = {
   onRemove: (card: Card) => void;
   onKeep: (id: string) => void;
   onAddManual: (kind: EntityKind) => void;
+  /** The "Ce cere pasul" checklist, first in the column. */
+  top?: ReactNode;
+  /** The open questions, after the saved cards. */
+  afterSaved?: ReactNode;
+  /** The proposals heading, focused by "Vezi și editează →". */
+  proposalsHeadingRef?: Ref<HTMLHeadingElement>;
 };
 
 const TITLE_KEYS = ['name', 'text', 'statement'];
@@ -68,16 +74,24 @@ function cardView(card: Card, project: Project): { title: string; details: strin
   return { title, details };
 }
 
+/** The card's title as the cards show it (for the proposal digest in the chat). */
+export const cardTitle = (card: Card, project: Project) => cardView(card, project).title;
+
 const small =
   'rounded-lg px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
-const primary = `${small} bg-teal-800 text-white hover:bg-teal-900`;
+// Outlined: the step's single filled primary button is in the action bar.
+const accept = `${small} border border-teal-800 text-teal-900 hover:bg-teal-50`;
 const secondary = `${small} border border-stone-400 text-stone-800 hover:bg-stone-100`;
 
-function CardBody({ card, project }: { card: Card; project: Project }) {
+function CardBody({ card, project, saved = false }: { card: Card; project: Project; saved?: boolean }) {
   const { title, details } = cardView(card, project);
   return (
     <>
-      <p className="text-xs font-medium uppercase tracking-wide text-stone-600">{KIND_LABEL[card.kind]}</p>
+      {saved ? (
+        <p className="text-xs font-medium uppercase tracking-wide text-teal-800">✓ {KIND_LABEL[card.kind]}</p>
+      ) : (
+        <p className="text-xs font-medium uppercase tracking-wide text-stone-600">{KIND_LABEL[card.kind]}</p>
+      )}
       <p className="mt-1 font-medium text-stone-900">{title || <span className="italic text-stone-500">Necompletat</span>}</p>
       {details.length > 0 && (
         <ul className="mt-1 space-y-0.5 text-sm text-stone-700">
@@ -95,15 +109,15 @@ export function CardsPanel(props: Props) {
   const listKinds = STEP_ENTITIES[step].filter((k) => !isSingleton(k));
   const [addKind, setAddKind] = useState<EntityKind | undefined>(listKinds[0]);
   const accepted = entitiesForStep(draft, step);
+  // An empty singleton (project info, problem) is listed so it can be edited, but is not counted as saved.
+  const savedCount = savedEntitiesForStep(draft, step).length;
   const risks = step === 'risks';
   const stale = new Set(draft.stale);
   const full = addKind !== undefined && !isSingleton(addKind) && remainingCapacity(draft, addKind) === 0;
 
   return (
-    <section aria-labelledby="cards-heading" className="min-w-0 space-y-4">
-      <h2 id="cards-heading" className="font-semibold text-stone-900">
-        Rezultatul pasului
-      </h2>
+    <section aria-label="Rezultatul pasului" className="min-w-0 space-y-5">
+      {props.top}
 
       {editing && (
         <CardEditor
@@ -121,25 +135,27 @@ export function CardsPanel(props: Props) {
       {proposed.length > 0 && (
         <section aria-label="Propuneri" className="space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-medium text-stone-800">Propuse de AI</h3>
-            <button type="button" onClick={props.onAcceptAll} className={primary}>
+            <h2 ref={props.proposalsHeadingRef} tabIndex={-1} className="text-sm font-medium text-stone-800 focus-visible:outline-2 focus-visible:outline-teal-800">
+              Propuse de AI · nesalvate ({proposed.length})
+            </h2>
+            <button type="button" onClick={props.onAcceptAll} className={accept}>
               Acceptă tot
             </button>
           </div>
           <ul className="space-y-3">
             {proposed.map((card, i) => (
-              <li key={`${card.kind}-${card.data.id}-${i}`} className="rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 p-3">
-                <span className="float-right rounded-full bg-stone-200 px-2 py-0.5 text-xs font-medium text-stone-700">propus</span>
+              <li key={`${card.kind}-${card.data.id}-${i}`} className="rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/40 p-3">
+                <span className="float-right rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">propus</span>
                 <CardBody card={card} project={draft} />
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => props.onAccept(i)} className={primary}>
+                  <button type="button" onClick={() => props.onAccept(i)} className={accept}>
                     Acceptă
                   </button>
                   <button type="button" onClick={() => setEditing({ origin: 'proposed', card, index: i })} className={secondary}>
                     Editează
                   </button>
                   <button type="button" onClick={() => props.onDiscard(i)} className={secondary}>
-                    Șterge
+                    Renunță
                   </button>
                 </div>
               </li>
@@ -148,10 +164,12 @@ export function CardsPanel(props: Props) {
         </section>
       )}
 
-      <section aria-label="Acceptate" className="space-y-3">
-        {accepted.length === 0 ? (
-          <p className="text-sm text-stone-600">Nimic acceptat încă.</p>
-        ) : (
+      <section aria-label="Salvate" className="space-y-3">
+        <h2 className="text-sm font-medium text-stone-800">
+          Salvate ({savedCount})
+        </h2>
+        {savedCount === 0 && <p className="text-sm text-stone-600">Nimic salvat încă. Răspunde în conversație sau adaugă manual.</p>}
+        {accepted.length > 0 && (
           <ul className="space-y-3">
             {accepted.map((card) => {
               const isStale = stale.has(card.data.id);
@@ -160,7 +178,7 @@ export function CardsPanel(props: Props) {
                   {isStale && (
                     <span className="float-right rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">de revizuit</span>
                   )}
-                  <CardBody card={card} project={draft} />
+                  <CardBody card={card} project={draft} saved />
                   <div className="mt-3 flex flex-wrap gap-2">
                     {isStale && (
                       <button type="button" onClick={() => props.onKeep(card.data.id)} className={secondary}>
@@ -182,6 +200,8 @@ export function CardsPanel(props: Props) {
           </ul>
         )}
       </section>
+
+      {props.afterSaved}
 
       {!risks && addKind && (
         <div className="flex flex-wrap items-center gap-2">

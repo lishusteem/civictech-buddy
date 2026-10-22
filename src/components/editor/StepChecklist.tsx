@@ -1,0 +1,178 @@
+'use client';
+
+import { useId, type Ref } from 'react';
+import type { Project, StepId } from '@/lib/project/schema';
+import { orphanFeatures, requirementsFor, rowState, type Requirement, type RowState } from '@/lib/steps/requirements';
+
+type Props = {
+  step: StepId;
+  draft: Project;
+  /** The draft as it would be with every pending proposal accepted (for the ◐ rows). */
+  afterAccept: Project;
+  /** Attached to the first missing required row; the action bar focuses it. */
+  firstMissingRef?: Ref<HTMLLIElement>;
+  onNoneFound: () => void;
+  onAddSuggested: () => void;
+  /** "Nu sunt pași noi de adăugat." after Adaugă pașii sugerați added nothing. */
+  suggestNote: boolean;
+  onLinkFeature: (featureId: string, preconditionId: string) => void;
+  onLaterFeature: (featureId: string) => void;
+  onKeepFeature: (featureId: string) => void;
+  onLaterAll: () => void;
+};
+
+const ICON: Record<RowState, { mark: string; className: string; label: string }> = {
+  saved: { mark: '✓', className: 'text-teal-800', label: 'salvat' },
+  proposed: { mark: '◐', className: 'text-amber-700', label: 'propus' },
+  missing: { mark: '○', className: 'text-stone-500', label: 'lipsește' },
+};
+
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
+const rowButton = `rounded-lg border border-teal-800 px-3 py-1 text-sm font-medium text-teal-900 hover:bg-teal-50 ${focusRing}`;
+const smallButton = `rounded-lg border border-stone-400 px-2 py-0.5 text-xs font-medium text-stone-800 hover:bg-stone-100 ${focusRing}`;
+
+/** Counts "{done} din {total}" over the required and recommended rows together. */
+export function checklistProgress(step: StepId, draft: Project) {
+  const rows = requirementsFor(step, draft);
+  return { done: rows.filter((r) => r.done(draft)).length, total: rows.length };
+}
+
+function OrphanFeatures({ draft, onLink, onLater, onKeep, onLaterAll }: {
+  draft: Project;
+  onLink: Props['onLinkFeature'];
+  onLater: Props['onLaterFeature'];
+  onKeep: Props['onKeepFeature'];
+  onLaterAll: Props['onLaterAll'];
+}) {
+  const orphans = orphanFeatures(draft);
+  if (orphans.length === 0) return null;
+  return (
+    <div className="mt-2 space-y-2">
+      <p className="text-xs text-stone-700">
+        {orphans.length === 1 ? '1 funcție nu ajută' : `${orphans.length} funcții nu ajută`} încă la nicio precondiție:
+      </p>
+      <ul className="space-y-2">
+        {orphans.map((f) => (
+          <li key={f.id} className="flex flex-wrap items-center gap-2">
+            <span className="min-w-0 flex-1 basis-full text-stone-900 sm:basis-auto">{f.text}</span>
+            {draft.preconditions.length > 0 && (
+              <select
+                aria-label={`Leagă de… (${f.text})`}
+                value=""
+                onChange={(e) => e.target.value && onLink(f.id, e.target.value)}
+                className={`max-w-[12rem] rounded-lg border border-stone-400 bg-white px-2 py-0.5 text-xs text-stone-900 ${focusRing}`}
+              >
+                <option value="">Leagă de…</option>
+                {draft.preconditions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.text}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button type="button" aria-label={`Mai târziu: ${f.text}`} onClick={() => onLater(f.id)} className={smallButton}>
+              Mai târziu
+            </button>
+            <button type="button" aria-label={`Păstrează: ${f.text}`} onClick={() => onKeep(f.id)} className={smallButton}>
+              Păstrează
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button type="button" onClick={onLaterAll} className={smallButton}>
+        Mută toate la „mai târziu”
+      </button>
+    </div>
+  );
+}
+
+/** "Ce cere pasul" (UX spec §4): saved ✓, proposed ◐ (saved once accepted) or missing ○, required or recommended. */
+export function StepChecklist(props: Props) {
+  const { step, draft, afterAccept, firstMissingRef } = props;
+  const headingId = useId();
+  const rows = requirementsFor(step, draft);
+  const states = rows.map((r) => rowState(r, draft, afterAccept));
+  const firstMissing = rows.findIndex((r, i) => r.level === 'required' && states[i] !== 'saved');
+  const { done, total } = checklistProgress(step, draft);
+
+  function actions(r: Requirement, state: RowState) {
+    if (r.action === 'none_found' && state !== 'saved') {
+      return (
+        <span className="mt-2 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={props.onNoneFound} className={rowButton}>
+            Nu am găsit nimic similar
+          </button>
+          <a href="https://civictech.guide" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-teal-900 underline underline-offset-2">
+            Caută în Civic Tech Field Guide ↗
+          </a>
+        </span>
+      );
+    }
+    if (r.action === 'add_suggested') {
+      return (
+        <span className="mt-2 block">
+          <button type="button" onClick={props.onAddSuggested} className={rowButton}>
+            Adaugă pașii sugerați
+          </button>
+          {props.suggestNote && (
+            <span role="status" className="mt-1 block text-sm text-stone-700">
+              Nu sunt pași noi de adăugat.
+            </span>
+          )}
+        </span>
+      );
+    }
+    if (r.action === 'orphan_features') {
+      return (
+        <OrphanFeatures
+          draft={draft}
+          onLink={props.onLinkFeature}
+          onLater={props.onLaterFeature}
+          onKeep={props.onKeepFeature}
+          onLaterAll={props.onLaterAll}
+        />
+      );
+    }
+    return null;
+  }
+
+  return (
+    <section aria-labelledby={headingId} className="rounded-xl border border-stone-300 bg-white p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 id={headingId} className="font-semibold text-stone-900">
+          Ce cere pasul
+        </h2>
+        <span className="text-sm text-stone-600">
+          {done} din {total}
+        </span>
+      </div>
+      <ul className="mt-3 space-y-2 text-sm">
+        {rows.map((r, i) => {
+          const state = states[i];
+          const icon = ICON[state];
+          return (
+            <li
+              key={r.id}
+              data-state={state}
+              ref={i === firstMissing ? firstMissingRef : undefined}
+              tabIndex={i === firstMissing ? -1 : undefined}
+              className={`flex gap-2 rounded-md ${focusRing}`}
+            >
+              <span aria-hidden className={`w-4 shrink-0 text-center ${icon.className}`}>
+                {icon.mark}
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="text-stone-900">{r.label}</span>
+                <span className="sr-only"> ({icon.label})</span>
+                {state === 'proposed' && <span className="block text-xs text-amber-900">propus — acceptă ca să salvezi</span>}
+                {state === 'missing' && r.why && <span className="block text-xs text-stone-600">{`De ce contează: ${r.why}`}</span>}
+                {actions(r, state)}
+              </div>
+              <span className="shrink-0 text-xs text-stone-500">{r.level === 'required' ? 'obligatoriu' : 'recomandat'}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
