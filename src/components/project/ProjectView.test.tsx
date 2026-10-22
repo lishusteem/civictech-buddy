@@ -183,8 +183,8 @@ describe('ProjectView — public page (§9)', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
     const risks = screen.getByRole('region', { name: 'Ce verificăm întâi' });
     expect(within(risks).getByText(/Primăria acceptă sesizări din afara registraturii/)).toBeTruthy();
-    expect(within(risks).getByText('Test: O întâlnire cu direcția tehnică.')).toBeTruthy();
-    expect(within(risks).getByText('Test: încă de stabilit — idei binevenite.')).toBeTruthy();
+    expect(within(risks).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Test: O întâlnire cu direcția tehnică.')).toBeTruthy();
+    expect(within(risks).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Test: încă de stabilit — idei binevenite.')).toBeTruthy();
   });
 
   it('groups actors and shows relations as chips, never as a verb-template sentence', () => {

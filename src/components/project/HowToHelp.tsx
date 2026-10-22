@@ -1,6 +1,7 @@
 import type { Project } from '@/lib/project/schema';
 import { ContactAction } from './ContactAction';
 import { Section } from './PublicSection';
+import { Points } from '../Points';
 import type { Contact } from './publicPage';
 
 type Role = Project['roles'][number];
@@ -47,14 +48,10 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
               </div>
               {r.status === 'partner' && <p className="text-sm text-stone-600">Căutăm o organizație parteneră</p>}
               {r.reason.trim() !== '' && (
-                <p className={lead ? 'mt-2' : 'mt-2 text-sm'}>
-                  <span className="font-medium">De ce:</span> {clean(r.reason)}
-                </p>
+                <Points className={lead ? 'mt-2' : 'mt-2 text-sm'} label="De ce" text={clean(r.reason)} />
               )}
               {first && (
-                <p className={lead ? 'mt-1' : 'mt-1 text-sm'}>
-                  <span className="font-medium">Primul lucru:</span> <span>{clean(first)}</span>
-                </p>
+                <Points className={lead ? 'mt-1' : 'mt-1 text-sm'} label="Primul lucru" text={clean(first)} />
               )}
             </article>
           );

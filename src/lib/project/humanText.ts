@@ -50,13 +50,22 @@ export function scrubIds(text: string, names: NameIndex): string {
 const HEDGE = /^\s*(sugestie|propunere|exemplu)\s*[:\-–—]\s*/i;
 const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase('ro') + s.slice(1);
 
-/** Tidies the human text of a card: trimmed, no „Sugestie:” prefix, a capital first letter on names and sentences. */
+/** Tidies the human text of a card: trimmed, no „Sugestie:” prefix, a capital first letter on names, sentences and each listed point. */
 export function polishCard(card: Card): Card {
   const data: Record<string, unknown> = { ...card.data };
   for (const f of [...HUMAN_TEXT_FIELDS, 'name', 'statement'] as const) {
     if (typeof data[f] !== 'string') continue;
-    const s = (data[f] as string).trim().replace(HEDGE, '');
-    data[f] = /^https?:/.test(s) ? s : capitalize(s);
+    // Line by line, so a list of points („- …” on each line) keeps its bullets and gets capitals too.
+    data[f] = (data[f] as string)
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => {
+        const m = /^(\s*(?:[-•*]\s+)?)(.*)$/.exec(line)!;
+        const body = m[2].trim().replace(HEDGE, '');
+        return (m[1] ? '- ' : '') + (/^https?:/.test(body) ? body : capitalize(body));
+      })
+      .filter((line) => line !== '' && line !== '- ')
+      .join('\n');
   }
   return { kind: card.kind, data: data as Card['data'] };
 }

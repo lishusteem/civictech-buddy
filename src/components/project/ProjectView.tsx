@@ -7,6 +7,7 @@ import { HELP_ANCHOR, HowToHelp, helpRoles } from './HowToHelp';
 import { NextSteps } from './NextSteps';
 import { Placeholder, Section } from './PublicSection';
 import { WhoMatters } from './WhoMatters';
+import { Points } from '../Points';
 import {
   STAGE_LABEL,
   firstSentence,
@@ -136,9 +137,7 @@ export function ProjectView({ project: p, publishedAt, preview = false }: Props)
           {risky.map((c) => (
             <li key={c.id} className="rounded-xl border border-amber-300 bg-white p-4">
               <p className="font-medium">⚠ {clean(c.assumption || c.text)}</p>
-              <p className="mt-1 text-stone-700">
-                {c.test.trim() !== '' ? `Test: ${clean(c.test)}` : 'Test: încă de stabilit — idei binevenite.'}
-              </p>
+              <Points className="mt-1 text-stone-700" label="Test" text={c.test.trim() !== '' ? clean(c.test) : 'încă de stabilit — idei binevenite.'} />
             </li>
           ))}
         </ul>

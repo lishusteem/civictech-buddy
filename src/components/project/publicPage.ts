@@ -1,5 +1,6 @@
 import type { AlertCode, Project } from '@/lib/project/schema';
 import { QUESTION_CODES } from '@/lib/alerts/messages';
+import { toPoints } from '@/lib/project/points';
 
 type Actor = Project['actors'][number];
 type Stage = Project['project']['stage'];
@@ -25,7 +26,8 @@ const PITCH_MAX = 160;
 
 /** First sentence: up to the first ., ! or ? followed by whitespace or the end. */
 export function firstSentence(text: string): string {
-  const t = text.trim();
+  // A text written as points starts with its first point.
+  const t = toPoints(text)[0] ?? '';
   const m = /^[\s\S]*?[.!?](?=\s|$)/.exec(t);
   return m ? m[0] : t;
 }

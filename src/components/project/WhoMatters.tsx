@@ -1,5 +1,6 @@
 import type { Project } from '@/lib/project/schema';
 import { Section } from './PublicSection';
+import { Points } from '../Points';
 import { RELATION_CHIP, groupActors } from './publicPage';
 
 type Power = Project['actors'][number]['power'];
@@ -45,7 +46,7 @@ export function WhoMatters({ project: p, clean, actorName, preview }: Props) {
                         <span className="rounded bg-stone-200 px-1 text-xs">exclus</span>
                       </>
                     )}
-                    {a.note && <p className="text-sm text-stone-600">{a.note}</p>}
+                    {a.note && <Points className="text-sm text-stone-600" text={clean(a.note)} />}
                   </li>
                 ))}
               </ul>

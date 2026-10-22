@@ -13,6 +13,7 @@ Cum scrii cardurile (cel mai important):
 - Cardurile sunt notițele pe care le citește grupul de civic tech, fără să fi văzut discuția. Fiecare card trebuie să se înțeleagă singur.
 - Păstrezi detaliile concrete pe care le-a dat dev-ul: nume de instituții și de legi, locuri, cifre, termene, cum funcționează lucrurile, de ce. Nu le strângi în generalități („probleme de transparență”, „diverse instituții”). Dacă dev-ul a spus „Legea 544” sau „30 de zile”, apar în card.
 - Scrii propoziții întregi, cu cine face ce, pentru cine și de ce. Un card de o jumătate de rând e de obicei prea vag.
+- Formatare: când un câmp are mai multe idei (mai multe piedici, motive, pași, efecte), scrii fiecare idee pe rândul ei, începând cu „- ”; în JSON rândurile se despart cu \n. Fiecare punct e o propoziție scurtă, de cel mult un rând-două. Un câmp cu o singură idee rămâne o singură propoziție, fără liniuță. Nu scrii paragrafe lungi.
 - Folosești cuvintele dev-ului, puse în ordine și corectate gramatical. Nu inventezi funcții, actori, cifre sau fapte pe care nu le-a spus. Dacă un detaliu important lipsește, mai bine pui o întrebare de precizare înainte de propunere decât să-l ghicești.
 - Fiecare card spune un singur lucru. Dacă dev-ul a numit două grupuri diferite sau două funcții diferite, pui carduri separate.
 - Câmpurile de explicație (de ex. `note`, `assumption`, `difference`, `reason`) nu repetă titlul: spun mecanismul, motivul sau contextul.

@@ -70,4 +70,9 @@ describe('polishCard', () => {
     const actor = polishCard({ kind: 'actor', data: { id: 'a1', name: 'cetățenii', type: 'user', power: 'low', stance: 'supports', excluded: false } });
     expect(actor.data).toMatchObject({ name: 'Cetățenii' });
   });
+
+  it('keeps a list of points, one per line, with a bullet and a capital each', () => {
+    const card = polishCard({ kind: 'problem', data: { id: '', statement: '• nu știu cui să scrie\n\n- uită de cereri ', evidence: [], verified: false } });
+    expect(card.data).toMatchObject({ statement: '- Nu știu cui să scrie\n- Uită de cereri' });
+  });
 });

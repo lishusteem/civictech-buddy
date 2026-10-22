@@ -3,6 +3,8 @@
 import { useState, type ReactNode, type Ref } from 'react';
 import { entitiesForStep, isSingleton, savedEntitiesForStep, remainingCapacity, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
 import type { Project, StepId } from '@/lib/project/schema';
+import { Points } from '../Points';
+import { toPoints } from '@/lib/project/points';
 import { CardEditor, FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
 
 export type Editing = {
@@ -35,42 +37,49 @@ type Props = {
 
 const TITLE_KEYS = ['name', 'text', 'statement'];
 
-function fieldText(f: Field, value: unknown, project: Project): string {
+/** One detail line of a card; a text field keeps its label apart so a long value can become a list. */
+type Detail = { label?: string; text: string };
+
+/** A form label without its typing hint: „Dovezi (una pe rând)” -> „Dovezi”. */
+const shortLabel = (label: string) => label.replace(/\s*\([^)]*\)$/, '');
+
+function fieldText(f: Field, value: unknown, project: Project): Detail | null {
+  const line = (text: string): Detail | null => (text === '' ? null : { text });
   switch (f.type) {
     case 'checkbox':
-      return value === true ? f.label : '';
+      return line(value === true ? f.label : '');
     case 'enum':
-      return value == null ? '' : `${f.label}: ${f.options.find(([v]) => v === value)?.[1] ?? String(value)}`;
+      return line(value == null ? '' : `${f.label}: ${f.options.find(([v]) => v === value)?.[1] ?? String(value)}`);
     case 'ref': {
-      if (typeof value !== 'string' || value === '') return '';
+      if (typeof value !== 'string' || value === '') return null;
       const all = [...project.actors, ...project.preconditions, ...project.targetChanges, ...project.team, ...project.features];
       const e = all.find((x) => x.id === value) as Record<string, unknown> | undefined;
-      return `${f.label}: ${String(e?.name ?? e?.text ?? value)}`;
+      return line(`${f.label}: ${String(e?.name ?? e?.text ?? value)}`);
     }
     case 'lines':
-      return Array.isArray(value) && value.length > 0 ? `${f.label}: ${value.join(', ')}` : '';
+      return Array.isArray(value) && value.length > 0 ? { label: shortLabel(f.label), text: value.join(value.some((v) => String(v).length > 40) ? '\n' : ', ') } : null;
     case 'refs':
-      return '';
+      return null;
     case 'number':
-      return typeof value === 'number' ? `${f.label}: ${value}` : '';
+      return line(typeof value === 'number' ? `${f.label}: ${value}` : '');
     default:
-      return typeof value === 'string' && value.trim() !== '' ? `${f.label}: ${value}` : '';
+      return typeof value === 'string' && value.trim() !== '' ? { label: shortLabel(f.label), text: value } : null;
   }
 }
 
 /** A title and short detail lines for a card, from the same field list the form uses. */
-function cardView(card: Card, project: Project): { title: string; details: string[] } {
+function cardView(card: Card, project: Project): { title: string; details: Detail[] } {
   const d = card.data as Record<string, unknown>;
   const fields = FIELDS[card.kind];
   if (card.kind === 'relation') {
-    return { title: relationLabel(project, d), details: d.note ? [String(d.note)] : [] };
+    return { title: relationLabel(project, d), details: d.note ? [{ text: String(d.note) }] : [] };
   }
   const titleField = fields.find((f) => TITLE_KEYS.includes(f.key));
   const title = titleField ? String(d[titleField.key] ?? '') : '';
   const details = fields
     .filter((f) => f !== titleField)
     .map((f) => fieldText(f, d[f.key], project))
-    .filter((t) => t !== '');
+    .filter((t): t is Detail => t !== null);
   return { title, details };
 }
 
@@ -92,13 +101,19 @@ function CardBody({ card, project, saved = false }: { card: Card; project: Proje
       ) : (
         <p className="text-xs font-medium uppercase tracking-wide text-stone-600">{KIND_LABEL[card.kind]}</p>
       )}
-      <p className="mt-1 font-medium text-stone-900">{title || <span className="italic text-stone-500">Necompletat</span>}</p>
+      {title === '' ? (
+        <p className="mt-1 font-medium italic text-stone-500">Necompletat</p>
+      ) : toPoints(title).length > 1 ? (
+        <Points text={title} className="mt-1 text-stone-900" />
+      ) : (
+        <p className="mt-1 font-medium text-stone-900">{title}</p>
+      )}
       {details.length > 0 && (
-        <ul className="mt-1 space-y-0.5 text-sm text-stone-700">
+        <div className="mt-1 space-y-1 text-sm text-stone-700">
           {details.map((t, i) => (
-            <li key={i}>{t}</li>
+            <Points key={i} text={t.text} label={t.label} />
           ))}
-        </ul>
+        </div>
       )}
     </>
   );
