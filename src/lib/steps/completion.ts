@@ -1,5 +1,8 @@
 import { StepIdSchema, type Project, type StepId } from '../project/schema';
 
+// The step checklist (UX spec §4): required rows match RULES below, recommended rows never gate.
+export { requirementsFor, type Requirement } from './requirements';
+
 type Rule = { done: (p: Project) => boolean; hint: string };
 
 const filled = (s: string) => s.trim() !== '';
