@@ -210,6 +210,50 @@ describe('Editor', () => {
     expect(screen.getByText('propus')).toBeTruthy();
   });
 
+  describe('automatic first question', () => {
+    const aiCalls = (fetchMock: ReturnType<typeof vi.fn>) =>
+      fetchMock.mock.calls.filter((c) => String(c[0]).endsWith('/ai')).length;
+
+    it('leaving a step while the first call is in flight and returning does not ask twice', async () => {
+      let release: () => void = () => {};
+      const gate = new Promise<void>((r) => (release = r));
+      const fetchMock = vi.fn(async (url: string) => {
+        if (url.endsWith('/ai')) await gate;
+        return { ok: true, status: 200, json: async () => (url.endsWith('/ai') ? { kind: 'question', text: 'Prima întrebare.' } : { alerts: [] }) };
+      });
+      vi.stubGlobal('fetch', fetchMock);
+      const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+      render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
+      expect(screen.getByText('AI-ul pregătește prima întrebare…')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
+      fireEvent.click(screen.getByRole('button', { name: /^Problema/ }));
+      expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
+      expect(screen.getByText('AI-ul pregătește prima întrebare…')).toBeTruthy();
+      release();
+      expect(await screen.findByText('Prima întrebare.')).toBeTruthy();
+      expect(aiCalls(fetchMock)).toBe(2); // one for the project step, one for the problem step; none repeated
+      expect(screen.getAllByText('Prima întrebare.')).toHaveLength(1);
+    });
+
+    it('reopening a step after an error does not ask again', async () => {
+      const fetchMock = vi.fn(async (url: string) => ({
+        ok: !url.endsWith('/ai'),
+        status: url.endsWith('/ai') ? 502 : 200,
+        json: async () => (url.endsWith('/ai') ? { error: 'AI-ul nu răspunde acum.' } : { alerts: [] }),
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+      const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+      render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
+      expect(await screen.findByText('AI-ul nu răspunde acum.')).toBeTruthy();
+      const before = aiCalls(fetchMock);
+      fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
+      await screen.findByText('AI-ul nu răspunde acum.'); // project step: its own first ask failed too
+      fireEvent.click(screen.getByRole('button', { name: /^Problema/ }));
+      expect(screen.getByText('AI-ul nu răspunde acum.')).toBeTruthy(); // the error is remembered
+      expect(aiCalls(fetchMock)).toBe(before + 1); // only the project step's first ask
+    });
+  });
+
   it('appends organizing items on the first entry only; the button adds them back on demand', async () => {
     stubFetch(() => ({ alerts: [], draftUpdatedAt: T1 }));
     // Steps 1-9 complete: the editor opens on the backlog, which is entered "for the first time" through the sidebar.

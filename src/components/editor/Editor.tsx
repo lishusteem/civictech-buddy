@@ -7,6 +7,7 @@ import { firstIncompleteStep, isStepUnlocked } from '@/lib/steps/completion';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import { appendOrganizingItems } from '@/lib/backlog/organizing';
 import type { Project, StepId } from '@/lib/project/schema';
+import { AskTracker } from './ChatPanel';
 import { ConflictDialog } from './ConflictDialog';
 import { KeepLinks } from './KeepLinks';
 import { Overview } from './Overview';
@@ -58,6 +59,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   const [updatedNotice, setUpdatedNotice] = useState(false);
   // Unaccepted AI proposals per step; kept while the user moves between steps (lost on reload).
   const [proposals, setProposals] = useState<Partial<Record<StepId, Card[]>>>({});
+  const [askTracker] = useState(() => new AskTracker());
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuError, setMenuError] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -276,6 +278,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
               token={token}
               onNext={goNext}
               flush={flush}
+              askTracker={askTracker}
               proposed={proposals[stepDef.id] ?? []}
               setProposed={(update) =>
                 setProposals((all) => ({

@@ -516,6 +516,47 @@ describe('StepScreen', () => {
       expect(spy.mock.calls.at(-1)![0].actors.map((a) => a.id)).toEqual(['a9']);
     });
 
+    it('Înapoi cancels the choice, and the choice resets when the proposals are gone', () => {
+      stubFetch([]);
+      const draft = createEmptyProject('P');
+      draft.actors = [{ ...actor, id: 'a9' }];
+      setup('actors', draft, vi.fn(), { proposed: two });
+      fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Înapoi' }));
+      expect(screen.queryByRole('button', { name: 'Continuă fără ele' })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Acceptă tot și continuă' }));
+      expect(screen.queryByRole('button', { name: 'Continuă fără ele' })).toBeNull();
+    });
+
+    it('a disabled Continuă fără ele carries the missing-step hint', () => {
+      stubFetch([]);
+      setup('actors', createEmptyProject('P'), vi.fn(), { proposed: two });
+      fireEvent.click(screen.getByRole('button', { name: /Am terminat pasul/ }));
+      const skip = screen.getByRole('button', { name: 'Continuă fără ele' });
+      expect(skip.getAttribute('title')).toBe('Acceptă cel puțin un actor.');
+      expect(document.getElementById(skip.getAttribute('aria-describedby')!)!.textContent).toBe('Acceptă cel puțin un actor.');
+    });
+
+    it('a new AI proposal is merged with the pending cards, replacing the same kind and id', async () => {
+      const a2 = { ...actor, id: 'a2', name: 'Consiliul local' };
+      const a1new = { ...actor, name: 'Primăria (nou)' };
+      stubFetch([
+        { body: { kind: 'proposal', text: 'Unu.', cards: [{ kind: 'actor', data: actor }, { kind: 'actor', data: a2 }] } },
+        { body: { kind: 'proposal', text: 'Doi.', cards: [{ kind: 'actor', data: a1new }] } },
+      ]);
+      setup('actors');
+      fireEvent.click(screen.getByRole('button', { name: 'Propune rezumatul acum' }));
+      await screen.findByText('Unu.');
+      fireEvent.click(screen.getByRole('button', { name: 'Propune rezumatul acum' }));
+      await screen.findByText('Doi.');
+      const region = screen.getByRole('region', { name: 'Propuneri' });
+      expect(within(region).getByText('Consiliul local')).toBeTruthy();
+      expect(within(region).getByText('Primăria (nou)')).toBeTruthy();
+      expect(within(region).queryByText('Primăria')).toBeNull();
+      expect(within(region).getAllByText('propus')).toHaveLength(2);
+    });
+
     it('Acceptă tot și continuă saves the proposals, then moves on and marks the step done', () => {
       const onNext = vi.fn();
       stubFetch([]);
@@ -609,6 +650,13 @@ describe('StepScreen', () => {
         { id: 'e1', name: 'Nimic similar găsit', url: null, difference: 'Dev-ul a căutat și n-a găsit inițiative similare.' },
       ]);
       expect(button().disabled).toBe(false);
+    });
+
+    it('hides Nu am găsit nimic similar once an existing entry exists', () => {
+      const draft = createEmptyProject('P');
+      draft.existing = [{ id: 'e1', name: 'X', url: null, difference: 'y' }];
+      setup('existing', draft);
+      expect(screen.queryByRole('button', { name: 'Nu am găsit nimic similar' })).toBeNull();
     });
 
     it('does not offer Nu am găsit nimic similar on other steps', () => {

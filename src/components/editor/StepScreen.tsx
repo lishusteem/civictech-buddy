@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import type { AiTurn } from '@/lib/ai/stepTurn';
 import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
 import { ALERT_MESSAGES } from '@/lib/alerts/messages';
@@ -22,7 +22,7 @@ import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
 import { CardsPanel, type Editing } from './CardsPanel';
 import { appendOrganizingItems, buildOrganizingItems } from '@/lib/backlog/organizing';
-import { ChatPanel, MAX_MESSAGES } from './ChatPanel';
+import { AskTracker, ChatPanel, MAX_MESSAGES } from './ChatPanel';
 
 /** useAutosave().setDraft: a draft, or an updater applied to the latest draft. */
 export type SetDraft = (update: Project | ((prev: Project) => Project)) => void;
@@ -37,6 +37,8 @@ type Props = {
   /** useAutosave().flush: the AI routes read the server-saved draft, so pending edits are saved first. */
   flush?: () => Promise<void>;
   /** Unaccepted AI proposals of this step; the Editor keeps them per step for the session. */
+  /** Owned by the Editor so the automatic first question is asked once per step per session. */
+  askTracker?: AskTracker;
   proposed: Card[];
   setProposed: Dispatch<SetStateAction<Card[]>>;
 };
@@ -57,8 +59,12 @@ function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
   return next.steps[step].status === 'untouched' ? withStatus(next, step, 'in_progress') : next;
 }
 
-export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush, proposed, setProposed }: Props) {
+export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlush, proposed, setProposed, askTracker }: Props) {
+  const [ownTracker] = useState(() => new AskTracker());
   const [confirmingNext, setConfirmingNext] = useState(false);
+  useEffect(() => {
+    if (proposed.length === 0) setConfirmingNext(false);
+  }, [proposed.length]);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [suggestNote, setSuggestNote] = useState(false);
   const stepId = step.id;
@@ -67,7 +73,11 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
 
   function onTurn(turn: AiTurn) {
     if (turn.kind === 'question') return;
-    setProposed(turn.cards);
+    // New cards join the pending ones; a pending card with the same kind and id is replaced.
+    setProposed((list) => [
+      ...list.filter((c) => !turn.cards.some((n) => n.kind === c.kind && n.data.id === c.data.id)),
+      ...turn.cards,
+    ]);
     if (turn.kind === 'fallback' && turn.cards.length === 0) openForm();
   }
 
@@ -208,6 +218,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <ChatPanel
           step={stepId}
+          tracker={askTracker ?? ownTracker}
           token={token}
           messages={draft.steps[stepId].messages}
           setDraft={setDraft}
@@ -218,7 +229,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
         />
         <div className="min-w-0 space-y-4">
           <AlertList alerts={alerts} onWork={workOn} onDismiss={(a) => setAlertStatus(a, 'dismissed')} />
-          {stepId === 'existing' && (
+          {stepId === 'existing' && draft.existing.length === 0 && (
             <div>
               <button
                 type="button"
@@ -298,9 +309,23 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
                 finish();
               }}
               disabled={!complete}
+              title={complete ? undefined : missingForStep(draft, stepId)}
+              aria-describedby={complete ? undefined : 'skip-hint'}
               className="rounded-lg border border-teal-800 px-4 py-2 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-50"
             >
               Continuă fără ele
+            </button>
+            {!complete && (
+              <span id="skip-hint" className="sr-only">
+                {missingForStep(draft, stepId)}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setConfirmingNext(false)}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+            >
+              Înapoi
             </button>
             <button type="button" onClick={acceptAllAndContinue} disabled={!completeAfterAccept} className={`${primaryBtn} disabled:opacity-50`}>
               Acceptă tot și continuă

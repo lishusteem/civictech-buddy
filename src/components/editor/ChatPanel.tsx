@@ -17,8 +17,42 @@ const NOTED = 'Am notat întrebarea ca «de aflat». Mergi mai departe.';
 const ACCEPT_HINT = 'Ca să salvezi propunerea, apasă «Acceptă tot» sau «Acceptă» pe fiecare card.';
 const PROPOSAL_TEXT = 'Uite ce am înțeles. Verifică propunerile de lângă conversație.';
 
+/**
+ * Per-session AI state per step, owned by the Editor so it survives step remounts:
+ * which steps were already asked automatically, which calls are in flight, and the last error.
+ */
+export class AskTracker {
+  readonly asked = new Set<StepId>();
+  private inFlight = new Set<StepId>();
+  private errors = new Map<StepId, string>();
+  private listeners = new Set<() => void>();
+
+  isPending = (step: StepId) => this.inFlight.has(step);
+  errorOf = (step: StepId) => this.errors.get(step) ?? null;
+  subscribe = (fn: () => void) => {
+    this.listeners.add(fn);
+    return () => void this.listeners.delete(fn);
+  };
+  start(step: StepId) {
+    this.inFlight.add(step);
+    this.errors.delete(step);
+    this.notify();
+  }
+  fail(step: StepId, message: string) {
+    this.errors.set(step, message);
+  }
+  end(step: StepId) {
+    this.inFlight.delete(step);
+    this.notify();
+  }
+  private notify() {
+    this.listeners.forEach((fn) => fn());
+  }
+}
+
 type Props = {
   step: StepId;
+  tracker: AskTracker;
   token: string;
   messages: Message[];
   setDraft: SetDraft;
@@ -75,15 +109,16 @@ const buttonBase =
   'rounded-lg px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60';
 const secondary = `${buttonBase} border border-teal-800 text-teal-900 hover:bg-teal-50`;
 
-export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFormMode, hasPending }: Props) {
+export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending }: Props) {
   const [text, setText] = useState('');
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, rerender] = useState(0);
+  const pending = tracker.isPending(step);
+  const error = tracker.errorOf(step);
   const [notice, setNotice] = useState(false);
   const inputId = useId();
   const lastAiRef = useRef<HTMLLIElement>(null);
   const seenAi = useRef<number | null>(null);
-  const autoAsked = useRef(false);
+  useEffect(() => tracker.subscribe(() => rerender((n) => n + 1)), [tracker]);
   // User messages sent while proposals were pending (a hint under them; never stored).
   const [hinted, setHinted] = useState<Message[]>([]);
 
@@ -97,8 +132,7 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
   }, [aiCount]);
 
   async function ask(chat: Message[]) {
-    setPending(true);
-    setError(null);
+    tracker.start(step);
     try {
       await flush();
       const res = await fetch(`/api/e/${token}/ai`, {
@@ -109,16 +143,16 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
       const data: unknown = await res.json().catch(() => ({}));
       if (!res.ok || !isTurn(data)) {
         const msg = (data as { error?: unknown }).error;
-        setError(typeof msg === 'string' && msg !== '' ? msg : AI_DOWN);
+        tracker.fail(step, typeof msg === 'string' && msg !== '' ? msg : AI_DOWN);
         return;
       }
       const reply = data.text.trim() !== '' ? data.text : PROPOSAL_TEXT;
       setDraft((p) => withMessages(p, step, [{ role: 'assistant', content: reply.slice(0, MAX_CHARS) }]));
       onTurn(data);
     } catch {
-      setError(AI_DOWN);
+      tracker.fail(step, AI_DOWN);
     } finally {
-      setPending(false);
+      tracker.end(step);
     }
   }
 
@@ -139,10 +173,11 @@ export function ChatPanel({ step, token, messages, setDraft, flush, onTurn, onFo
     void ask(chat);
   }
 
-  // The AI asks first: a step opened without messages gets its first question right away (once per mount).
+  // The AI asks first: the first time a step without messages is opened in this session. Never again for that
+  // step (not while a call is in flight, not after an error: "Reîncearcă" is the way).
   useEffect(() => {
-    if (messages.length > 0 || autoAsked.current) return;
-    autoAsked.current = true;
+    if (messages.length > 0 || tracker.asked.has(step)) return;
+    tracker.asked.add(step);
     void ask([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

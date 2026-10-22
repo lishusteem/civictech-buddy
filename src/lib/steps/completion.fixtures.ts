@@ -15,7 +15,11 @@ export const fill: Record<StepId, (p: Project) => void> = {
   existing: (p) => void (p.existing = [{ id: 'e1', name: 'X', url: null, difference: 'y' }]),
   target: (p) => void (p.targetChanges = [{ id: 't1', text: 'T', signal: '' }]),
   actors: (p) => void (p.actors = [{ id: 'a1', name: 'A', type: 'user', power: 'low', stance: 'unknown', excluded: false }]),
-  relations: (p) => void (p.relations = [{ id: 'r1', from: 'a1', to: 'a2', type: 'decides', note: '' }]),
+  relations: (p) => {
+    const actor = { type: 'user', power: 'low', stance: 'unknown', excluded: false } as const;
+    p.actors = [{ id: 'a1', name: 'A', ...actor }, { id: 'a2', name: 'B', ...actor }];
+    p.relations = [{ id: 'r1', from: 'a1', to: 'a2', type: 'decides', note: '' }];
+  },
   preconditions: (p) => void (p.preconditions = [{ ...precondition }]),
   risks: (p) => void (p.preconditions = [{ ...precondition, risky: true }]),
   roles: (p) =>

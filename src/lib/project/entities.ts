@@ -187,11 +187,11 @@ export function entitiesForStep(p: Project, step: StepId): Card[] {
 
 /** Like entitiesForStep, but a singleton (project info, problem, direction) that is still empty does not count. */
 export function savedEntitiesForStep(p: Project, step: StepId): Card[] {
-  const empty = createEmptyProject(p.project.name);
+  const field: Record<SingletonKind, string> = { projectInfo: 'description', problem: 'statement', direction: 'text' };
   return entitiesForStep(p, step).filter((card) => {
     if (!isSingleton(card.kind)) return true;
-    const blank = cardsOfKind(empty, card.kind)[0].data;
-    return JSON.stringify(card.data) !== JSON.stringify(blank);
+    const value = (card.data as Record<string, unknown>)[field[card.kind]];
+    return typeof value === 'string' && value.trim() !== '';
   });
 }
 

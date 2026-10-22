@@ -30,7 +30,11 @@ export function isStepComplete(p: Project, step: StepId): boolean {
 
 /** What is still missing for the step, or '' when it is complete. */
 export function missingForStep(p: Project, step: StepId): string {
-  return isStepComplete(p, step) ? '' : RULES[step].hint;
+  if (isStepComplete(p, step)) return '';
+  if (step === 'relations' && p.actors.length < 2) {
+    return 'Ai nevoie de cel puțin 2 actori: întoarce-te la pasul Actorii sau adaugă un actor nou.';
+  }
+  return RULES[step].hint;
 }
 
 /** The stored status, except that 'done' only holds for a complete step (older drafts may say done with nothing saved). */

@@ -92,6 +92,7 @@ export function Overview({ token, project, onEditStep }: Props) {
                   type="button"
                   onClick={() => onEditStep(s.id)}
                   disabled={!isStepUnlocked(project, s.id)}
+                  title={isStepUnlocked(project, s.id) ? undefined : 'Termină întâi pașii anteriori.'}
                   aria-label={`Editează: ${s.title}`}
                   className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
                 >

@@ -36,6 +36,11 @@ describe('isStepComplete / missingForStep', () => {
   it('uses the product hints', () => {
     const p = createEmptyProject('P');
     expect(missingForStep(p, 'existing')).toBe('Adaugă cel puțin o inițiativă similară sau apasă «Nu am găsit nimic similar».');
+    expect(missingForStep(p, 'relations')).toBe(
+      'Ai nevoie de cel puțin 2 actori: întoarce-te la pasul Actorii sau adaugă un actor nou.',
+    );
+    fill.actors(p);
+    p.actors.push({ ...p.actors[0], id: 'a2' });
     expect(missingForStep(p, 'relations')).toBe('Acceptă cel puțin o relație între actori.');
   });
 });

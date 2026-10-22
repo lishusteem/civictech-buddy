@@ -147,8 +147,20 @@ describe('savedEntitiesForStep', () => {
     expect(savedEntitiesForStep(p, 'project')).toEqual([]);
     expect(savedEntitiesForStep(p, 'target')).toEqual([]);
     p.problem.statement = 'Sesizările se pierd.';
-    p.project.area = 'Cluj';
+    p.project.description = 'O descriere';
     expect(savedEntitiesForStep(p, 'problem')).toHaveLength(1);
     expect(savedEntitiesForStep(p, 'project')).toHaveLength(1);
+  });
+
+  it('is not sensitive to key order (jsonb reorders keys)', () => {
+    const p = createEmptyProject('P');
+    p.problem = { verified: false, evidence: [], statement: '' };
+    p.project = { contact: '', motivation: '', links: [], area: '', stage: null, description: '', name: 'P' };
+    expect(savedEntitiesForStep(p, 'problem')).toEqual([]);
+    expect(savedEntitiesForStep(p, 'project')).toEqual([]);
+    p.direction = '   ';
+    expect(savedEntitiesForStep(p, 'target')).toEqual([]);
+    p.direction = 'Spre mai bine';
+    expect(savedEntitiesForStep(p, 'target')).toHaveLength(1);
   });
 });
