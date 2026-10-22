@@ -34,23 +34,45 @@ test.beforeAll(async ({ browser, playwright }) => {
   await page.close();
 });
 
-/** One step: the AI asks first on its own, answer it, accept the fake proposal if there is one, finish the step. */
-async function completeStep(page: Page) {
+const barPrimary = (page: Page) => page.getByRole('region', { name: 'Acțiunile pasului' }).getByTestId('bar-primary');
+
+/** Waits until the AI asked first (the fake answers with a proposal) and nothing is loading. */
+async function waitForFirstTurn(page: Page) {
   const replies = page.getByRole('listitem').filter({ hasText: /^AI:/ });
   await expect(replies.first()).toBeVisible();
-  await expect(page.getByText('AI-ul pregătește prima întrebare…')).toBeHidden();
+  await expect(page.getByText('Pregătesc prima întrebare…')).toBeHidden();
+  return replies;
+}
+
+/**
+ * One step: answer the AI, then a single click on the action bar saves the pending proposals and moves on
+ * (state A), or moves on when the step is already complete (state C).
+ */
+async function completeStep(page: Page) {
+  const replies = await waitForFirstTurn(page);
   const before = await replies.count();
   await page.getByLabel('Răspunsul tău').fill('Un răspuns de test.');
   await page.getByRole('button', { name: 'Trimite', exact: true }).click();
-  // The fake may answer with a question instead of a proposal (e.g. relations with one actor).
   await expect(replies).toHaveCount(before + 1);
-  await expect(page.getByText('AI-ul se gândește…')).toBeHidden();
-  const acceptAll = page.getByRole('region', { name: 'Propuneri', exact: true }).getByRole('button', { name: 'Acceptă tot' });
-  if (await acceptAll.isVisible()) {
-    await acceptAll.click();
-    await expect(acceptAll).toBeHidden();
-  }
-  await page.getByRole('button', { name: /Am terminat pasul/ }).click();
+  await expect(page.getByText('Mă gândesc…')).toBeHidden();
+  await barPrimary(page).click();
+}
+
+/** Typing "da" saves the pending proposals without asking the AI; then the bar moves on. */
+async function completeStepWithDa(page: Page) {
+  const replies = await waitForFirstTurn(page);
+  await expect(page.getByRole('region', { name: 'Propuneri în conversație' })).toBeVisible();
+  const before = await replies.count();
+  const aiCalls: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().endsWith('/ai')) aiCalls.push(r.url());
+  });
+  await page.getByLabel('Răspunsul tău').fill('da');
+  await page.getByRole('button', { name: 'Trimite', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Conversația' }).getByText(/✓ Am salvat \d+ elemente?\. Poți trece la pasul următor\./)).toBeVisible();
+  expect(aiCalls).toHaveLength(0);
+  await expect(replies).toHaveCount(before);
+  await barPrimary(page).click();
 }
 
 test('full flow: create, 10 steps, publish, update, conflict', async ({ page, browser }) => {
@@ -66,8 +88,9 @@ test('full flow: create, 10 steps, publish, update, conflict', async ({ page, br
 
   // 2. Ten steps
   for (let i = 1; i <= STEP_COUNT; i++) {
-    await expect(page.getByText(`Pasul ${i} din ${STEP_COUNT}`, { exact: true })).toBeVisible();
-    await completeStep(page);
+    await expect(page.getByRole('main').getByText(new RegExp(`^Pasul ${i} din ${STEP_COUNT} · `))).toBeVisible();
+    if (i === 2) await completeStepWithDa(page);
+    else await completeStep(page);
   }
 
   // 3. Summary -> publish -> keep links
@@ -87,7 +110,7 @@ test('full flow: create, 10 steps, publish, update, conflict', async ({ page, br
 
   // 5. Edit the problem, update the public page
   await page.getByRole('navigation', { name: 'Pașii proiectului' }).getByRole('button', { name: /^Problema/ }).click();
-  await page.getByRole('region', { name: 'Acceptate' }).getByRole('button', { name: 'Editează' }).click();
+  await page.getByRole('region', { name: 'Salvate' }).getByRole('button', { name: 'Editează' }).click();
   await page.getByLabel('Problema', { exact: true }).fill('Problemă actualizată de test.');
   await page.getByRole('button', { name: 'Salvează' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Salvat' })).toBeVisible();
@@ -103,14 +126,40 @@ test('full flow: create, 10 steps, publish, update, conflict', async ({ page, br
   const pageB = await other.newPage();
   await pageB.goto(`/e/${token}`);
   await pageB.getByRole('navigation', { name: 'Pașii proiectului' }).getByRole('button', { name: /^Problema/ }).click();
-  await pageB.getByRole('region', { name: 'Acceptate' }).getByRole('button', { name: 'Editează' }).click();
+  await pageB.getByRole('region', { name: 'Salvate' }).getByRole('button', { name: 'Editează' }).click();
   await pageB.getByLabel('Problema', { exact: true }).fill('Modificare din al doilea context.');
   await pageB.getByRole('button', { name: 'Salvează' }).click();
   await expect(pageB.getByRole('status').filter({ hasText: 'Salvat' })).toBeVisible();
 
-  await page.getByRole('region', { name: 'Acceptate' }).getByRole('button', { name: 'Editează' }).click();
+  await page.getByRole('region', { name: 'Salvate' }).getByRole('button', { name: 'Editează' }).click();
   await page.getByLabel('Problema', { exact: true }).fill('Modificare din primul context.');
   await page.getByRole('button', { name: 'Salvează' }).click();
   await expect(page.getByText('Proiectul a fost modificat în altă parte')).toBeVisible();
   await other.close();
+});
+
+test('mobile 375 px: the action bar is on screen and one click after a proposal opens step 2', async ({ browser }) => {
+  const context = await browser.newContext({ baseURL: BASE_URL, viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Începe un proiect nou' }).click();
+  await page.getByRole('button', { name: 'Începe', exact: true }).click();
+  await page.waitForURL(/\/e\/[^/]+$/);
+  await page.getByRole('button', { name: 'Am salvat linkurile' }).click();
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Conversația' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('region', { name: 'Propuneri în conversație' })).toBeVisible();
+  const primary = barPrimary(page);
+  await expect(primary).toBeInViewport();
+  await expect(primary).toHaveAccessibleName('Acceptă și treci la pasul următor →');
+  await expect(primary).toContainText('Acceptă și treci mai departe →');
+  await primary.click();
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Problema' })).toBeVisible();
+  await expect(barPrimary(page)).toBeInViewport();
+  await page.getByRole('tab', { name: /Rezultatul/ }).click();
+  await expect(page.getByRole('region', { name: 'Ce cere pasul' })).toBeVisible();
+  await expect(barPrimary(page)).toBeInViewport();
+  await context.close();
 });
