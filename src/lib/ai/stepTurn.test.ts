@@ -121,16 +121,28 @@ describe('runStepTurn', () => {
 
   it('retries a relation pointing to an unknown actor', async () => {
     const p = withFeature();
-    p.actors = [{ id: 'a1', name: 'Părinți', type: 'user', power: 'low', stance: 'supports', excluded: false }];
+    p.actors = [
+      { id: 'a1', name: 'Părinți', type: 'user', power: 'low', stance: 'supports', excluded: false },
+      { id: 'a2', name: 'Școala', type: 'institution', power: 'high', stance: 'neutral', excluded: false },
+    ];
     const rel = (to: string) => ({ kind: 'relation', data: { id: 'r1', from: 'a1', to, type: 'influences', note: '' } });
     const { provider, calls } = scripted(
       JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel('a99')] }),
-      JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel('a1')] }),
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel('a2')] }),
     );
     const turn = await runStepTurn(p, 'relations', [], provider);
     expect(calls).toHaveLength(2);
     expect(calls[1][calls[1].length - 1].content).toContain('a99');
     expect(turn.kind).toBe('proposal');
+  });
+
+  it('retries a relation from an actor to itself', async () => {
+    const p = withFeature();
+    p.actors = [{ id: 'a1', name: 'Părinți', type: 'user', power: 'low', stance: 'supports', excluded: false }];
+    const self = { kind: 'relation', data: { id: 'r1', from: 'a1', to: 'a1', type: 'influences', note: '' } };
+    const { provider, calls } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [self] }), JSON.stringify({ kind: 'question', text: 'Cine altcineva?' }));
+    await runStepTurn(p, 'relations', [], provider);
+    expect(calls[1][calls[1].length - 1].content).toContain('același actor');
   });
 
   it('retries a precondition whose leadsTo is unknown, accepting refs to new cards in the batch', async () => {

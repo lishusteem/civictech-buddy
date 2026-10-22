@@ -18,4 +18,10 @@ Carduri permise:
 - {"kind": "precondition", "data": {"id": "p1", "text": "<ce trebuie să fie adevărat>", "actorId": "<id actor sau id membru al echipei>" | null, "stage": "start" | "mid", "leadsTo": "<id schimbare țintă sau id precondiție>", "coveredByApp": true | false, "assumption": "<de ce ar duce la pasul următor, dacă dev-ul a spus>", "risky": false, "test": ""}}
 - {"kind": "actor", "data": {"id": "a9", "name": "...", "type": "user" | "institution" | "ngo" | "media" | "funder" | "business" | "other", "power": "low" | "medium" | "high", "stance": "supports" | "neutral" | "opposes" | "unknown", "excluded": false}} — doar pentru un actor nou, care nu e încă în context; folosește același id în `actorId`.
 
+Ce notezi, concret:
+- `text`: o propoziție cu cine face ce („Ziariștii de la publicații locale folosesc ratele de răspuns în articole”), nu o stare abstractă („există presiune”).
+- `assumption`: mecanismul, adică de ce precondiția asta duce la pasul următor, cu cuvintele dev-ului („Instituțiile răspund mai repede când apar în presă ca restanțiere”). Dacă dev-ul nu a spus, îl întrebi o dată; nu-l inventezi.
+- Lanțul pornește de la ce poate face echipa acum: cel puțin o precondiție „start” e ceva ce echipa sau aplicația face în primele luni (`coveredByApp` true dacă o face aplicația).
+- Dacă dev-ul a dat mai multe căi pentru o precondiție („o campanie cetățenească sau un guvern binevoitor”), le notezi pe toate, în `text` sau ca precondiții separate; nu pierzi niciuna.
+
 La acest pas `risky` rămâne false și `test` rămâne "" (se completează la pasul 8).

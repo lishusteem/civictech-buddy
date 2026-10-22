@@ -45,6 +45,7 @@ export function WhoMatters({ project: p, clean, actorName, preview }: Props) {
                         <span className="rounded bg-stone-200 px-1 text-xs">exclus</span>
                       </>
                     )}
+                    {a.note && <p className="text-sm text-stone-600">{a.note}</p>}
                   </li>
                 ))}
               </ul>

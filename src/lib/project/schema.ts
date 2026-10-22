@@ -104,6 +104,8 @@ export const ProjectSchema = z.object({
         power: z.enum(['low', 'medium', 'high']),
         stance: z.enum(['supports', 'neutral', 'opposes', 'unknown']),
         excluded: z.boolean(),
+        /** Why the actor matters for the problem, in the dev's words; older drafts have none. */
+        note: z.string().max(300).optional(),
       }),
     )
     .max(40),

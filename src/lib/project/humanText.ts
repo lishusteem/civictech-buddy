@@ -47,6 +47,20 @@ export function scrubIds(text: string, names: NameIndex): string {
     .trim();
 }
 
+const HEDGE = /^\s*(sugestie|propunere|exemplu)\s*[:\-–—]\s*/i;
+const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase('ro') + s.slice(1);
+
+/** Tidies the human text of a card: trimmed, no „Sugestie:” prefix, a capital first letter on names and sentences. */
+export function polishCard(card: Card): Card {
+  const data: Record<string, unknown> = { ...card.data };
+  for (const f of [...HUMAN_TEXT_FIELDS, 'name', 'statement'] as const) {
+    if (typeof data[f] !== 'string') continue;
+    const s = (data[f] as string).trim().replace(HEDGE, '');
+    data[f] = /^https?:/.test(s) ? s : capitalize(s);
+  }
+  return { kind: card.kind, data: data as Card['data'] };
+}
+
 /** Same card with the ids removed from its human text fields; ids and references are untouched. */
 export function scrubCardIds(card: Card, names: NameIndex): Card {
   const data: Record<string, unknown> = { ...card.data };

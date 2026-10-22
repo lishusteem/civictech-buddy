@@ -233,7 +233,7 @@ describe('StepScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
 
     expect(last().actors).toEqual([
-      { id: 'a1', name: 'Asociația Pietonilor', type: 'ngo', power: 'medium', stance: 'unknown', excluded: true },
+      { id: 'a1', name: 'Asociația Pietonilor', type: 'ngo', power: 'medium', stance: 'unknown', excluded: true, note: '' },
     ]);
     expect(last().steps.actors.status).toBe('in_progress');
   });

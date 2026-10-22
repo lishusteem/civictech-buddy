@@ -10,7 +10,7 @@ import {
   type EntityKind,
   type ListKind,
 } from '../project/entities';
-import { nameIndex, scrubCardIds, scrubIds } from '../project/humanText';
+import { nameIndex, polishCard, scrubCardIds, scrubIds } from '../project/humanText';
 import type { Message, Project, StepId } from '../project/schema';
 import { buildMessages, contextMessage, loadPrompt } from './prompts';
 import { RECAP_MARKER, type ChatMessage, type ChatProvider } from './provider';
@@ -125,6 +125,7 @@ function refError(card: Card, has: HasId): string | null {
     case 'relation':
       if (!has(d.from, 'actor')) return bad('from', 'actor');
       if (!has(d.to, 'actor')) return bad('to', 'actor');
+      if (d.from === d.to) return `Cardul relation (${d.id}): from și to sunt același actor; o relație leagă doi actori diferiți.`;
       return null;
     case 'precondition':
       if (d.actorId !== null && !has(d.actorId, 'actor', 'teamMember')) return bad('actorId', 'actor sau membru al echipei');
@@ -278,7 +279,7 @@ function parseTurn(raw: string, p: Project, step: StepId): Parsed {
 /** Internal ids must not leak into the text the dev reads (and that goes on the public page). */
 function finish(p: Project, cards: Card[]): Card[] {
   const names = nameIndex(p, cards);
-  const clean = dropUnanchoredRoles(p, cards).map((c) => scrubCardIds(c, names));
+  const clean = dropUnanchoredRoles(p, cards).map((c) => polishCard(scrubCardIds(c, names)));
   return normalizeCardIds(p, clean);
 }
 

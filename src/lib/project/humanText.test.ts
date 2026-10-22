@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from './empty';
-import { nameIndex, scrubCardIds, scrubIds } from './humanText';
+import { nameIndex, polishCard, scrubCardIds, scrubIds } from './humanText';
 import type { Project } from './schema';
 
 function proj(): Project {
@@ -60,5 +60,14 @@ describe('scrubCardIds', () => {
     expect(out.data.reason).toBe('«Datele sunt publice» spune că Primăria decide');
     expect(out.data.reasonRefs).toEqual(['p1', 'a4']);
     expect(out.data.id).toBe('o1');
+  });
+});
+
+describe('polishCard', () => {
+  it('drops a „Sugestie:” prefix and capitalizes names and sentences', () => {
+    const card = polishCard({ kind: 'precondition', data: { id: 'p1', text: ' guvernul aprobă', actorId: null, stage: 'mid', leadsTo: 't1', coveredByApp: false, assumption: '', risky: true, test: 'Sugestie: o cerere 544 către minister' } });
+    expect(card.data).toMatchObject({ text: 'Guvernul aprobă', test: 'O cerere 544 către minister', assumption: '' });
+    const actor = polishCard({ kind: 'actor', data: { id: 'a1', name: 'cetățenii', type: 'user', power: 'low', stance: 'supports', excluded: false } });
+    expect(actor.data).toMatchObject({ name: 'Cetățenii' });
   });
 });

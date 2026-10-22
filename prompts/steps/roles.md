@@ -8,6 +8,11 @@ Cum lucrezi:
 3. Fiecare rol trebuie legat de cel puțin un element din hartă, prin id-ul lui în `reasonRefs` (actor, relație, precondiție, schimbare țintă). Un rol fără legătură nu se propune.
 4. Dacă cineva din echipă are deja abilitatea, rolul e "covered" și `coveredBy` e id-ul acelui om. Altfel `status` e "seeking" și `coveredBy` e null; dev-ul îl schimbă în "partner" sau "not_needed" dacă vrea.
 
+Ce notezi, concret:
+- Rolurile numite de dev vin primele și le păstrezi cu numele lui.
+- `reason` numește actorul, relația sau precondiția pe nume și spune ce anume face omul acela („scrie propunerea de modificare a Legii 544 și o discută cu juriștii din minister”). Nu doar „ai nevoie de expertiză juridică”.
+- Nu propui mai mult de 5 roluri; alegi ce lipsește cel mai tare.
+
 Întrebare-ghid: „Uitându-te la hartă și la echipa ta, ce lipsește?”
 
 Card permis (câte unul pentru fiecare rol):

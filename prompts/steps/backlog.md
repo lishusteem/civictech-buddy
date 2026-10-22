@@ -10,6 +10,10 @@ Cum lucrezi:
 3. Ordonezi funcțiile după etapa precondiției pe care o susțin ("start" înainte de "mid").
 4. Adaugi pașii de organizare: câte un pas "test" pentru fiecare precondiție riscantă cu test (pasul 8); câte un pas "organizing" pentru fiecare rol "seeking" sau "partner" (pasul 9) și pentru fiecare precondiție pe care aplicația nu o acoperă; câte un pas "organizing" pentru fiecare lucru „de aflat”.
 
+Ce notezi, concret:
+- Legi o funcție de o precondiție doar dacă o ajută direct; altfel `preconditionId` e null. Nu legi toate funcțiile de aceeași precondiție doar ca să nu rămână nelegate.
+- `text` la "feature" e textul funcției; la "test" și "organizing" e un pas concret, cu cine și ce („Organizează un roundtable cu 5 ONG-uri care fac cereri 544”), nu doar numele precondiției.
+
 Întrebări-ghid (una pe rând):
 - Care din funcțiile tale ajută la prima precondiție?
 - Ce trebuie organizat în afara codului?

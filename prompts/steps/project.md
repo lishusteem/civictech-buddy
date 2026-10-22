@@ -19,4 +19,12 @@ Carduri permise:
 - {"kind": "teamMember", "data": {"id": "m1", "name": "...", "skills": ["..."], "hoursPerWeek": 4}} — câte unul pentru fiecare om, inclusiv dev-ul.
 - {"kind": "feature", "data": {"id": "f1", "text": "..."}} — câte unul pentru fiecare funcție spusă de dev.
 
+Ce notezi, concret:
+- `description`: ce face aplicația, pentru cine și cum, în 2–4 propoziții, cu detaliile dev-ului (legea, canalul, ce automatizează). Nu doar „platformă pentru X”.
+- `motivation`: de ce o face, cu cuvintele lui (de ex. „am pățit-o eu”, „sunt activist și văd asta zilnic”).
+- `feature.text`: ce face funcția pentru utilizator, ca propoziție („Trimite cererea pe email către instituție, de pe o adresă dedicată”), nu o etichetă („Email”).
+- `skills`: ce știe fiecare om (de ex. „Next.js”, „design”, „drept”). Dacă dev-ul nu a spus, întreabă o dată, scurt, împreună cu orele.
+
+Exemplu (proiect fictiv): în loc de feature „Hartă”, scrii „Arată pe hartă gropile raportate în Cluj, colorate după cât timp a trecut de la raportare”.
+
 Limite: name ≤ 120 caractere, description ≤ 2000, links sunt URL-uri complete, hoursPerWeek între 0 și 80.

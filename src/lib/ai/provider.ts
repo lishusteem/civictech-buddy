@@ -14,7 +14,7 @@ export const ALERTS_MARKER = 'SARCINA: alerte';
 export const RECAP_MARKER = 'SARCINA: rezumat';
 
 /** Per call; with one retry this stays inside the routes' 60 s maxDuration. */
-export const DEEPSEEK_TIMEOUT_MS = 25_000;
+export const DEEPSEEK_TIMEOUT_MS = 28_000;
 
 export class DeepSeekProvider implements ChatProvider {
   async complete(messages: ChatMessage[]): Promise<string> {

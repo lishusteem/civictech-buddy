@@ -77,6 +77,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
   ],
   actor: [
     { key: 'name', label: 'Nume', type: 'text', required: true },
+    { key: 'note', label: 'De ce contează', type: 'textarea' },
     {
       key: 'type',
       label: 'Tip',
@@ -158,7 +159,7 @@ export function defaultData(kind: EntityKind, project: Project, step: StepId): C
     case 'targetChange':
       return { id: '', text: '', signal: '' };
     case 'actor':
-      return { id: '', name: '', type: 'user', power: 'medium', stance: 'unknown', excluded: false };
+      return { id: '', name: '', type: 'user', power: 'medium', stance: 'unknown', excluded: false, note: '' };
     case 'relation':
       return { id: '', from: '', to: '', type: 'influences', note: '' };
     case 'precondition':
