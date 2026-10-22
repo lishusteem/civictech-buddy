@@ -356,3 +356,60 @@ describe('summarizeProject', () => {
     expect(await summarizeProject(createEmptyProject('x'), scripted('nope').provider)).toBe('');
   });
 });
+
+describe('runStepTurn: nothing cards and ids in text', () => {
+  const existingCard = (name: string) => ({
+    kind: 'existing',
+    data: { id: 'e1', name, url: null, difference: '' },
+  });
+
+  it.each(['Nu există', 'nu exista.', 'Nimic', 'Niciuna', 'None'])('retries an existing card named "%s"', async (name) => {
+    const good = { kind: 'proposal', text: 'Ok', cards: [existingCard('Civic Tech Field Guide')] };
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [existingCard(name)] }),
+      JSON.stringify(good),
+    );
+    const turn = await runStepTurn(createEmptyProject('x'), 'existing', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain('Nu am găsit nimic similar');
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('keeps a real initiative whose name merely contains "nimic"', async () => {
+    const { provider, calls } = scripted(
+      JSON.stringify({ kind: 'proposal', text: 'x', cards: [existingCard('Nimic fără noi')] }),
+    );
+    const turn = await runStepTurn(createEmptyProject('x'), 'existing', [], provider);
+    expect(calls).toHaveLength(1);
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('replaces ids with names in the human text of proposed cards, but not in id/reference fields', async () => {
+    const p = withFeature();
+    p.actors = [{ id: 'a4', name: 'Primăria', type: 'institution', power: 'high', stance: 'neutral', excluded: false }];
+    const role = {
+      kind: 'role',
+      data: { id: 'o1', name: 'Jurist', reason: 'p1 spune că a4 decide (a4)', reasonRefs: ['p1', 'a4'], stage: 'mid', status: 'seeking', coveredBy: null },
+    };
+    const { provider } = scripted(JSON.stringify({ kind: 'proposal', text: 'Pentru a4 propun un rol.', cards: [role] }));
+    const turn = await runStepTurn(p, 'roles', [], provider);
+    if (turn.kind !== 'proposal') throw new Error('expected a proposal');
+    expect(turn.text).toBe('Pentru Primăria propun un rol.');
+    expect(turn.cards[0].data.reason).toBe('«Primăria publică datele» spune că Primăria decide (Primăria)');
+    expect(turn.cards[0].data.reasonRefs).toEqual(['p1', 'a4']);
+  });
+
+  it('names project actors in a relation note', async () => {
+    const cards = [
+      { kind: 'actor', data: { id: 'a7', name: 'Ziarul Local', type: 'media', power: 'low', stance: 'unknown', excluded: false } },
+      { kind: 'actor', data: { id: 'a8', name: 'Cititorii', type: 'user', power: 'low', stance: 'supports', excluded: false } },
+    ];
+    const rel = { kind: 'relation', data: { id: 'r1', from: 'a7', to: 'a8', type: 'influences', note: 'a7 scrie pentru a8' } };
+    const p = createEmptyProject('x');
+    p.actors = cards.map((c) => c.data) as Project['actors'];
+    const { provider } = scripted(JSON.stringify({ kind: 'proposal', text: 'x', cards: [rel] }));
+    const turn = await runStepTurn(p, 'relations', [], provider);
+    if (turn.kind !== 'proposal') throw new Error('expected a proposal');
+    expect(turn.cards.find((c) => c.kind === 'relation')!.data.note).toBe('Ziarul Local scrie pentru Cititorii');
+  });
+});

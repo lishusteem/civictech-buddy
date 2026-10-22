@@ -7,6 +7,7 @@ import {
   remainingCapacity,
   removeEntity,
   savedEntitiesForStep,
+  STEP_ENTITIES,
   upsertEntity,
   type Card,
 } from './entities';
@@ -75,11 +76,14 @@ describe('upsertEntity / removeEntity', () => {
 });
 
 describe('entitiesForStep', () => {
-  it('includes actors in the preconditions step', () => {
+  it('shows only preconditions as the content of the preconditions step (actors live on their own step)', () => {
     let p = upsertEntity(createEmptyProject('T'), actor('a1'));
     p = upsertEntity(p, precondition('p1'));
-    const kinds = entitiesForStep(p, 'preconditions').map((c) => c.kind);
-    expect(kinds).toEqual(['precondition', 'actor']);
+    expect(entitiesForStep(p, 'preconditions').map((c) => c.kind)).toEqual(['precondition']);
+    expect(savedEntitiesForStep(p, 'preconditions').map((c) => c.kind)).toEqual(['precondition']);
+    expect(entitiesForStep(p, 'actors').map((c) => c.kind)).toEqual(['actor']);
+    // the AI may still propose a new actor on the preconditions step
+    expect(STEP_ENTITIES.preconditions).toContain('actor');
   });
 
   it('returns singleton cards with fixed ids', () => {
@@ -109,14 +113,56 @@ describe('normalizeCardIds', () => {
     expect(normalizeCardIds(p, [actor('a1', 'Renamed')])[0].data.id).toBe('a1');
   });
 
-  it('rewrites array references (reasonRefs)', () => {
+  it('does not rewrite a reasonRefs entry that also names an existing entity of another kind', () => {
     const p = upsertEntity(createEmptyProject('T'), precondition('x'));
     const role: Card = {
       kind: 'role',
       data: { id: 'o1', name: 'n', reason: '', reasonRefs: ['x', 'p1'], stage: 'start', status: 'seeking', coveredBy: null },
     };
     const out = normalizeCardIds(p, [role, actor('x')]);
-    expect(out[0].data.reasonRefs).toEqual(['a1', 'p1']);
+    expect(out[1].data.id).toBe('a1');
+    expect(out[0].data.reasonRefs).toEqual(['x', 'p1']);
+  });
+
+  it('keeps featureId f1/f2 on backlog items whose own ids collide with the features (production bug)', () => {
+    const p = createEmptyProject('T');
+    p.features = [{ id: 'f1', text: 'Harta' }, { id: 'f2', text: 'Alerte' }];
+    p.backlog = Array.from({ length: 10 }, (_, i) => ({
+      id: `b${i + 1}`, stage: 'start' as const, kind: 'organizing' as const, featureId: null, preconditionId: null, text: `o${i}`, order: i + 1,
+    }));
+    const item = (id: string, featureId: string): Card => ({
+      kind: 'backlogItem',
+      data: { id, stage: 'start', kind: 'feature', featureId, preconditionId: 'p1', text: 'x', order: 1 },
+    });
+    const out = normalizeCardIds(p, [item('f1', 'f1'), item('f2', 'f2')]);
+    expect(out.map((c) => c.data.id)).toEqual(['b11', 'b12']);
+    expect(out.map((c) => c.data.featureId)).toEqual(['f1', 'f2']);
+    expect(out.map((c) => c.data.preconditionId)).toEqual(['p1', 'p1']);
+  });
+
+  it('rewrites a reference only in fields that point at the renamed card kind', () => {
+    // existing precondition p1; the AI proposes a new actor also called p1, a relation from it and a precondition leading to p1
+    const p = upsertEntity(createEmptyProject('T'), precondition('p1'));
+    const rel: Card = { kind: 'relation', data: { id: 'r1', from: 'p1', to: 'p1', type: 'funds', note: '' } };
+    const pre: Card = precondition('p2', { actorId: 'p1', leadsTo: 'p1' });
+    const out = normalizeCardIds(p, [actor('p1'), rel, pre]);
+    expect(out[0].data.id).toBe('a1');
+    expect(out[1].data.from).toBe('a1');
+    expect(out[1].data.to).toBe('a1');
+    expect(out[2].data.actorId).toBe('a1');
+    expect(out[2].data.leadsTo).toBe('p1'); // leadsTo points to a precondition, which is not renamed
+  });
+
+  it('rewrites coveredBy for a renamed team member', () => {
+    const p = upsertEntity(createEmptyProject('T'), actor('m1'));
+    const member: Card = { kind: 'teamMember', data: { id: 'm1', name: 'Ana', skills: [], hoursPerWeek: 3 } };
+    const role: Card = {
+      kind: 'role',
+      data: { id: 'o1', name: 'n', reason: '', reasonRefs: [], stage: 'start', status: 'covered', coveredBy: 'm1' },
+    };
+    const out = normalizeCardIds(p, [member, role]);
+    expect(out[0].data.id).toBe('m2');
+    expect(out[1].data.coveredBy).toBe('m2');
   });
 });
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { nameIndex, scrubIds } from '@/lib/project/humanText';
 import type { Project, Stage } from '@/lib/project/schema';
 
 type Props = {
@@ -73,12 +74,15 @@ function ExtLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 export function ProjectView({ project: p, publishedAt }: Props) {
+  // Safety net: older data may carry internal ids ("a4", "p1") inside human text.
+  const names = nameIndex(p);
+  const clean = (text: string) => scrubIds(text, names);
   const actorName = (id: string | null) =>
     p.actors.find((a) => a.id === id)?.name ?? p.team.find((m) => m.id === id)?.name ?? null;
   const cardRoles = p.roles.filter((r) => r.status === 'seeking' || r.status === 'partner');
   const tableRoles = p.roles.filter((r) => r.status !== 'not_needed');
   const sentence = firstSentence(p.problem.statement);
-  const firstChange = p.targetChanges[0]?.text ?? '';
+  const firstChange = clean(p.targetChanges[0]?.text ?? '');
   const risky = p.preconditions.filter((c) => c.risky).slice(0, 3);
   const links = p.project.links.map((l) => ({ raw: l, href: safeHttpUrl(l) }));
   const dismissedAlerts = p.alerts.filter((a) => a.status === 'dismissed');
@@ -182,7 +186,7 @@ export function ProjectView({ project: p, publishedAt }: Props) {
               return (
                 <li key={x.id}>
                   {href ? <ExtLink href={href}>{x.name}</ExtLink> : x.name}
-                  {x.difference && ` — ${x.difference}`}
+                  {x.difference && ` — ${clean(x.difference)}`}
                 </li>
               );
             })}
@@ -196,8 +200,8 @@ export function ProjectView({ project: p, publishedAt }: Props) {
           <ul className="list-disc space-y-1 pl-5">
             {p.targetChanges.map((t) => (
               <li key={t.id}>
-                {t.text}
-                {t.signal && <span className="text-stone-700"> — semn observabil: {t.signal}</span>}
+                {clean(t.text)}
+                {t.signal && <span className="text-stone-700"> — semn observabil: {clean(t.signal)}</span>}
               </li>
             ))}
           </ul>
@@ -211,7 +215,7 @@ export function ProjectView({ project: p, publishedAt }: Props) {
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 {items.map((c) => (
                   <li key={c.id}>
-                    {c.text}
+                    {clean(c.text)}
                     {actorName(c.actorId) && <span className="text-stone-700"> · {actorName(c.actorId)}</span>}
                   </li>
                 ))}
@@ -229,8 +233,8 @@ export function ProjectView({ project: p, publishedAt }: Props) {
           <ol className="list-decimal space-y-2 pl-5">
             {risky.map((c) => (
               <li key={c.id}>
-                {c.assumption || c.text}
-                {c.test && <span className="block text-stone-700">Test: {c.test}</span>}
+                {clean(c.assumption || c.text)}
+                {c.test && <span className="block text-stone-700">Test: {clean(c.test)}</span>}
               </li>
             ))}
           </ol>
@@ -276,7 +280,7 @@ export function ProjectView({ project: p, publishedAt }: Props) {
                 {tableRoles.map((r) => (
                   <tr key={r.id} className="border-b border-stone-200 align-top">
                     <td className="py-2 pr-3">{r.name}</td>
-                    <td className="py-2 pr-3">{r.reason}</td>
+                    <td className="py-2 pr-3">{clean(r.reason)}</td>
                     <td className="py-2 pr-3">{PHASE_LABEL[r.stage]}</td>
                     <td className="py-2">{ROLE_STATUS[r.status]}</td>
                   </tr>
@@ -297,7 +301,7 @@ export function ProjectView({ project: p, publishedAt }: Props) {
                 {items.map((b) => (
                   <li key={b.id}>
                     <span className="text-sm text-stone-700">{KIND_LABEL[b.kind]}: </span>
-                    {b.text}
+                    {clean(b.text)}
                   </li>
                 ))}
               </ul>
@@ -315,7 +319,7 @@ export function ProjectView({ project: p, publishedAt }: Props) {
               <li key={`${a.code}-${i}`}>{a.message}</li>
             ))}
             {p.toFindOut.map((q) => (
-              <li key={q.id}>{q.text}</li>
+              <li key={q.id}>{clean(q.text)}</li>
             ))}
           </ul>
         )}

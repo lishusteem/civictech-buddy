@@ -56,6 +56,17 @@ describe('ProjectView', () => {
     expect(hrefs.some((h) => h?.startsWith('javascript'))).toBe(false);
   });
 
+  it('never shows internal ids in the human text (safety net)', () => {
+    const p = createEmptyProject('P');
+    p.actors = [{ id: 'a4', name: 'Primăria', type: 'institution', power: 'high', stance: 'neutral', excluded: false }];
+    p.roles = [{ id: 'o1', name: 'Jurist', reason: 'a4 decide și (a4) contează', reasonRefs: ['a4'], stage: 'start', status: 'seeking', coveredBy: null }];
+    p.existing = [{ id: 'e1', name: 'Alt proiect', url: null, difference: 'Spre deosebire de a4' }];
+    render(<ProjectView project={p} publishedAt={null} />);
+    expect(screen.getByText('Primăria decide și (Primăria) contează')).toBeTruthy();
+    expect(screen.getByText(/Spre deosebire de Primăria/)).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/\ba4\b/);
+  });
+
   it('lists backlog start before mid and open points', () => {
     const p = createEmptyProject('P');
     p.backlog = [

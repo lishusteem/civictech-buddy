@@ -156,6 +156,34 @@ describe('Editor', () => {
     ).toBeTruthy();
   });
 
+  it('repairs backlog items whose featureId points at themselves on load, and saves the repair', async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ draftUpdatedAt: '2026-10-21T10:00:05.000Z' }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const draft = createEmptyProject('P');
+    draft.features = [{ id: 'f1', text: 'Harta' }];
+    draft.backlog = [
+      { id: 'b1', stage: 'start', kind: 'feature', featureId: 'b1', preconditionId: null, text: 'Harta', order: 1 },
+      { id: 'b2', stage: 'start', kind: 'feature', featureId: 'b2', preconditionId: null, text: 'Altceva', order: 2 },
+    ];
+    render(
+      <Editor
+        token="t"
+        slug="s"
+        initial={{ draft, draftUpdatedAt: T1 }}
+        publishedAt={T1}
+        renderStep={(_s, d) => <p>{d.backlog.map((b) => String(b.featureId)).join(',')}</p>}
+      />,
+    );
+    expect(screen.getByText('f1,null')).toBeTruthy();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled(), { timeout: 3000 });
+    const sent = JSON.parse(fetchMock.mock.calls[0][1]!.body as string).draft;
+    expect(sent.backlog.map((b: { featureId: string | null }) => b.featureId)).toEqual(['f1', null]);
+  });
+
   it('saves an accepted card before asking for alerts', async () => {
     const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>(async (url) => ({
       ok: true,

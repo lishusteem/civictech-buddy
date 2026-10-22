@@ -10,6 +10,7 @@ import {
   type EntityKind,
   type ListKind,
 } from '../project/entities';
+import { nameIndex, scrubCardIds, scrubIds } from '../project/humanText';
 import type { Message, Project, StepId } from '../project/schema';
 import { buildMessages, contextMessage, loadPrompt } from './prompts';
 import { RECAP_MARKER, type ChatMessage, type ChatProvider } from './provider';
@@ -29,6 +30,30 @@ type CardResult = { card: Card } | { error: string } | { drop: true };
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Lower case, no diacritics, no punctuation: "Nu există." -> "nu exista". */
+function plain(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+/** Names the AI gives to an "existing" card when the dev found nothing. */
+const NOTHING_NAMES = new Set([
+  'nu exista',
+  'nu exista nimic',
+  'nu am gasit nimic',
+  'nu am gasit',
+  'nimic',
+  'niciuna',
+  'niciunul',
+  'nicio initiativa',
+  'none',
+  'n a',
+]);
 
 function issuesText(kind: string, id: unknown, err: ZodError): string {
   const where = typeof id === 'string' && id ? ` (${id})` : '';
@@ -60,6 +85,12 @@ function validateCard(raw: unknown, p: Project, step: StepId): CardResult {
       ...existing,
       risky: 'risky' in data ? data.risky : existing.risky,
       test: 'test' in data ? data.test : existing.test,
+    };
+  }
+
+  if (kind === 'existing' && typeof data.name === 'string' && NOTHING_NAMES.has(plain(data.name))) {
+    return {
+      error: `Cardul existing "${data.name}" spune că nu există nimic. Dacă dev-ul n-a găsit nimic similar, nu propune niciun card existing: spune-i să apese „Nu am găsit nimic similar”.`,
     };
   }
 
@@ -244,8 +275,11 @@ function parseTurn(raw: string, p: Project, step: StepId): Parsed {
   return { ok: true, turn: { kind: 'proposal', text, cards: batch.cards } };
 }
 
+/** Internal ids must not leak into the text the dev reads (and that goes on the public page). */
 function finish(p: Project, cards: Card[]): Card[] {
-  return normalizeCardIds(p, dropUnanchoredRoles(p, cards));
+  const names = nameIndex(p, cards);
+  const clean = dropUnanchoredRoles(p, cards).map((c) => scrubCardIds(c, names));
+  return normalizeCardIds(p, clean);
 }
 
 export async function runStepTurn(
@@ -273,8 +307,8 @@ export async function runStepTurn(
   }
 
   const { turn } = result;
-  if (turn.kind === 'question') return turn;
-  return { kind: 'proposal', text: turn.text, cards: finish(p, turn.cards) };
+  if (turn.kind === 'question') return { kind: 'question', text: scrubIds(turn.text, nameIndex(p)) };
+  return { kind: 'proposal', text: scrubIds(turn.text, nameIndex(p, turn.cards)), cards: finish(p, turn.cards) };
 }
 
 /** Up to 3 lines recapping the project, for coming back via the edit link (F7). '' on any error. */

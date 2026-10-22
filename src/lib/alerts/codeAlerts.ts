@@ -25,6 +25,12 @@ function make(code: AlertCode, refs: string[] = [], message?: string): Alert {
   return { code, step: def.step, refs, status: 'open', message: message ?? def.message };
 }
 
+/** Keeps an alert message within the 400 characters the schema allows. */
+function shorten(text: string): string {
+  const t = text.trim();
+  return t.length > 200 ? `${t.slice(0, 199)}…` : t;
+}
+
 function touched(p: Project, stepNumber: number): boolean {
   const def = STEPS.find((s) => s.number === stepNumber);
   return !!def && p.steps[def.id].status !== 'untouched';
@@ -86,7 +92,7 @@ export function computeCodeAlerts(p: Project): Project['alerts'] {
   if (on('orphan_feature')) {
     for (const f of p.features) {
       const linked = p.backlog.some((b) => b.featureId === f.id && b.preconditionId !== null);
-      if (!linked) out.push(make('orphan_feature', [f.id]));
+      if (!linked) out.push(make('orphan_feature', [f.id], ALERT_MESSAGES.orphan_feature.message.replace('{text}', () => shorten(f.text))));
     }
   }
 

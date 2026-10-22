@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { repairBacklogLinks } from '@/lib/backlog/repair';
 import { computeCodeAlerts, mergeAlerts } from '@/lib/alerts/codeAlerts';
 import { computeStale } from '@/lib/project/stale';
 import type { Project } from '@/lib/project/schema';
@@ -26,14 +27,19 @@ function withDerived(prev: Project, next: Project): Project {
 }
 
 export function useAutosave(token: string, initial: { draft: Project; draftUpdatedAt: string }) {
-  const [draft, setDraftState] = useState<Project>(initial.draft);
+  // Backlog links broken by older versions are repaired once on load; a repair is saved like an edit.
+  const [start] = useState(() => {
+    const fixed = repairBacklogLinks(initial.draft);
+    return fixed === initial.draft ? { draft: initial.draft, repaired: false } : { draft: withDerived(initial.draft, fixed), repaired: true };
+  });
+  const [draft, setDraftState] = useState<Project>(start.draft);
   const [draftUpdatedAt, setDraftUpdatedAt] = useState(initial.draftUpdatedAt);
-  const [status, setStatus] = useState<SaveStatus>('saved');
+  const [status, setStatus] = useState<SaveStatus>(start.repaired ? 'saving' : 'saved');
   const [conflict, setConflict] = useState<Conflict | null>(null);
 
-  const draftRef = useRef(initial.draft);
+  const draftRef = useRef(start.draft);
   const expectedRef = useRef(initial.draftUpdatedAt);
-  const dirtyRef = useRef(false);
+  const dirtyRef = useRef(start.repaired);
   const inFlightRef = useRef(false);
   const conflictRef = useRef<Conflict | null>(null);
   const retriesRef = useRef(0);
@@ -165,6 +171,10 @@ export function useAutosave(token: string, initial: { draft: Project; draftUpdat
       }
     });
   }, [clearTimer]);
+
+  useEffect(() => {
+    if (start.repaired) schedule(DEBOUNCE_MS);
+  }, [start.repaired, schedule]);
 
   useEffect(() => {
     mountedRef.current = true;

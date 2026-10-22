@@ -113,6 +113,7 @@ describe('computeCodeAlerts', () => {
     const a = computeCodeAlerts(proj(['backlog'], feats));
     expect(a).toHaveLength(1);
     expect(a[0]).toMatchObject({ code: 'orphan_feature', step: 10, refs: ['f1'] });
+    expect(a[0].message).toBe('Funcția «F» nu ajută la nicio precondiție. La ce ajută? Poate așteaptă în lista „mai târziu”.');
     // linked to a feature but not to a precondition: still orphan
     expect(codes(proj(['backlog'], (p) => { feats(p); p.backlog = [item({ featureId: 'f1' })]; }))).toContain('orphan_feature');
     expect(codes(proj(['backlog'], (p) => { feats(p); p.backlog = [item({ featureId: 'f1', preconditionId: 'p1' })]; }))).not.toContain('orphan_feature');

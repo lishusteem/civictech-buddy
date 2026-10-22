@@ -3,7 +3,7 @@ import type { AlertCode } from '../project/schema';
 // Texts copied from PRD section 5 (Alertele de naivitate). `step` is the first
 // number of the table's "Pas" column.
 // Placeholders: team_no_time uses {h}; powerful_actor_unused replaces
-// "Ministerul X" with the actor name; all_on_one replaces "în 4 ore" with the
+// "Ministerul X" with the actor name; orphan_feature replaces {text} with the feature text; all_on_one replaces "în 4 ore" with the
 // person's hours (see codeAlerts.ts).
 export const ALERT_MESSAGES: Record<AlertCode, { title: string; step: number; message: string }> = {
   team_no_time: {
@@ -79,7 +79,7 @@ export const ALERT_MESSAGES: Record<AlertCode, { title: string; step: number; me
   orphan_feature: {
     title: 'Feature orfan',
     step: 10,
-    message: 'La ce ajută funcția asta? Poate așteaptă în lista „mai târziu”.',
+    message: 'Funcția «{text}» nu ajută la nicio precondiție. La ce ajută? Poate așteaptă în lista „mai târziu”.',
   },
   only_code: {
     title: 'Doar cod',

@@ -181,8 +181,16 @@ function cardsOfKind(p: Project, kind: EntityKind): Card[] {
   return listOf(p, kind).map((e) => ({ kind, data: { ...e } }));
 }
 
+/**
+ * What a step shows as its saved content. The AI may propose more kinds than that
+ * (a new actor on the preconditions step), but once accepted those belong to their own step.
+ */
+const STEP_CONTENT: Partial<Record<StepId, EntityKind[]>> = {
+  preconditions: ['precondition'],
+};
+
 export function entitiesForStep(p: Project, step: StepId): Card[] {
-  return STEP_ENTITIES[step].flatMap((kind) => cardsOfKind(p, kind));
+  return (STEP_CONTENT[step] ?? STEP_ENTITIES[step]).flatMap((kind) => cardsOfKind(p, kind));
 }
 
 /** Like entitiesForStep, but a singleton (project info, problem, direction) that is still empty does not count. */
@@ -195,9 +203,23 @@ export function savedEntitiesForStep(p: Project, step: StepId): Card[] {
   });
 }
 
-function mapRef(value: unknown, renames: Map<string, string>): unknown {
-  if (typeof value === 'string') return renames.get(value) ?? value;
-  if (Array.isArray(value)) return value.map((v) => mapRef(v, renames));
+/** The kinds of entity each reference field points to. */
+const REF_TARGETS = {
+  from: ['actor'],
+  to: ['actor'],
+  actorId: ['actor', 'teamMember'],
+  leadsTo: ['precondition', 'targetChange'],
+  featureId: ['feature'],
+  preconditionId: ['precondition'],
+  coveredBy: ['teamMember'],
+} as const satisfies Record<string, readonly EntityKind[]>;
+
+/** old id -> (kind of the renamed card -> its new id). */
+type Renames = Map<string, Map<EntityKind, string>>;
+
+function mapRef(value: unknown, pick: (oldId: string) => string | undefined): unknown {
+  if (typeof value === 'string') return pick(value) ?? value;
+  if (Array.isArray(value)) return value.map((v) => mapRef(v, pick));
   return value;
 }
 
@@ -227,7 +249,7 @@ export function normalizeCardIds(p: Project, cards: Card[]): Card[] {
     return `${prefix}${n}`;
   };
 
-  const renames = new Map<string, string>();
+  const renames: Renames = new Map();
   const assigned = cards.map((card): Card => {
     if (isSingleton(card.kind)) return { kind: card.kind, data: { ...card.data, id: card.kind } };
     const oldId = card.data.id;
@@ -239,14 +261,37 @@ export function normalizeCardIds(p: Project, cards: Card[]): Card[] {
     }
     const id = nextId(ID_PREFIX[card.kind]);
     taken.set(id, card.kind);
-    if (has) renames.set(oldId, id);
+    if (has) (renames.get(oldId) ?? renames.set(oldId, new Map()).get(oldId)!).set(card.kind, id);
     return { kind: card.kind, data: { ...card.data, id } };
   });
 
   if (renames.size === 0) return assigned;
+
+  // A reference follows a renamed card only when the field points at that card's kind.
+  const refTo = (kinds: readonly EntityKind[]) => (oldId: string) => {
+    const byKind = renames.get(oldId);
+    if (!byKind) return undefined;
+    for (const k of kinds) if (byKind.has(k)) return byKind.get(k);
+    return undefined;
+  };
+  // reasonRefs may point at any kind: follow a rename only when no other entity kept that id.
+  const anyKind = (oldId: string) => {
+    const byKind = renames.get(oldId);
+    if (!byKind || keptIds.has(oldId)) return undefined;
+    return byKind.values().next().value;
+  };
+  const keptIds = new Set<string>();
+  for (const { entity } of allListEntities(p)) keptIds.add(entity.id);
+  assigned.forEach((card, i) => {
+    if (!isSingleton(card.kind) && card.data.id === cards[i].data.id) keptIds.add(card.data.id);
+  });
+
   return assigned.map((card) => {
     const data: Record<string, unknown> = { ...card.data };
-    for (const f of REF_FIELDS) if (f in data) data[f] = mapRef(data[f], renames);
+    for (const f of REF_FIELDS) {
+      if (!(f in data)) continue;
+      data[f] = mapRef(data[f], f === 'reasonRefs' ? anyKind : refTo(REF_TARGETS[f]));
+    }
     return { kind: card.kind, data: data as Card['data'] };
   });
 }
