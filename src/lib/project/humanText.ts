@@ -15,6 +15,8 @@ function labelOf(data: Record<string, unknown>): string {
   if (typeof data.text === 'string') {
     const text = data.text.trim();
     if (text !== '' && text.length <= MAX_QUOTED) return `«${text}»`;
+    // A long text is quoted by its first words, so a removed id never leaves a hole in the sentence.
+    if (text !== '') return `«${text.slice(0, MAX_QUOTED).replace(/\s+\S*$/, '')}…»`;
   }
   return '';
 }

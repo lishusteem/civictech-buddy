@@ -263,7 +263,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
               }}
             />
           ) : view === 'summary' ? (
-            <Summary draft={draft} publishing={publishing} disabled={status !== 'saved'} error={publishError} onPublish={publish} />
+            <Summary draft={draft} setDraft={setDraft} published={publishedAt !== null} publishing={publishing} disabled={status !== 'saved'} error={publishError} onPublish={publish} />
           ) : stepDef === null ? (
             <div className="mx-auto max-w-3xl">
               <Overview token={token} project={draft} onEditStep={go} />

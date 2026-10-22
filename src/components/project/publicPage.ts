@@ -1,4 +1,5 @@
 import type { AlertCode, Project } from '@/lib/project/schema';
+import { QUESTION_CODES } from '@/lib/alerts/messages';
 
 type Actor = Project['actors'][number];
 type Stage = Project['project']['stage'];
@@ -133,15 +134,7 @@ export function groupActors(actors: Actor[]): ActorGroup[] {
 }
 
 /** Alerts that are questions for the person (spec §5.1); the other codes are checklist rows and never public. */
-export const QUESTION_ALERT_CODES: ReadonlySet<AlertCode> = new Set<AlertCode>([
-  'team_no_time',
-  'all_on_one',
-  'solution_in_problem',
-  'app_as_goal',
-  'abstract_change',
-  'magic_leap',
-  'build_and_they_come',
-]);
+export const QUESTION_ALERT_CODES: ReadonlySet<AlertCode> = new Set<AlertCode>(QUESTION_CODES);
 
 const MAX_PUBLIC_QUESTIONS = 6;
 

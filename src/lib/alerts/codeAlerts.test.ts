@@ -133,6 +133,13 @@ describe('mergeAlerts', () => {
     code, step: ALERT_MESSAGES[code].step, refs, status, message: 'm',
   });
 
+  it('keeps one copy of an LLM question asked again on a later step', () => {
+    const early: Alert = { code: 'build_and_they_come', step: 3, refs: [], status: 'open', message: 'a' };
+    const late: Alert = { code: 'build_and_they_come', step: 8, refs: [], status: 'open', message: 'b' };
+    const out = mergeAlerts([early], [late], { llmStep: 8 });
+    expect(out).toEqual([early]);
+  });
+
   it('keeps dismissed status for existing keys', () => {
     const out = mergeAlerts([al('no_evidence', 'dismissed')], [al('no_evidence', 'open')]);
     expect(out).toHaveLength(1);

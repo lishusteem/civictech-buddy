@@ -132,5 +132,8 @@ export function mergeAlerts(previous: Alert[], fresh: Alert[], opts: { llmStep?:
       merged.push(prev);
     }
   }
-  return merged;
+  // The same LLM question can come back from a later step; keep only the earliest step's copy.
+  const firstStep = new Map<AlertCode, number>();
+  for (const a of merged) if (!isCodeAlert(a)) firstStep.set(a.code, Math.min(a.step, firstStep.get(a.code) ?? Infinity));
+  return merged.filter((a) => isCodeAlert(a) || a.step === firstStep.get(a.code));
 }

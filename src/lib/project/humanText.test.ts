@@ -12,7 +12,10 @@ function proj(): Project {
   p.preconditions = [
     { id: 'p1', text: 'Datele sunt publice', actorId: null, stage: 'start', leadsTo: 't1', coveredByApp: false, assumption: '', risky: false, test: '' },
   ];
-  p.targetChanges = [{ id: 't1', text: 'x'.repeat(200), signal: '' }];
+  p.targetChanges = [
+    { id: 't1', text: '', signal: '' },
+    { id: 't2', text: 'Instituțiile publice răspund mai repede și complet la toate cererile de informații', signal: '' },
+  ];
   return p;
 }
 
@@ -22,6 +25,11 @@ describe('scrubIds', () => {
     expect(scrubIds('a4 are control asupra datelor', names)).toBe('Primăria are control asupra datelor');
     expect(scrubIds('Din cauza lui p1 apar probleme', names)).toBe('Din cauza lui «Datele sunt publice» apar probleme');
     expect(scrubIds('Primăria (a6) ajută', names)).toBe('Primăria (ONG-ul Verde) ajută');
+  });
+
+  it('quotes a long text by its first words', () => {
+    const names = nameIndex(proj());
+    expect(scrubIds('Ajută la t2', names)).toBe('Ajută la «Instituțiile publice răspund mai repede și complet la toate…»');
   });
 
   it('strips an id with no short name, with its parentheses', () => {
