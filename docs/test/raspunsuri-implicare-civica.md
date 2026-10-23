@@ -6,9 +6,28 @@ Numele proiectului, la creare: **Implicare Civica**
 
 ## 1. Proiectul și echipa
 
+Pasul 1 începe cu trei câmpuri. Completează-le așa:
+
+**Ce face aplicația**
+
 ```
-e o platforma de management pentru cererile foia, pe legea 544 referitor la informatiile de interes public. creaza o adresa de mail @implicarecivica.ro . exista un ai care ajuta utilizatorul sa identifice istitutiile responsabile pentru problemele defeinite si ajuta la formularea de intrebari pertinente. apoi trimite mailurile si face tracking pe status. deci ajuta utlizatorul sa tina seama de stadiul cererilor. si scoate date publice despre rata de raspuns a diferitelor instituii. e live acum asta
+e o platforma de management pentru cererile foia, pe legea 544 referitor la informatiile de interes public. ajuta cetatenii sa trimita cereri la institutiile potrivite si sa urmareasca raspunsurile. e live acum
 ```
+
+**Funcții care merg deja** (câte una pe rând)
+
+```
+creaza o adresa de mail @implicarecivica.ro pentru fiecare utilizator
+un ai care ajuta utilizatorul sa identifice institutiile responsabile pentru problemele definite
+un ai care ajuta la formularea de intrebari pertinente
+trimite mailurile catre institutii
+face tracking pe status, ca utilizatorul sa tina seama de stadiul cererilor
+scoate date publice despre rata de raspuns a diferitelor institutii
+```
+
+**Funcții care urmează**: lasă gol sau scrie ce ai în plan.
+
+Apoi, în conversație:
 
 ```
 doar eu, 4 ore pe saptamana

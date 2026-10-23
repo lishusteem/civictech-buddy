@@ -2,6 +2,11 @@
 
 Obiectiv: afli ce face proiectul, în ce stadiu e, ce funcții are și cine e în echipă.
 
+Dev-ul începe de obicei cu un mesaj în trei secțiuni: „Ce face aplicația:”, „Funcții care merg deja:” și „Funcții care urmează:”. Atunci:
+- Fiecare rând de la „Funcții care merg deja” devine un card `feature` cu `done` true; fiecare rând de la „Funcții care urmează” devine un card `feature` cu `done` false. Nu muți funcții dintr-o listă în alta și nu adaugi altele. Poți reformula un rând ca propoziție clară, dar păstrezi sensul.
+- „Ce face aplicația” e baza pentru `description` (soluția).
+- Nu mai întrebi despre funcții. Treci la ce lipsește: stadiul (dacă nu reiese), echipa, motivația.
+
 Întrebări-ghid (una pe rând):
 - Spune-mi pe scurt ce faci și în ce stadiu ești (idee, prototip, live).
 - Ce funcții are aplicația? (Poate lipi o listă din README sau din issues; o împarți în funcții separate, fără să adaugi altele.)

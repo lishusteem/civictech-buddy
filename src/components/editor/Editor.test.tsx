@@ -2,12 +2,16 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import { createEmptyProject } from '@/lib/project/empty';
+import type { Project } from '@/lib/project/schema';
 import { fillSteps } from '@/lib/steps/completion.fixtures';
 import { STEPS } from '@/lib/steps/definitions';
 import { Editor } from './Editor';
 
 const T1 = '2026-10-21T10:00:00.000Z';
 const T0 = '2026-10-20T10:00:00.000Z';
+
+/** A project that already has its functions: step 1 then opens with the AI's question, not the three fields. */
+const withFeature = (p: Project): Project => ({ ...p, features: [{ id: 'f1', text: 'Hartă', done: true }] });
 
 afterEach(() => {
   cleanup();
@@ -258,7 +262,7 @@ describe('Editor', () => {
         return { ok: true, status: 200, json: async () => (url.endsWith('/ai') ? { kind: 'question', text: 'Prima întrebare.' } : { alerts: [] }) };
       });
       vi.stubGlobal('fetch', fetchMock);
-      const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+      const initial = { draft: withFeature(fillSteps(createEmptyProject('P'), ['project'])), draftUpdatedAt: T1 };
       render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
       expect(screen.getByText('Pregătesc prima întrebare…')).toBeTruthy();
       fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
@@ -278,7 +282,7 @@ describe('Editor', () => {
         json: async () => (url.endsWith('/ai') ? { error: 'AI-ul nu răspunde acum.' } : { alerts: [] }),
       }));
       vi.stubGlobal('fetch', fetchMock);
-      const initial = { draft: fillSteps(createEmptyProject('P'), ['project']), draftUpdatedAt: T1 };
+      const initial = { draft: withFeature(fillSteps(createEmptyProject('P'), ['project'])), draftUpdatedAt: T1 };
       render(<Editor token="t" slug="s" initial={initial} publishedAt={T1} />);
       expect(await screen.findByText('AI-ul nu răspunde acum.')).toBeTruthy();
       const before = aiCalls(fetchMock);

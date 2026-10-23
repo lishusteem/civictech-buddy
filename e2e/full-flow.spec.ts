@@ -44,6 +44,15 @@ async function waitForFirstTurn(page: Page) {
   return replies;
 }
 
+/** Step 1 opens with three fields instead of a first question; sending them starts the conversation. */
+async function fillIntake(page: Page) {
+  const intake = page.getByRole('form', { name: 'Despre aplicație' });
+  await intake.getByLabel('Ce face aplicația').fill('Sesizări pentru asociații de proprietari.');
+  await intake.getByLabel('Funcții care merg deja').fill('Trimite sesizarea pe email');
+  await intake.getByLabel('Funcții care urmează').fill('Urmărește răspunsul primăriei');
+  await intake.getByRole('button', { name: 'Trimite' }).click();
+}
+
 /**
  * One step: answer the AI, then a single click on the action bar saves the pending proposals and moves on
  * (state A), or moves on when the step is already complete (state C).
@@ -89,6 +98,7 @@ test('full flow: create, 10 steps, publish, update, conflict', async ({ page, br
   // 2. Ten steps
   for (let i = 1; i <= STEP_COUNT; i++) {
     await expect(page.getByRole('main').getByText(new RegExp(`^Pasul ${i} din ${STEP_COUNT} · `))).toBeVisible();
+    if (i === 1) await fillIntake(page);
     if (i === 2) await completeStepWithDa(page);
     else await completeStep(page);
   }
@@ -149,6 +159,7 @@ test('mobile 375 px: the action bar is on screen and one click after a proposal 
 
   await expect(page.getByRole('heading', { level: 1, name: 'Proiectul și echipa' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Conversația' })).toHaveAttribute('aria-selected', 'true');
+  await fillIntake(page);
   await expect(page.getByRole('region', { name: 'Propuneri în conversație' })).toBeVisible();
   const primary = barPrimary(page);
   await expect(primary).toBeInViewport();

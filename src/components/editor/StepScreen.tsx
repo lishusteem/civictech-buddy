@@ -25,6 +25,7 @@ import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
 import { CardsPanel, type Editing } from './CardsPanel';
 import { AskTracker, ChatPanel, MAX_MESSAGES, PROPOSE_NOW, type ChatHandle } from './ChatPanel';
+import { ProjectIntake } from './ProjectIntake';
 import { ProposalDigest } from './ProposalDigest';
 import { checklistProgress, StepChecklist } from './StepChecklist';
 
@@ -91,6 +92,10 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   const [tab, setTab] = useState<'chat' | 'result'>('chat');
   const [focusTarget, setFocusTarget] = useState<{ to: 'proposals' | 'missing'; n: number } | null>(null);
   const chatRef = useRef<ChatHandle>(null);
+  // Step 1 starts with three fields (what the app does, what works, what comes next) instead of a first question.
+  const [intakeSkipped, setIntakeSkipped] = useState(false);
+  const showIntake =
+    step.id === 'project' && draft.steps.project.messages.length === 0 && draft.features.length === 0 && !intakeSkipped;
   const proposalsHeadingRef = useRef<HTMLHeadingElement>(null);
   const firstMissingRef = useRef<HTMLLIElement>(null);
   const stepId = step.id;
@@ -342,6 +347,17 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
             onAffirm={onAffirm}
             onFormMode={openForm}
             footer={chatFooter}
+            intake={
+              showIntake ? (
+                <ProjectIntake
+                  onSubmit={(message) => chatRef.current?.send(message)}
+                  onSkip={() => {
+                    setIntakeSkipped(true);
+                    chatRef.current?.ask([]);
+                  }}
+                />
+              ) : undefined
+            }
           />
         </div>
         <div role="tabpanel" id="panel-result" aria-labelledby="tab-result" className={`min-w-0 ${tab === 'result' ? '' : 'max-md:hidden'}`}>

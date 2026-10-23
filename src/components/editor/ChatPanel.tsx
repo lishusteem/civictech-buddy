@@ -83,6 +83,8 @@ type Props = {
   onAffirm: (chat: Message[]) => void;
   /** The proposal digest and the system line, under the last message. */
   footer?: ReactNode;
+  /** Shown instead of the conversation before its first message; the AI then waits for it instead of asking first. */
+  intake?: ReactNode;
   ref?: Ref<ChatHandle>;
 };
 
@@ -125,7 +127,7 @@ const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-
 const secondary = `rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-60 ${focusRing}`;
 const chip = `rounded-full border border-stone-400 px-3 py-1 text-sm text-stone-800 hover:bg-stone-100 disabled:opacity-60 ${focusRing}`;
 
-export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending, onAffirm, footer, ref }: Props) {
+export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending, onAffirm, footer, intake, ref }: Props) {
   const [text, setText] = useState('');
   const [, rerender] = useState(0);
   const pending = tracker.isPending(step);
@@ -223,7 +225,7 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
   // The AI asks first: the first time a step without messages is opened in this session. Never again for that
   // step (not while a call is in flight, not after an error: "Reîncearcă" is the way).
   useEffect(() => {
-    if (messages.length > 0 || tracker.asked.has(step)) return;
+    if (messages.length > 0 || tracker.asked.has(step) || intake) return;
     tracker.asked.add(step);
     void ask([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,6 +293,9 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
         </div>
       )}
 
+      {intake && messages.length === 0 && !pending ? (
+        intake
+      ) : (
       <form onSubmit={submit} className="flex flex-col gap-2">
         <label htmlFor={inputId} className="sr-only">
           Răspunsul tău
@@ -327,6 +332,7 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
           <span className="ml-auto hidden text-xs text-stone-500 md:inline">Ctrl+Enter trimite</span>
         </div>
       </form>
+      )}
     </section>
   );
 }
