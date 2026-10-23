@@ -172,6 +172,17 @@ describe('ProjectView — public page (§9)', () => {
     expect(working.textContent).toContain('Funcționează');
   });
 
+  it('relinks a published function item that points at itself, so a live function still counts as working', () => {
+    const p = fullProject();
+    p.project.stage = 'live';
+    p.features = [{ id: 'f1', text: 'Harta sesizărilor' }];
+    p.backlog = p.backlog.map((b) => (b.id === 'b2' ? { ...b, featureId: 'b2', text: 'Harta sesizărilor' } : b));
+    render(<ProjectView project={p} publishedAt={T} />);
+    const next = screen.getByRole('region', { name: 'Următorii pași' });
+    const top = within(next).getAllByRole('listitem').filter((li) => li.closest('details') === null);
+    expect(top.map((li) => li.textContent).join('|')).not.toContain('Harta sesizărilor');
+  });
+
   it('shows the change chain bottom-up with actor and risk tags (P0 version)', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
     const toc = screen.getByRole('region', { name: 'Cum credem că se produce schimbarea' });

@@ -8,6 +8,7 @@ import { NextSteps } from './NextSteps';
 import { Placeholder, Section } from './PublicSection';
 import { WhoMatters } from './WhoMatters';
 import { Points } from '../Points';
+import { repairBacklogLinks } from '@/lib/backlog/repair';
 import {
   STAGE_LABEL,
   formatShortDate,
@@ -57,7 +58,9 @@ function ShortBox({ title, children, wide = false }: { title: string; children: 
 const MAX_BRIEF_FEATURES = 6;
 
 /** The public page of a project (/p/[slug]) and its preview in Rezumat. Spec §9: inverted pyramid for the group. */
-export function ProjectView({ project: p, publishedAt, preview = false }: Props) {
+export function ProjectView({ project, publishedAt, preview = false }: Props) {
+  // Pages published before the backlog fix may link a function item to itself; relink it like the editor does.
+  const p = repairBacklogLinks(project);
   // Safety net: older data may carry internal ids ("a4", "p1") inside human text.
   const names = nameIndex(p);
   const clean = (text: string) => scrubIds(text, names);
