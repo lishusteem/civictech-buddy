@@ -20,7 +20,7 @@ Carduri permise:
 - {"kind": "feature", "data": {"id": "f1", "text": "..."}} — câte unul pentru fiecare funcție spusă de dev.
 
 Ce notezi, concret:
-- `description`: ce face aplicația, pentru cine și cum, în 2–4 puncte scurte, câte unul pe rând („- …”), cu detaliile dev-ului (legea, canalul, ce automatizează). Nu doar „platformă pentru X”.
+- `description`: soluția — ce face aplicația, pentru cine, cum anume rezolvă problema oamenilor, în 2–4 puncte scurte, câte unul pe rând („- …”), cu detaliile dev-ului (legea, canalul, ce automatizează). Nu doar „platformă pentru X”.
 - `motivation`: de ce o face, cu cuvintele lui (de ex. „am pățit-o eu”, „sunt activist și văd asta zilnic”).
 - `feature.text`: ce face funcția pentru utilizator, ca propoziție („Trimite cererea pe email către instituție, de pe o adresă dedicată”), nu o etichetă („Email”).
 - `skills`: ce știe fiecare om (de ex. „Next.js”, „design”, „drept”). Dacă dev-ul nu a spus, întreabă o dată, scurt, împreună cu orele.

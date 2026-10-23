@@ -77,15 +77,20 @@ function validateCard(raw: unknown, p: Project, step: StepId): CardResult {
     return { card: { kind, data: { id: 'direction', text: r.data } } };
   }
 
-  // The risks step may only change `risky` and `test` of an existing precondition.
+  // The risks step changes only `risky`, `test` and `riskBy` of an existing precondition.
+  // A risk the dev names that is not in the chain yet arrives as a whole new precondition.
   if (step === 'risks') {
     const existing = p.preconditions.find((c) => c.id === data.id);
-    if (!existing) return { drop: true };
-    data = {
-      ...existing,
-      risky: 'risky' in data ? data.risky : existing.risky,
-      test: 'test' in data ? data.test : existing.test,
-    };
+    if (existing) {
+      data = {
+        ...existing,
+        risky: 'risky' in data ? data.risky : existing.risky,
+        test: 'test' in data ? data.test : existing.test,
+        riskBy: 'riskBy' in data ? data.riskBy : existing.riskBy,
+      };
+    } else if (typeof data.text !== 'string' || typeof data.leadsTo !== 'string') {
+      return { drop: true };
+    }
   }
 
   if (kind === 'existing' && typeof data.name === 'string' && NOTHING_NAMES.has(plain(data.name))) {
@@ -180,16 +185,15 @@ function capErrors(p: Project, cards: Card[]): { kept: Card[]; errors: string[] 
 /** Batch-level checks: references and list caps. Invalid cards are removed. */
 function checkBatch(p: Project, step: StepId, cards: Card[]): { cards: Card[]; errors: string[] } {
   const errors: string[] = [];
-  // On risks only `risky`/`test` change; the rest is the existing precondition as is.
+  // On risks an existing precondition keeps its references; only new ones are checked.
   const has = idIndex(p, cards);
-  const referenced =
-    step === 'risks'
-      ? cards
-      : cards.filter((c) => {
-          const e = refError(c, has);
-          if (e) errors.push(e);
-          return !e;
-        });
+  const known = new Set(p.preconditions.map((c) => c.id));
+  const referenced = cards.filter((c) => {
+    if (step === 'risks' && known.has(c.data.id)) return true;
+    const e = refError(c, has);
+    if (e) errors.push(e);
+    return !e;
+  });
   const capped = capErrors(p, referenced);
   return { cards: capped.kept, errors: [...errors, ...capped.errors] };
 }

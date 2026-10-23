@@ -10,7 +10,6 @@ import { WhoMatters } from './WhoMatters';
 import { Points } from '../Points';
 import {
   STAGE_LABEL,
-  firstSentence,
   formatShortDate,
   isNothingFoundCard,
   linkLabel,
@@ -45,14 +44,17 @@ function ExtLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-function ShortBox({ title, children }: { title: string; children: ReactNode }) {
+function ShortBox({ title, children, wide = false }: { title: string; children: ReactNode; wide?: boolean }) {
   return (
-    <div className="rounded-xl border border-stone-300 bg-white p-4">
-      <p className="text-sm font-medium text-teal-900">{title}</p>
-      <p className="mt-1">{children}</p>
+    <div className={`rounded-xl border border-stone-300 bg-white p-4 ${wide ? 'sm:p-5' : ''}`}>
+      <h3 className={`font-semibold text-teal-900 ${wide ? 'text-base' : 'text-sm'}`}>{title}</h3>
+      <div className="mt-2 space-y-2">{children}</div>
     </div>
   );
 }
+
+/** At most this many functions in „Soluția”; the rest are in the backlog further down. */
+const MAX_BRIEF_FEATURES = 6;
 
 /** The public page of a project (/p/[slug]) and its preview in Rezumat. Spec §9: inverted pyramid for the group. */
 export function ProjectView({ project: p, publishedAt, preview = false }: Props) {
@@ -73,8 +75,10 @@ export function ProjectView({ project: p, publishedAt, preview = false }: Props)
   const canHelp = helpRoles(p).length > 0;
   const firstLink = p.project.links.map(safeHttpUrl).find((u): u is string => u !== null) ?? null;
 
-  const problem = pitch.source === 'problem' ? '' : clean(firstSentence(p.problem.statement));
-  const firstChange = clean(p.targetChanges[0]?.text ?? '');
+  const problem = clean(p.problem.statement.trim());
+  const evidence = p.problem.evidence.map((e) => clean(e.trim())).filter((e) => e !== '');
+  const solution = clean(p.project.description.trim());
+  const features = p.features.map((f) => clean(f.text.trim())).filter((t) => t !== '');
   const totalHours = p.team.reduce((sum, m) => sum + m.hoursPerWeek, 0);
   const teamLine = p.team.length > 0 ? `${people(p.team.length)}, ~${hours(Math.round(totalHours))} ore/săpt.` : '';
   const whereWeAre = [stage, teamLine].filter(Boolean).join(' · ');
@@ -120,12 +124,42 @@ export function ProjectView({ project: p, publishedAt, preview = false }: Props)
         )}
       </header>
 
-      <Section headingId="pe-scurt" title="Pe scurt" small empty={!problem && !firstChange && !whereWeAre} preview={preview}>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          {problem && <ShortBox title="Problema">{problem}</ShortBox>}
-          {firstChange && <ShortBox title="Ce vrem să schimbăm">{firstChange}</ShortBox>}
-          {whereWeAre && <ShortBox title="Unde suntem">{whereWeAre}</ShortBox>}
-        </div>
+      <Section
+        headingId="pe-scurt"
+        title="Problema și soluția"
+        small
+        empty={!problem && !solution && features.length === 0 && !whereWeAre}
+        preview={preview}
+      >
+        {(problem || solution || features.length > 0) && (
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {problem && (
+              <ShortBox title="Problema" wide>
+                <Points text={problem} />
+                {evidence.length > 0 && (
+                  <Points className="text-sm text-stone-600" label="De unde știm" text={evidence.join('\n')} />
+                )}
+              </ShortBox>
+            )}
+            {(solution || features.length > 0) && (
+              <ShortBox title="Soluția" wide>
+                {solution && <Points text={solution} />}
+                {features.length > 0 && (
+                  <Points
+                    className="text-sm text-stone-700"
+                    label="Ce face aplicația"
+                    text={[...features.slice(0, MAX_BRIEF_FEATURES), ...(features.length > MAX_BRIEF_FEATURES ? [`și încă ${features.length - MAX_BRIEF_FEATURES}`] : [])].join('\n')}
+                  />
+                )}
+              </ShortBox>
+            )}
+          </div>
+        )}
+        {whereWeAre && (
+          <p className="mt-3 text-sm text-stone-700">
+            <span className="font-medium">Unde suntem:</span> {whereWeAre}
+          </p>
+        )}
       </Section>
 
       <HowToHelp project={p} contact={contact} clean={clean} preview={preview} />

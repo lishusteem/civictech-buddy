@@ -214,6 +214,28 @@ describe('runStepTurn', () => {
       expect(turn.cards[0].data).toMatchObject({ id: 'p1', text: 'Primăria publică datele', risky: true, test: 'Sună la primărie' });
     }
   });
+
+  it('on risks, records who named a risk and accepts a new precondition the dev names', async () => {
+    const fresh = {
+      id: 'p9', text: 'Părinții află de hartă', actorId: null, stage: 'start', leadsTo: 'p1', coveredByApp: false,
+      assumption: '', risky: true, test: 'Întreabă 10 părinți', riskBy: 'dev',
+    };
+    const { provider } = scripted(
+      JSON.stringify({
+        kind: 'proposal',
+        text: 'Ipoteze',
+        cards: [
+          { kind: 'precondition', data: { id: 'p1', risky: true, test: 'Sună la primărie', riskBy: 'ai' } },
+          { kind: 'precondition', data: fresh },
+        ],
+      }),
+    );
+    const turn = await runStepTurn(withFeature(), 'risks', [], provider);
+    expect(turn.kind).toBe('proposal');
+    if (turn.kind !== 'question') {
+      expect(turn.cards.map((c) => c.data)).toMatchObject([{ id: 'p1', riskBy: 'ai' }, { text: 'Părinții află de hartă', riskBy: 'dev', leadsTo: 'p1' }]);
+    }
+  });
 });
 
 describe('project step completeness', () => {

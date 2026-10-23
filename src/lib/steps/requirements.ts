@@ -150,6 +150,9 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
     case 'risks':
       return [
         req('risks.any', 'Cel puțin o ipoteză marcată riscantă', (x) => x.preconditions.some((c) => c.risky)),
+        rec('risks.dev', 'Cel puțin 2 ipoteze riscante spuse de tine, nu doar sugerate de AI', (x) =>
+          x.preconditions.filter((c) => c.risky && c.riskBy !== 'ai').length >= 2,
+        ),
         rec(
           'risks.tests',
           'Un test ieftin pentru fiecare ipoteză riscantă',

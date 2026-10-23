@@ -132,6 +132,8 @@ export const ProjectSchema = z.object({
         assumption: z.string().max(500),
         risky: z.boolean(),
         test: z.string().max(500),
+        /** Who called it risky: the dev or an AI suggestion; older drafts and manual edits have none (the dev). */
+        riskBy: z.enum(['dev', 'ai']).optional(),
       }),
     )
     .max(40),

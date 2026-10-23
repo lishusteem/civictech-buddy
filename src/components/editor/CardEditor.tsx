@@ -116,6 +116,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'assumption', label: 'Ce presupunem', type: 'textarea' },
     { key: 'risky', label: 'Ipoteză riscantă', type: 'checkbox' },
     { key: 'test', label: 'Test ieftin', type: 'textarea' },
+    { key: 'riskBy', label: 'Cine a spus-o', type: 'enum', options: [['dev', 'tu'], ['ai', 'sugestie AI']] },
   ],
   role: [
     { key: 'name', label: 'Rol', type: 'text', required: true },

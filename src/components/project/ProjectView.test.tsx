@@ -112,12 +112,15 @@ describe('ProjectView — public page (§9)', () => {
     expect(within(top).getByRole('link', { name: 'Codul pe GitHub ↗' }).getAttribute('href')).toBe('https://github.com/ana/sesizari');
   });
 
-  it('shows „Pe scurt” with problem, first change and where we are', () => {
-    render(<ProjectView project={fullProject()} publishedAt={T} />);
-    const short = screen.getByRole('region', { name: 'Pe scurt' });
-    expect(within(short).getByText('Asociațiile sună la primărie și nu află ce s-a întâmplat.')).toBeTruthy();
-    expect(within(short).getByText('Primăria răspunde public în 30 de zile')).toBeTruthy();
-    expect(within(short).getByText('Prototip · 2 oameni, ~7 ore/săpt.')).toBeTruthy();
+  it('shows „Problema și soluția” with the whole problem, the solution and where we are', () => {
+    const p = fullProject();
+    p.features = [{ id: 'f1', text: 'Trimite sesizarea direct la primărie' }];
+    render(<ProjectView project={p} publishedAt={T} />);
+    const short = screen.getByRole('region', { name: 'Problema și soluția' });
+    expect(within(short).getByText('Asociațiile sună la primărie și nu află ce s-a întâmplat. Și altele.')).toBeTruthy();
+    expect(within(short).getByRole('heading', { name: 'Soluția' })).toBeTruthy();
+    expect(within(short).getByText('Trimite sesizarea direct la primărie')).toBeTruthy();
+    expect(within(short).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Unde suntem: Prototip · 2 oameni, ~7 ore/săpt.')).toBeTruthy();
   });
 
   it('shows seeking and partner roles as cards without the word „Caut”', () => {
