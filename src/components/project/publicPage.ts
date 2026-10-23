@@ -120,13 +120,22 @@ export function memberName(name: string): string {
 
 export type ActorGroup = { title: string; actors: Actor[] };
 
+/** One line under each group title, so a reader outside the project knows what the group means. */
+export const GROUP_HINT: Record<string, string> = {
+  'Cine decide': 'Pot schimba regulile, procedurile sau banii de care depinde problema.',
+  'Pe cine afectează': 'Trăiesc problema direct, zi de zi.',
+  'Aliați posibili': 'Au același interes și ne pot ajuta.',
+  'Pot bloca': 'Pierd ceva dacă proiectul reușește.',
+  'Alții': 'Contează, dar rolul lor e încă de lămurit.',
+};
+
 /** Groups for „Cine contează”; an actor goes into the first rule that matches, groups are shown in display order. */
 export function groupActors(actors: Actor[]): ActorGroup[] {
   const rules: { key: string; match: (a: Actor) => boolean }[] = [
     { key: 'Cine decide', match: (a) => a.type === 'institution' || a.type === 'funder' || a.power === 'high' },
     { key: 'Pot bloca', match: (a) => a.stance === 'opposes' },
-    { key: 'Aliați posibili', match: (a) => a.stance === 'supports' || a.type === 'ngo' || a.type === 'media' },
     { key: 'Pe cine afectează', match: (a) => a.type === 'user' || a.excluded },
+    { key: 'Aliați posibili', match: (a) => a.stance === 'supports' || a.type === 'ngo' || a.type === 'media' },
     { key: 'Alții', match: () => true },
   ];
   const byKey = new Map<string, Actor[]>(rules.map((r) => [r.key, []]));

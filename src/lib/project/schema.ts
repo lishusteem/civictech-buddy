@@ -74,7 +74,16 @@ export const ProjectSchema = z.object({
       }),
     )
     .max(20),
-  features: z.array(z.object({ id: z.string(), text: z.string().max(300) })).max(100),
+  features: z
+    .array(
+      z.object({
+        id: z.string(),
+        text: z.string().max(300),
+        /** Already works for users (true) or still planned (false); older drafts have none. */
+        done: z.boolean().optional(),
+      }),
+    )
+    .max(100),
   steps: z.object(stepsShape),
   problem: z.object({
     statement: z.string().max(1500),

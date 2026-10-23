@@ -160,6 +160,18 @@ describe('ProjectView — public page (§9)', () => {
     expect(next.querySelector('details')!.textContent).toContain('Pas mediu');
   });
 
+  it('leaves functions that already work out of the next steps and marks them in the whole plan', () => {
+    const p = fullProject();
+    p.features = [{ id: 'f1', text: 'Harta sesizărilor', done: true }];
+    p.backlog = p.backlog.map((b) => (b.id === 'b2' ? { ...b, featureId: 'f1', text: 'Harta sesizărilor' } : b));
+    render(<ProjectView project={p} publishedAt={T} />);
+    const next = screen.getByRole('region', { name: 'Următorii pași' });
+    const top = within(next).getAllByRole('listitem').filter((li) => li.closest('details') === null);
+    expect(top.map((li) => li.textContent).join('|')).not.toContain('Harta sesizărilor');
+    const working = within(next.querySelector('details')!).getByText('Harta sesizărilor').closest('li')!;
+    expect(working.textContent).toContain('Funcționează');
+  });
+
   it('shows the change chain bottom-up with actor and risk tags (P0 version)', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
     const toc = screen.getByRole('region', { name: 'Cum credem că se produce schimbarea' });
@@ -195,8 +207,8 @@ describe('ProjectView — public page (§9)', () => {
     const actors = screen.getByRole('region', { name: 'Cine contează' });
     expect(within(actors).getByRole('heading', { name: 'Cine decide' })).toBeTruthy();
     expect(within(actors).getByRole('heading', { name: 'Pe cine afectează' })).toBeTruthy();
-    expect(within(actors).getByText('exclus')).toBeTruthy();
-    expect(within(actors).getByText('putere mare')).toBeTruthy();
+    expect(within(actors).getByText(/lăsat pe dinafară/)).toBeTruthy();
+    expect(within(actors).getAllByText(/Putere mare/).length).toBeGreaterThan(0);
     expect(within(actors).getByText('are datele')).toBeTruthy();
     expect(within(actors).getByText('Primăria are registrul sesizărilor.')).toBeTruthy();
     expect(text()).not.toContain('deține datele lui');

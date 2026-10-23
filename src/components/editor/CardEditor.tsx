@@ -59,7 +59,10 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'skills', label: 'Ce știe (una pe rând)', type: 'lines' },
     { key: 'hoursPerWeek', label: 'Ore pe săptămână', type: 'number' },
   ],
-  feature: [{ key: 'text', label: 'Funcția', type: 'text', required: true }],
+  feature: [
+    { key: 'text', label: 'Funcția', type: 'text', required: true },
+    { key: 'done', label: 'Funcționează deja', type: 'checkbox' },
+  ],
   problem: [
     { key: 'statement', label: 'Problema', type: 'textarea', required: true },
     { key: 'evidence', label: 'Dovezi (una pe rând)', type: 'lines' },

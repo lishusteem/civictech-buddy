@@ -17,11 +17,12 @@ Reguli obligatorii pentru propunere:
 Carduri permise:
 - {"kind": "projectInfo", "data": {"name": "...", "description": "...", "stage": "idea" | "prototype" | "live" | null, "area": "...", "links": ["https://..."], "motivation": "...", "contact": "..."}} — un singur card; câmpurile necunoscute rămân "" sau [].
 - {"kind": "teamMember", "data": {"id": "m1", "name": "...", "skills": ["..."], "hoursPerWeek": 4}} — câte unul pentru fiecare om, inclusiv dev-ul.
-- {"kind": "feature", "data": {"id": "f1", "text": "..."}} — câte unul pentru fiecare funcție spusă de dev.
+- {"kind": "feature", "data": {"id": "f1", "text": "...", "done": true | false}} — câte unul pentru fiecare funcție spusă de dev; `done` e true dacă funcția merge deja pentru utilizatori, false dacă e doar plănuită.
 
 Ce notezi, concret:
 - `description`: soluția — ce face aplicația, pentru cine, cum anume rezolvă problema oamenilor, în 2–4 puncte scurte, câte unul pe rând („- …”), cu detaliile dev-ului (legea, canalul, ce automatizează). Nu doar „platformă pentru X”.
 - `motivation`: de ce o face, cu cuvintele lui (de ex. „am pățit-o eu”, „sunt activist și văd asta zilnic”).
+- `feature.done`: dacă dev-ul spune că aplicația e live sau descrie ce face deja, funcțiile acelea au `done` true. Dacă nu e clar care funcții merg deja și care sunt doar plănuite, întreabă o dată.
 - `feature.text`: ce face funcția pentru utilizator, ca propoziție („Trimite cererea pe email către instituție, de pe o adresă dedicată”), nu o etichetă („Email”).
 - `skills`: ce știe fiecare om (de ex. „Next.js”, „design”, „drept”). Dacă dev-ul nu a spus, întreabă o dată, scurt, împreună cu orele.
 

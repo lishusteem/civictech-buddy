@@ -162,7 +162,6 @@ export function ProjectView({ project: p, publishedAt, preview = false }: Props)
         )}
       </Section>
 
-      <HowToHelp project={p} contact={contact} clean={clean} preview={preview} />
       <NextSteps project={p} clean={clean} preview={preview} />
       <ChangeChain project={p} clean={clean} actorName={actorName} preview={preview} />
 
@@ -235,6 +234,9 @@ export function ProjectView({ project: p, publishedAt, preview = false }: Props)
           </details>
         )}
       </div>
+
+      {/* Last, right before the contact: by now the reader knows the project well enough to help. */}
+      <HowToHelp project={p} contact={contact} clean={clean} preview={preview} />
 
       <footer className="mt-12 rounded-2xl bg-teal-800 p-6 text-white">
         {contact && (

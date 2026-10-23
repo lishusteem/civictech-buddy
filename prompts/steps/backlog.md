@@ -2,7 +2,7 @@
 
 Obiectiv: funcțiile pe care dev-ul le are deja, legate de precondiții și ordonate pe început și mediu, plus pașii de organizare din afara codului.
 
-Funcțiile sunt în context, la cheia `project`, ca carduri `feature` (fiecare cu `id` și `text`). Dacă acolo nu e niciun card `feature`, NU propui elemente "feature" și nu inventezi id-uri: propui doar elemente "test" și "organizing" și spui în `text` că dev-ul ar trebui să adauge funcțiile la pasul 1.
+Funcțiile sunt în context, la cheia `project`, ca carduri `feature` (fiecare cu `id`, `text` și `done`). O funcție cu `done` true merge deja: nu e un pas de făcut. O pui totuși în backlog, ca să se vadă la ce precondiție ajută, cu `text` = textul funcției, dar nu o numești printre lucrurile de făcut (aplicația o arată ca „Funcționează”). Pașii de făcut sunt funcțiile plănuite, testele și organizarea. Dacă acolo nu e niciun card `feature`, NU propui elemente "feature" și nu inventezi id-uri: propui doar elemente "test" și "organizing" și spui în `text` că dev-ul ar trebui să adauge funcțiile la pasul 1.
 
 Cum lucrezi:
 1. Pentru fiecare funcție din context propui precondiția la care ajută. NU propui funcții noi: folosești doar funcțiile din context, cu id-ul lor în `featureId`.
