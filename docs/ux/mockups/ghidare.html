@@ -185,11 +185,11 @@ function step(n, collapsed) {
     ? `<div class="collapsed"><span><b>Ghidul pasului</b> · ${g.why.split('.')[0]}.</span><button class="link" onclick="show(${n})">Deschide ▸</button></div>`
     : `<p class="why"><b>De ce contează.</b> ${g.why}</p>
        <p class="q">Cum să gândești: „${g.q}”</p>${list(g.think)}
-       <details><summary>Exemple, greșeli și sfaturi</summary>
+       <details open><summary>Exemple, greșeli și sfaturi</summary>
          <div class="ex"><div class="good"><b>✓ Bun</b>${g.good}</div><div class="bad"><b>✗ Slab</b>${g.bad}</div></div>
          <div class="cols"><div><h4>Greșeli frecvente</h4>${list(g.mistakes)}</div><div><h4>Sfaturi</h4>${list(g.tips)}</div></div>
        </details>
-       <p style="margin:8px 0 0"><button class="link" onclick="show(${n}, true)">Restrânge (se restrânge singur după primul card acceptat)</button></p>`;
+       <p style="margin:8px 0 0"><button class="link" onclick="show(${n}, true)">Restrânge ghidul</button></p>`;
   view.innerHTML = `<div class="panel">
     <div class="stephead"><small>Pasul ${n} din 10</small><h1>${g.title}</h1>${lane}</div>
     <section class="guide" aria-label="Ghidul pasului">${body}</section>

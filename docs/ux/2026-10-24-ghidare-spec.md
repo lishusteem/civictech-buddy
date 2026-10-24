@@ -9,7 +9,7 @@
    - un exemplu bun și unul slab;
    - greșeli frecvente și sfaturi.
 
-Partea esențială stă mereu vizibilă și e scurtă. Exemplele și greșelile stau într-un expander. AI-ul primește aceleași greșeli în prompt, ca să le prindă în conversație.
+Totul e deschis implicit, pe toți pașii: și partea esențială, și exemplele, greșelile și sfaturile. Dev-ul poate restrânge ghidul dacă vrea. AI-ul primește aceleași greșeli în prompt, ca să le prindă în conversație.
 
 Machetă interactivă cu tot conținutul: [mockups/ghidare.html](mockups/ghidare.html).
 
@@ -99,16 +99,14 @@ Un bloc sus, sub titlul pasului, deasupra conversației și a cardurilor.
 | **Unde ești în lanț** (pașii 4, 7, 8 și 10) | mereu | o bandă mică cu nivelul aprins |
 | **De ce contează** | mereu | 1–2 propoziții |
 | **Cum să gândești** | mereu | o întrebare-cheie + 2–3 puncte |
-| **Exemplu bun / slab** | în expander „Exemple, greșeli și sfaturi” | 2 rânduri |
-| **Greșeli frecvente** | în același expander | 3–4 puncte |
-| **Sfaturi** | în același expander | 2–3 puncte |
+| **Exemplu bun / slab** | deschis implicit, sub titlul „Exemple, greșeli și sfaturi” | 2 rânduri |
+| **Greșeli frecvente** | deschis implicit | 3–4 puncte |
+| **Sfaturi** | deschis implicit | 2–3 puncte |
 
 **Comportament:**
 
-- Prima dată când intri într-un pas, ghidul e deschis.
-- După ce accepți primul card din pas, ghidul se restrânge la o linie: „Ghidul pasului ▸”.
-- Starea se ține per proiect, în `localStorage`; datele proiectului nu se schimbă.
-- Pe telefon, ghidul e restrâns de la început, la o linie cu „De ce contează”.
+- Ghidul e **deschis implicit, peste tot**: pe fiecare pas, pe desktop și pe telefon, cu tot cu exemple, greșeli și sfaturi. Nu se restrânge singur.
+- Dev-ul îl poate restrânge cu „Restrânge ghidul”. Alegerea se ține per pas și per proiect, în `localStorage`; datele proiectului nu se schimbă.
 
 ### 2.3. Ghidarea la momentul potrivit (just-in-time)
 
@@ -387,7 +385,7 @@ Exemplele vin dintr-un proiect fictiv, „Harta gropilor din Cluj”, ca să nu 
 - **Prompturi:** `buildMessages` adaugă în promptul pasului secțiunea „Greșeli frecvente la acest pas” din `GUIDES`. AI-ul le numește blând și pune întrebarea care le repară.
 - **Teste:**
   - fiecare pas are ghid complet;
-  - ghidul se restrânge după primul card acceptat;
+  - ghidul e deschis implicit, cu exemplele, greșelile și sfaturile vizibile;
   - intro-ul apare o singură dată pe proiect nou și se redeschide din meniu;
   - e2e actualizat.
 
