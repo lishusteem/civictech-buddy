@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harta schimbării — machetă</title>
+<style>
+  :root {
+    --teal-900: #134e4a; --teal-800: #115e59; --teal-700: #0f766e; --teal-50: #f0fdfa; --teal-100: #ccfbf1;
+    --stone-900: #1c1917; --stone-700: #44403c; --stone-600: #57534e; --stone-500: #78716c; --stone-300: #d6d3d1; --stone-200: #e7e5e4; --stone-100: #f5f5f4; --stone-50: #fafaf9;
+    --amber-800: #92400e; --amber-100: #fef3c7; --amber-300: #fcd34d;
+    --sky-100: #e0f2fe; --sky-900: #0c4a6e; --emerald-100: #d1fae5; --emerald-900: #064e3b;
+    --control: #f5f5f4; --influence: #f0fdfa; --interest: #ecfdf5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--stone-50); color: var(--stone-900); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
+  .lede { color: var(--stone-600); margin: 4px 0 0; }
+  .note { margin: 16px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--amber-100); color: var(--amber-800); font-size: 14px; }
+
+  .paths { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 12px; }
+  .paths button { border: 1px solid var(--stone-300); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--stone-700); cursor: pointer; }
+  .paths button[aria-pressed="true"] { background: var(--teal-800); border-color: var(--teal-800); color: #fff; }
+  .paths button:focus-visible, .card:focus-visible { outline: 2px solid var(--teal-800); outline-offset: 2px; }
+
+  /* Wide map */
+  .map { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 28px; }
+  .sphere { grid-row: 1; border-radius: 14px 14px 0 0; padding: 8px 12px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .sphere small { display: block; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--stone-600); font-size: 12px; }
+  .s-control { grid-column: 1 / 3; background: var(--control); color: var(--stone-700); }
+  .s-influence { grid-column: 3 / 6; background: var(--influence); color: var(--teal-800); }
+  .s-interest { grid-column: 6 / 7; background: var(--interest); color: var(--emerald-900); }
+  .col { grid-row: 2; padding: 10px 0 18px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+  .bg { grid-row: 2; border-radius: 0 0 14px 14px; }
+  .bg-control { grid-column: 1 / 3; background: var(--control); }
+  .bg-influence { grid-column: 3 / 6; background: var(--influence); }
+  .bg-interest { grid-column: 6 / 7; background: var(--interest); }
+  .colhead { font-weight: 600; font-size: 15px; padding: 0 2px; }
+  .colhead small { display: block; font-weight: 400; color: var(--stone-500); font-size: 12px; }
+
+  .card { background: #fff; border: 1px solid var(--stone-300); border-radius: 12px; padding: 10px 12px; font-size: 14px; cursor: pointer; transition: opacity .15s, box-shadow .15s, border-color .15s; }
+  .card .tag { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-bottom: 4px; }
+  .tag.actor { background: var(--teal-50); color: var(--teal-800); border: 1px solid var(--teal-100); }
+  .tag.works { background: var(--emerald-100); color: var(--emerald-900); }
+  .tag.todo { background: var(--sky-100); color: var(--sky-900); }
+  .tag.when { background: var(--stone-100); color: var(--stone-600); }
+  .card .sig { display: block; margin-top: 4px; color: var(--stone-600); font-size: 12px; }
+  .card.big { border: 2px solid var(--teal-700); background: var(--teal-50); font-weight: 500; }
+  .card.impact { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
+  .card.impact .sig { color: var(--teal-100); }
+  .card.dim { opacity: .22; }
+  .card.on { box-shadow: 0 0 0 2px var(--teal-700); }
+  .card.selected { box-shadow: 0 0 0 3px var(--teal-800); }
+  .card.hidden { display: none; }
+
+  svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: visible; }
+  svg.wires path { fill: none; stroke: #a8a29e; stroke-width: 1.5; transition: opacity .15s; }
+  svg.wires path.risky { stroke: #d97706; stroke-dasharray: 5 4; }
+  svg.wires path.dim { opacity: .12; }
+  .card .why { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--stone-300); font-size: 12px; line-height: 1.35; color: var(--stone-600); }
+  .card .why.risky { color: var(--amber-800); border-top-color: var(--amber-300); }
+  .card.impact .why, .card.big .why { display: none; }
+
+  .story { margin-top: 18px; background: #fff; border: 1px solid var(--stone-300); border-radius: 14px; padding: 14px 16px; }
+  .story h2 { font-size: 15px; margin: 0 0 6px; }
+  .story p { margin: 0; color: var(--stone-700); }
+  .story b { color: var(--teal-800); }
+
+  .detail { margin-top: 12px; min-height: 24px; font-size: 14px; color: var(--stone-700); }
+
+  /* Narrow: vertical ladder */
+  .ladder { display: none; }
+  .rung { background: #fff; border: 1px solid var(--stone-300); border-radius: 12px; padding: 12px; }
+  .rung h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--stone-600); }
+  .rung h3 small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .rung ul { margin: 0; padding-left: 18px; }
+  .rung li { margin: 4px 0; }
+  .rung .sub { color: var(--stone-600); font-size: 13px; display: block; }
+  .rung.control { background: var(--control); }
+  .rung.influence { background: var(--influence); }
+  .rung.big { border: 2px solid var(--teal-700); background: var(--teal-50); }
+  .rung.impact { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
+  .rung.impact h3 { color: var(--teal-100); }
+  .join { text-align: center; color: var(--teal-800); font-weight: 600; font-size: 14px; padding: 6px 0; }
+  .join span { display: block; font-weight: 400; color: var(--stone-600); font-size: 12px; }
+  .join .risky { color: var(--amber-800); }
+
+  @media (max-width: 860px) {
+    .map { display: none; }
+    .ladder { display: block; }
+    .detail { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cum credem că se produce schimbarea</h1>
+  <p class="lede">Ce facem noi, ce livrăm, ce se schimbă la ceilalți și unde vrem să ajungem. Alege o schimbare ca să-i vezi drumul.</p>
+  <p class="note">Machetă cu datele proiectului Implicare Civica, reclasificate. Clic pe un card: se evidențiază tot drumul lui. Îngustează fereastra sub 860 px ca să vezi varianta de telefon.</p>
+
+  <div class="paths" role="group" aria-label="Alege drumul"></div>
+
+  <div class="map" id="map">
+    <div class="sphere s-control">Controlăm<small>ce depinde doar de noi</small></div>
+    <div class="sphere s-influence">Influențăm<small>alții fac ceva diferit</small></div>
+    <div class="sphere s-interest">Contribuim<small>pe termen lung</small></div>
+    <div class="bg bg-control" style="grid-column:1/3"></div>
+    <div class="bg bg-influence" style="grid-column:3/6"></div>
+    <div class="bg bg-interest" style="grid-column:6/7"></div>
+    <div class="col" data-col="activity" style="grid-column:1"><div class="colhead">Ce facem<small>activități</small></div></div>
+    <div class="col" data-col="output" style="grid-column:2"><div class="colhead">Ce livrăm<small>rezultate directe · outputs</small></div></div>
+    <div class="col" data-col="short" style="grid-column:3"><div class="colhead">Ce se schimbă întâi<small>outcomes · 0–3 luni</small></div></div>
+    <div class="col" data-col="mid" style="grid-column:4"><div class="colhead">Apoi<small>outcomes · 3–12 luni</small></div></div>
+    <div class="col" data-col="big" style="grid-column:5"><div class="colhead">Schimbarea mare<small>outcomes pe termen lung</small></div></div>
+    <div class="col" data-col="impact" style="grid-column:6"><div class="colhead">Impactul<small>impact</small></div></div>
+    <svg class="wires" aria-hidden="true"></svg>
+  </div>
+  <p class="detail" id="detail" aria-live="polite"></p>
+
+  <section class="story" aria-labelledby="story-h">
+    <h2 id="story-h">Pe scurt, „ca să…”</h2>
+    <p id="story"></p>
+  </section>
+
+  <div class="ladder" id="ladder"></div>
+</main>
+
+<script>
+// Each node: level, text, optional actor, signal, leadsTo (one target), why (assumption on the outgoing arrow), risky.
+const N = {
+  a1: { level: 'activity', text: 'Calculăm lunar rata de răspuns din cererile trimise prin platformă', to: 'o1', todo: true },
+  a2: { level: 'activity', text: 'Construim pagina publică a clasamentului', to: 'o1', todo: true },
+  a3: { level: 'activity', text: 'Organizăm un roundtable cu 5–10 ONG-uri și jurnaliști', to: 'o2' },
+  a4: { level: 'activity', text: 'Scriem cu un jurist propunerea de penalizări', to: 'o3' },
+  a5: { level: 'activity', text: 'Adăugăm în platformă marcajul „răspuns incomplet”', to: 'o4', todo: true },
+  o0: { level: 'output', text: 'Platforma pentru cereri pe Legea 544', signal: 'cereri trimise și urmărite până la răspuns', works: true, to: 'c5', why: 'O cerere urmărită e mai greu de ignorat' },
+  o1: { level: 'output', text: 'Clasament lunar public cu rata de răspuns a instituțiilor', signal: '12 clasamente pe an, 300+ instituții', to: 'c1', why: 'Presa caută date ușor de citat' },
+  o2: { level: 'output', text: 'Coaliția „Răspunde la timp”', signal: 'cel puțin 5 ONG-uri semnatare', to: 'c3' },
+  o3: { level: 'output', text: 'Propunere de penalizări pentru nerăspuns, trimisă Guvernului', signal: '1 propunere depusă', to: 'c4' },
+  o4: { level: 'output', text: 'Statistică publică a răspunsurilor incomplete', signal: 'în fiecare clasament lunar', to: 'c6' },
+  c1: { level: 'short', actor: 'Jurnaliștii', text: 'Jurnaliștii scriu despre instituțiile restanțiere folosind clasamentul', to: 'c2', why: 'Instituțiile se tem de presa negativă', risky: true },
+  c5: { level: 'short', actor: 'Cetățenii', text: 'Cetățenii își urmăresc cererile și reclamă când termenul trece', to: 'c2' },
+  c3: { level: 'short', actor: 'ONG-urile', text: 'ONG-urile cer public penalizări pentru nerăspuns', to: 'c4', why: 'Guvernul reacționează la presiune publică', risky: true },
+  c6: { level: 'short', actor: 'Cetățenii', text: 'Cetățenii marchează răspunsurile incomplete', to: 'c7' },
+  c2: { level: 'mid', actor: 'Instituțiile publice', text: 'Instituțiile restanțiere răspund mai repede', to: 't1' },
+  c4: { level: 'mid', actor: 'Guvernul', text: 'Guvernul pune în dezbatere penalizări pentru nerăspuns', to: 't1', why: 'O regulă cu sancțiuni schimbă comportamentul tuturor instituțiilor' },
+  c7: { level: 'mid', actor: 'Instituțiile publice', text: 'Instituțiile completează răspunsurile marcate ca incomplete', to: 't2' },
+  t1: { level: 'big', text: 'Instituțiile răspund la cererile pe Legea 544 în termenul legal', signal: 'sub 10% din cereri peste termen', to: 'i1' },
+  t2: { level: 'big', text: 'Instituțiile dau răspunsuri complete', signal: 'scade ponderea răspunsurilor parțiale', to: 'i1' },
+  i1: { level: 'impact', text: 'Cetățenii au informațiile de care au nevoie, iar instituțiile răspund de ce fac' },
+};
+const BIG = ['t1', 't2'];
+const SHORT_TITLE = { t1: 'Răspuns la termen', t2: 'Răspunsuri complete' };
+
+const ids = Object.keys(N);
+const parents = (id) => ids.filter((k) => N[k].to === id);
+function upstream(id, acc = new Set()) { for (const p of parents(id)) if (!acc.has(p)) { acc.add(p); upstream(p, acc); } return acc; }
+function downstream(id, acc = new Set()) { let t = N[id].to; while (t) { acc.add(t); t = N[t].to; } return acc; }
+
+// --- wide map ---
+const map = document.getElementById('map');
+const svg = map.querySelector('svg.wires');
+const cols = Object.fromEntries([...map.querySelectorAll('.col')].map((c) => [c.dataset.col, c]));
+const cards = {};
+// Order cards so paths stay in rows: walk each big change upstream depth-first.
+const order = [];
+function visit(id) { if (order.includes(id)) return; for (const p of parents(id)) visit(p); order.push(id); }
+BIG.forEach(visit); ids.forEach(visit);
+for (const id of order) {
+  const n = N[id];
+  const el = document.createElement('div');
+  el.className = 'card' + (n.level === 'big' ? ' big' : '') + (n.level === 'impact' ? ' impact' : '');
+  el.tabIndex = 0;
+  el.dataset.id = id;
+  const tags = [];
+  if (n.actor) tags.push(`<span class="tag actor">${n.actor}</span>`);
+  if (n.works) tags.push('<span class="tag works">Merge deja</span>');
+  if (n.todo) tags.push('<span class="tag todo">De făcut</span>');
+  el.innerHTML = `${tags.length ? tags.join(' ') + '<br>' : ''}${n.text}${n.signal ? `<span class="sig">Semn: ${n.signal}</span>` : ''}${n.why ? `<span class="why${n.risky ? ' risky' : ''}">${n.risky ? '⚠ nesigur: ' : '→ '}pentru că ${n.why.charAt(0).toLowerCase() + n.why.slice(1)}</span>` : ''}`;
+  el.addEventListener('click', () => select(id));
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(id); } });
+  cols[n.level].appendChild(el);
+  cards[id] = el;
+}
+
+let path = 't1';      // selected big change or 'all'
+let picked = null;    // selected card
+const labels = [];
+
+function visibleSet() {
+  if (path === 'all') return new Set(ids);
+  return new Set([...upstream(path), path, ...downstream(path)]);
+}
+
+function draw() {
+  svg.innerHTML = '';
+  labels.forEach((l) => l.remove()); labels.length = 0;
+  const vis = visibleSet();
+  const lit = picked ? new Set([picked, ...upstream(picked), ...downstream(picked)]) : null;
+  for (const id of ids) {
+    const c = cards[id];
+    c.classList.toggle('hidden', !vis.has(id));
+    c.classList.toggle('dim', !!lit && !lit.has(id));
+    c.classList.toggle('on', !!lit && lit.has(id) && id !== picked);
+    c.classList.toggle('selected', id === picked);
+  }
+  const box = map.getBoundingClientRect();
+  for (const id of ids) {
+    const n = N[id];
+    if (!n.to || !vis.has(id) || !vis.has(n.to)) continue;
+    const a = cards[id].getBoundingClientRect(), b = cards[n.to].getBoundingClientRect();
+    const x1 = a.right - box.left, y1 = a.top + a.height / 2 - box.top;
+    const x2 = b.left - box.left, y2 = b.top + b.height / 2 - box.top;
+    const dx = Math.max(24, (x2 - x1) / 2);
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`);
+    if (n.risky) p.classList.add('risky');
+    const dim = lit && !(lit.has(id) && lit.has(n.to));
+    if (dim) p.classList.add('dim');
+    svg.appendChild(p);
+  }
+  story();
+  ladder();
+}
+
+function select(id) {
+  picked = picked === id ? null : id;
+  const n = N[id];
+  document.getElementById('detail').textContent = picked
+    ? `${n.text}${n.why ? ` — duce mai departe pentru că ${n.why.charAt(0).toLowerCase() + n.why.slice(1)}${n.risky ? ' (nesigur, îl testăm)' : ''}.` : '.'}`
+    : '';
+  draw();
+}
+
+// --- path selector ---
+const bar = document.querySelector('.paths');
+for (const key of [...BIG, 'all']) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = key === 'all' ? 'Tot' : SHORT_TITLE[key];
+  b.setAttribute('aria-pressed', String(key === path));
+  b.addEventListener('click', () => {
+    path = key; picked = null;
+    document.getElementById('detail').textContent = '';
+    bar.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    draw();
+  });
+  bar.appendChild(b);
+}
+
+// --- „ca să…” sentence: the longest chain into the selected big change ---
+function chainInto(t) {
+  let best = [t];
+  const walk = (id, acc) => {
+    const ps = parents(id);
+    if (ps.length === 0) { if (acc.length > best.length) best = acc; return; }
+    ps.forEach((p) => walk(p, [p, ...acc]));
+  };
+  walk(t, [t]);
+  return best;
+}
+const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+function sentence(t) {
+  const chain = chainInto(t);
+  const parts = chain.map((id, i) => {
+    const n = N[id];
+    if (n.level === 'activity') return `<b>Facem:</b> ${lower(n.text)}`;
+    if (n.level === 'output') return `<b>ca să livrăm</b> ${lower(n.text)}`;
+    if (n.level === 'big') return `<b>astfel încât</b> ${lower(n.text)}`;
+    return `<b>${i > 0 && N[chain[i - 1]].level === 'output' ? 'apoi' : 'și apoi'}</b> ${lower(n.text)}`;
+  });
+  return parts.join(' → ') + ` → <b>pe termen lung,</b> ${lower(N.i1.text)}.`;
+}
+function story() {
+  const el = document.getElementById('story');
+  el.innerHTML = (path === 'all' ? BIG : [path]).map((t) => `<span style="display:block;margin-top:6px">${sentence(t)}</span>`).join('');
+}
+
+// --- narrow: vertical ladder, top to bottom, joined by „ca să…” ---
+function ladder() {
+  const el = document.getElementById('ladder');
+  const vis = visibleSet();
+  const of = (lvl) => order.filter((id) => vis.has(id) && N[id].level === lvl);
+  const item = (id) => {
+    const n = N[id];
+    const tag = n.works ? ' · merge deja' : n.todo ? ' · de făcut' : '';
+    return `<li>${n.text}${n.signal ? `<span class="sub">Semn: ${n.signal}${tag}</span>` : tag ? `<span class="sub">${tag.slice(3)}</span>` : ''}</li>`;
+  };
+  const whys = (lvl) => of(lvl).filter((id) => N[id].why).map((id) => `<span class="${N[id].risky ? 'risky' : ''}">${N[id].risky ? '⚠ ' : ''}pentru că ${lower(N[id].why)}</span>`).join('');
+  const rung = (cls, title, sub, lvl) => of(lvl).length ? `<div class="rung ${cls}"><h3>${title} <small>· ${sub}</small></h3><ul>${of(lvl).map(item).join('')}</ul></div>` : '';
+  const join = (word, lvl) => `<div class="join">↓ ${word}${whys(lvl)}</div>`;
+  el.innerHTML = [
+    rung('control', 'Ce facem', 'controlăm', 'activity'), join('ca să livrăm', 'activity'),
+    rung('control', 'Ce livrăm', 'controlăm', 'output'), join('ca să', 'output'),
+    rung('influence', 'Ce se schimbă întâi', 'influențăm', 'short'), join('apoi', 'short'),
+    rung('influence', 'Apoi', 'influențăm', 'mid'), join('astfel încât', 'mid'),
+    rung('big', 'Schimbarea mare', 'influențăm', 'big'), join('pe termen lung', 'big'),
+    rung('impact', 'Impactul', 'contribuim', 'impact'),
+  ].join('');
+}
+
+draw();
+window.addEventListener('resize', () => requestAnimationFrame(draw));
+</script>
+</body>
+</html>
