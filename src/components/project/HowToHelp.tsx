@@ -31,7 +31,8 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
     <Section id={HELP_ANCHOR} headingId="h-ajuta" title="Cum poți ajuta" empty={roles.length === 0} preview={preview}>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {roles.map((r, i) => {
-          const first = firstTask(p, r);
+          // The dev's own first task wins; else the first organizing step tied to the role.
+          const first = r.firstTask?.trim() || firstTask(p, r);
           const lead = i === 0;
           return (
             <article
@@ -47,6 +48,7 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
                 )}
               </div>
               {r.status === 'partner' && <p className="text-sm text-stone-600">Căutăm o organizație parteneră</p>}
+              {r.timeCommitment?.trim() && <p className="text-sm text-stone-600">Cât timp: {r.timeCommitment.trim()}</p>}
               {r.reason.trim() !== '' && (
                 <Points className={lead ? 'mt-2' : 'mt-2 text-sm'} label="De ce" text={clean(r.reason)} />
               )}
@@ -57,8 +59,9 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
           );
         })}
       </div>
+      <p className="mt-4 text-sm text-stone-600">Nu trebuie să știi cod: multe roluri sunt de advocacy, drept sau organizare.</p>
       {contact && (
-        <p className="mt-4 text-stone-700">
+        <p className="mt-2 text-stone-700">
           Nu te regăsești? Scrie-ne oricum. <ContactAction contact={contact} variant="text" />
         </p>
       )}

@@ -52,6 +52,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'area', label: 'Zona (oraș, național)', type: 'text' },
     { key: 'links', label: 'Linkuri (unul pe rând)', type: 'lines' },
     { key: 'motivation', label: 'Motivația', type: 'textarea' },
+    { key: 'traction', label: 'Ce ați realizat până acum (cifre)', type: 'textarea' },
     { key: 'contact', label: 'Contact', type: 'text' },
   ],
   teamMember: [
@@ -67,6 +68,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'statement', label: 'Problema', type: 'textarea', required: true },
     { key: 'evidence', label: 'Dovezi (una pe rând)', type: 'lines' },
     { key: 'verified', label: 'Verificată cu oameni care o au', type: 'checkbox' },
+    { key: 'example', label: 'Un caz concret', type: 'textarea' },
   ],
   existing: [
     { key: 'name', label: 'Nume', type: 'text', required: true },
@@ -148,6 +150,8 @@ export const FIELDS: Record<EntityKind, Field[]> = {
       ],
     },
     { key: 'coveredBy', label: 'Acoperit de', type: 'ref', refs: ['team'], nullable: true },
+    { key: 'timeCommitment', label: 'Cât timp cere', type: 'text' },
+    { key: 'firstTask', label: 'Prima sarcină', type: 'text' },
   ],
   backlogItem: [
     { key: 'text', label: 'Ce e de făcut', type: 'text', required: true },

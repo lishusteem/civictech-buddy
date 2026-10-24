@@ -19,3 +19,6 @@ export function toPoints(text: string): string[] {
   const sentences = one.split(SENTENCE_END).map((s) => s.trim()).filter((s) => s !== '');
   return sentences.length > 1 ? sentences : [one];
 }
+
+/** Lower-cases the first letter to continue a sentence, but leaves acronyms („ONG-urile”, „AI”) alone. */
+export const continueSentence = (s: string) => s.replace(/^(\p{Lu})(?=\p{Ll})/u, (m) => m.toLocaleLowerCase('ro'));

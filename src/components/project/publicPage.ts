@@ -186,3 +186,22 @@ export function formatShortDate(iso: string): string {
 export function isNothingFoundCard(x: Project['existing'][number]): boolean {
   return x.name.trim() === 'Nimic similar găsit' && x.url === null;
 }
+
+const hoursText = (h: number) => (Number.isInteger(h) ? String(h) : String(h).replace('.', ','));
+const peopleText = (n: number) => (n === 1 ? '1 om' : n >= 20 ? `${n} de oameni` : `${n} oameni`);
+
+/** „1 om, ~4 ore/săpt.”, or '' without a team. */
+export function teamLine(p: Project): string {
+  if (p.team.length === 0) return '';
+  const total = p.team.reduce((sum, m) => sum + m.hoursPerWeek, 0);
+  return `${peopleText(p.team.length)}, ~${hoursText(Math.round(total))} ore/săpt.`;
+}
+
+/** The three-line summary at the top of both variants: the first point of the problem, of the solution, and the first long-term outcome. */
+export function summaryOf(p: Project): { problem: string; work: string; goal: string } {
+  return {
+    problem: toPoints(p.problem.statement)[0] ?? '',
+    work: toPoints(p.project.description)[0] ?? '',
+    goal: p.targetChanges[0]?.text.trim() ?? '',
+  };
+}

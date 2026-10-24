@@ -20,13 +20,16 @@ type Props = {
   id?: string;
   /** Small uppercase label instead of a large heading („Pe scurt”). */
   small?: boolean;
+  /** A small label above the heading: which part of the story this is („Ce e în joc”). */
+  eyebrow?: string;
   children?: ReactNode;
 };
 
-export function Section({ headingId, title, empty, preview, id, small = false, children }: Props) {
+export function Section({ headingId, title, empty, preview, id, small = false, eyebrow, children }: Props) {
   if (empty) return preview ? <Placeholder title={title} /> : null;
   return (
     <section id={id} aria-labelledby={headingId} className="mt-10 scroll-mt-4">
+      {eyebrow && <p className="text-xs font-bold uppercase tracking-wider text-teal-700">{eyebrow}</p>}
       <h2
         id={headingId}
         className={small ? 'text-sm font-semibold uppercase tracking-wide text-teal-800' : 'text-2xl font-semibold text-stone-900'}

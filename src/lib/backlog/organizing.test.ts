@@ -37,12 +37,15 @@ describe('buildOrganizingItems', () => {
     expect(items.map((i) => i.order)).toEqual([10, 11, 12]);
   });
 
-  it('handles partner roles and preconditions not covered by app', () => {
+  it('handles partner roles and outputs the team delivers outside the app, but not outcomes', () => {
     const p = createEmptyProject('T');
     p.roles = [{ id: 'r1', name: 'Lobby', reason: '', reasonRefs: [], stage: 'start', status: 'partner', coveredBy: null }];
-    p.preconditions = [{ id: 'p1', text: 'Convinge consiliul', actorId: null, stage: 'mid', leadsTo: '', coveredByApp: false, assumption: '', risky: false, test: '' }];
+    p.preconditions = [
+      { id: 'p1', text: 'Coaliția a 5 ONG-uri', actorId: null, stage: 'mid', leadsTo: '', coveredByApp: false, assumption: '', risky: false, test: '', level: 'output' },
+      { id: 'p2', text: 'Guvernul adoptă penalizări', actorId: 'a1', stage: 'mid', leadsTo: '', coveredByApp: false, assumption: '', risky: false, test: '', level: 'outcome' },
+    ];
     const items = buildOrganizingItems(p);
-    expect(items.map((i) => i.text)).toEqual(['Vorbește cu un partener pentru: Lobby', 'Convinge consiliul']);
+    expect(items.map((i) => i.text)).toEqual(['Vorbește cu un partener pentru: Lobby', 'Pregătește: Coaliția a 5 ONG-uri']);
     expect(items[1]).toMatchObject({ kind: 'organizing', stage: 'mid', preconditionId: 'p1' });
   });
 

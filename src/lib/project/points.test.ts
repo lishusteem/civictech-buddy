@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toPoints } from './points';
+import { continueSentence, toPoints } from './points';
 
 describe('toPoints', () => {
   it('keeps a short text whole', () => {
@@ -23,5 +23,12 @@ describe('toPoints', () => {
       'Apoi uită dacă au primit răspuns, pentru că nu au unde să urmărească cererile.',
       'Nu există date publice despre cât de repede răspund instituțiile.',
     ]);
+  });
+});
+
+describe('continueSentence', () => {
+  it('lower-cases a sentence start but keeps acronyms', () => {
+    expect(continueSentence('Presa caută date')).toBe('presa caută date');
+    expect(continueSentence('ONG-urile vor urmări datele')).toBe('ONG-urile vor urmări datele');
   });
 });

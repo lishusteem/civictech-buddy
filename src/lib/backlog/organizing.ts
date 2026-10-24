@@ -1,4 +1,5 @@
 import { remainingCapacity } from '../project/entities';
+import { levelOf } from '../project/pathway';
 import type { Project } from '../project/schema';
 
 type Item = Project['backlog'][number];
@@ -18,9 +19,10 @@ export function buildOrganizingItems(p: Project): Project['backlog'] {
       drafts.push({ stage: r.stage, kind: 'organizing', featureId: null, preconditionId: null, text: 'Vorbește cu un partener pentru: ' + r.name });
     }
   }
+  // Only outputs the team delivers outside the app become work; outcomes are what others do, not tasks.
   for (const c of p.preconditions) {
-    if (!c.coveredByApp) {
-      drafts.push({ stage: c.stage, kind: 'organizing', featureId: null, preconditionId: c.id, text: c.text });
+    if (!c.coveredByApp && levelOf(p, c) === 'output') {
+      drafts.push({ stage: c.stage, kind: 'organizing', featureId: null, preconditionId: c.id, text: 'Pregătește: ' + c.text });
     }
   }
   for (const q of p.toFindOut) {

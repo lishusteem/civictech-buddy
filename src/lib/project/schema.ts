@@ -63,6 +63,8 @@ export const ProjectSchema = z.object({
     links: z.array(z.string().url()).max(10),
     motivation: z.string().max(1000),
     contact: z.string().max(200),
+    /** What the project has already achieved, in numbers if the dev has them (for the public page). */
+    traction: z.string().max(500).optional(),
   }),
   team: z
     .array(
@@ -89,6 +91,8 @@ export const ProjectSchema = z.object({
     statement: z.string().max(1500),
     evidence: z.array(z.string().max(500)).max(10),
     verified: z.boolean(),
+    /** One concrete, anonymous case of the problem, told briefly. */
+    example: z.string().max(600).optional(),
   }),
   existing: z
     .array(
@@ -160,6 +164,10 @@ export const ProjectSchema = z.object({
         stage: StageSchema,
         status: z.enum(['covered', 'seeking', 'partner', 'not_needed']),
         coveredBy: z.string().nullable(),
+        /** How much time the role asks for („~2 ore pe lună”). */
+        timeCommitment: z.string().max(120).optional(),
+        /** A small first task for someone new. */
+        firstTask: z.string().max(300).optional(),
       }),
     )
     .max(30),

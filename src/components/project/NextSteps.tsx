@@ -1,5 +1,5 @@
 import type { Project } from '@/lib/project/schema';
-import { isPendingItem } from '@/lib/project/features';
+import { isOutcomeCopy, isPendingItem } from '@/lib/project/features';
 import { Section } from './PublicSection';
 
 type Item = Project['backlog'][number];
@@ -33,7 +33,7 @@ type Props = { project: Project; clean: (t: string) => string; preview: boolean 
  * Functions that already work are not next steps; the whole plan shows them as working.
  */
 export function NextSteps({ project: p, clean, preview }: Props) {
-  const ordered = PHASES.flatMap(({ stage }) => p.backlog.filter((b) => b.stage === stage).sort(byOrder));
+  const ordered = PHASES.flatMap(({ stage }) => p.backlog.filter((b) => b.stage === stage && !isOutcomeCopy(p, b)).sort(byOrder));
   const pending = ordered.filter((b) => isPendingItem(p, b));
   const top = pending.slice(0, SHOWN);
   return (

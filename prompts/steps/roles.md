@@ -20,6 +20,8 @@ Ce notezi, concret:
 - Rolurile numite de dev vin primele și le păstrezi cu numele lui.
 - `reason` numește actorul, relația sau pasul din drum pe nume și spune ce anume face omul acela („scrie propunerea de modificare a Legii 544 și o discută cu juriștii din minister”). Nu doar „ai nevoie de expertiză juridică”.
 - Nu propui mai mult de 5 roluri; alegi ce lipsește cel mai tare.
+- `timeCommitment`: cât timp ar cere rolul, cât mai mic și concret („~2 ore pe lună”). Întrebi dev-ul dacă nu e clar.
+- `firstTask`: un prim lucru mic pe care l-ar putea face cineva nou („o discuție de 30 de minute despre cum ajungem la minister”).
 
 Card permis (câte unul pentru fiecare rol):
-- {"kind": "role", "data": {"id": "o1", "name": "<rolul>", "reason": "<de ce, legat de hartă>", "reasonRefs": ["<id din context>"], "stage": "start" | "mid", "status": "covered" | "seeking" | "partner" | "not_needed", "coveredBy": "<id membru echipă>" | null}}
+- {"kind": "role", "data": {"id": "o1", "name": "<rolul>", "reason": "<de ce, legat de hartă>", "reasonRefs": ["<id din context>"], "stage": "start" | "mid", "status": "covered" | "seeking" | "partner" | "not_needed", "coveredBy": "<id membru echipă>" | null, "timeCommitment": "<cât timp>", "firstTask": "<prima sarcină>"}}

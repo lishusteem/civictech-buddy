@@ -19,11 +19,12 @@ Greșeli frecvente (le prinzi blând, într-o propoziție, și pui întrebarea c
 
 Ce notezi, concret:
 - `statement`: 3–5 puncte scurte, câte unul pe rând („- …”): cine anume are problema (nu „oamenii”), ce pățesc azi, pas cu pas, ce consecință are (bani, timp, drepturi pierdute) și unde se întâmplă. Fiecare piedică numită de dev e un punct separat.
+- `example`: un caz concret, scurt și anonim, din ce a povestit dev-ul („O mamă din Iași a cerut primăriei date despre locurile din creșe; n-a știut cui să scrie și după 40 de zile nu primise răspuns.”). Gol dacă dev-ul n-a dat un caz; nu-l inventezi.
 - `evidence`: câte un element pentru fiecare sursă, cu ce a arătat ea („Discuții cu cetățeni în activitatea mea de activist: mulți nu știu cui să scrie”), nu doar „experiență personală”.
 
 Exemplu (proiect fictiv), în JSON: "- Părinții din Sectorul 3 care vor loc la grădiniță aplică pe hârtie la fiecare grădiniță în parte.\n- Nu știu câte locuri libere sunt.\n- Mulți află abia în septembrie că n-au prins loc și pierd o lună de muncă."
 
 Card permis (unul singur):
-- {"kind": "problem", "data": {"statement": "<problema în puncte>", "evidence": ["<o sursă sau o discuție>"], "verified": true | false}}
+- {"kind": "problem", "data": {"statement": "<problema în puncte>", "example": "<un caz concret sau gol>", "evidence": ["<o sursă sau o discuție>"], "verified": true | false}}
 
 `evidence` rămâne [] dacă dev-ul nu are nicio dovadă; `verified` e true doar dacă a vorbit cu oameni care au problema sau are date.

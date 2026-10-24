@@ -10,8 +10,8 @@ beforeAll(() => {
 describe('public project page', () => {
   it('404s for an unpublished project and unknown slugs', async () => {
     const { stored } = await getRepo().create('Ascuns');
-    await expect(PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }) })).rejects.toThrow();
-    await expect(PublicProjectPage({ params: Promise.resolve({ slug: 'nu-exista' }) })).rejects.toThrow();
+    await expect(PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }), searchParams: Promise.resolve({}) })).rejects.toThrow();
+    await expect(PublicProjectPage({ params: Promise.resolve({ slug: 'nu-exista' }), searchParams: Promise.resolve({}) })).rejects.toThrow();
   });
 
   it('renders only the published version, never the newer draft', async () => {
@@ -23,13 +23,13 @@ describe('public project page', () => {
     const current = (await getRepo().getByToken(editToken))!;
     await getRepo().saveDraft(editToken, { ...current.draft, direction: 'SECRET-DRAFT-ONLY' }, current.draftUpdatedAt);
 
-    const el = await PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }) });
+    const el = await PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }), searchParams: Promise.resolve({}) });
     const html = renderToStaticMarkup(el);
     expect(html).toContain('Versiune publicată.');
     expect(html).not.toContain('SECRET-DRAFT-ONLY');
     expect(html).not.toContain('/e/');
 
-    const meta = await generateMetadata({ params: Promise.resolve({ slug: stored.slug }) });
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: stored.slug }), searchParams: Promise.resolve({}) });
     expect(meta.title).toBe('Public — Ghidul de pornire');
     expect(meta.description).toBe('Versiune publicată.');
   });
@@ -45,11 +45,11 @@ describe('public project page', () => {
     await getRepo().saveDraft(editToken, draft, stored.draftUpdatedAt);
     await getRepo().publish(editToken);
 
-    const html = renderToStaticMarkup(await PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }) }));
+    const html = renderToStaticMarkup(await PublicProjectPage({ params: Promise.resolve({ slug: stored.slug }), searchParams: Promise.resolve({}) }));
     expect(html).toContain('Inițiatorul proiectului');
     expect(html).not.toMatch(/>tu</);
     expect(html).not.toMatch(/\b(m1|t1)\b/);
-    const meta = await generateMetadata({ params: Promise.resolve({ slug: stored.slug }) });
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: stored.slug }), searchParams: Promise.resolve({}) });
     expect(meta.description).toBe('Asociațiile raportează într-un loc.');
   });
 });

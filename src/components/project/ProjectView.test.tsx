@@ -94,14 +94,17 @@ const text = () => document.body.textContent ?? '';
 const hero = () => document.querySelector('header')!;
 
 describe('ProjectView — public page (§9)', () => {
-  it('shows the meta line (stage only there), the h1 and the pitch', () => {
+  it('shows the meta line with the team, the h1 and the three-line summary', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
     expect(screen.getByText(/Proiect civic tech/)).toBeTruthy();
+    expect(screen.getByText(/2 oameni, ~7 ore\/săpt\./)).toBeTruthy();
     expect(screen.getByText('Actualizat 21 oct 2026')).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1, name: 'Sesizări pentru asociații' })).toBeTruthy();
-    expect(screen.getByText('Asociațiile raportează problemele blocului într-un singur loc.')).toBeTruthy();
-    // „Prototip” appears in the meta line and inside „Unde suntem”, nowhere as a separate „Stadiul” block.
-    expect(screen.queryByText('Stadiul')).toBeNull();
+    const summary = within(hero());
+    expect(summary.getByText('Problema')).toBeTruthy();
+    expect(summary.getByText('Ce facem')).toBeTruthy();
+    expect(summary.getByText('Ținta')).toBeTruthy();
+    expect(summary.getByText('Primăria răspunde public în 30 de zile')).toBeTruthy();
   });
 
   it('has the hero CTAs: help anchor, contact button, code link by host', () => {
@@ -112,15 +115,21 @@ describe('ProjectView — public page (§9)', () => {
     expect(within(top).getByRole('link', { name: 'Codul pe GitHub ↗' }).getAttribute('href')).toBe('https://github.com/ana/sesizari');
   });
 
-  it('shows „Problema și soluția” with the whole problem, the solution and where we are', () => {
+  it('shows the whole problem with a concrete case, and the solution with what works and what comes next', () => {
     const p = fullProject();
-    p.features = [{ id: 'f1', text: 'Trimite sesizarea direct la primărie' }];
+    p.problem.example = 'O asociație din Titan a sunat de 5 ori pentru același acoperiș.';
+    p.project.traction = '40 de sesizări trimise.';
+    p.features = [{ id: 'f1', text: 'Trimite sesizarea direct la primărie', done: true }, { id: 'f2', text: 'Hartă publică' }];
     render(<ProjectView project={p} publishedAt={T} />);
-    const short = screen.getByRole('region', { name: 'Problema și soluția' });
-    expect(within(short).getByText('Asociațiile sună la primărie și nu află ce s-a întâmplat. Și altele.')).toBeTruthy();
-    expect(within(short).getByRole('heading', { name: 'Soluția' })).toBeTruthy();
-    expect(within(short).getByText('Trimite sesizarea direct la primărie')).toBeTruthy();
-    expect(within(short).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Unde suntem: Prototip · 2 oameni, ~7 ore/săpt.')).toBeTruthy();
+    const problem = screen.getByRole('region', { name: 'Problema' });
+    expect(within(problem).getByText('Asociațiile sună la primărie și nu află ce s-a întâmplat. Și altele.')).toBeTruthy();
+    expect(within(problem).getByText('O asociație din Titan a sunat de 5 ori pentru același acoperiș.')).toBeTruthy();
+    const solution = screen.getByRole('region', { name: 'Soluția' });
+    expect(within(solution).getByText('Merge deja')).toBeTruthy();
+    expect(within(solution).getByText('Trimite sesizarea direct la primărie')).toBeTruthy();
+    expect(within(solution).getByText('Urmează')).toBeTruthy();
+    expect(within(solution).getByText('Hartă publică')).toBeTruthy();
+    expect(within(solution).getByText(/40 de sesizări trimise/)).toBeTruthy();
   });
 
   it('shows seeking and partner roles as cards without the word „Caut”', () => {
@@ -183,46 +192,38 @@ describe('ProjectView — public page (§9)', () => {
     expect(top.map((li) => li.textContent).join('|')).not.toContain('Harta sesizărilor');
   });
 
-  it('shows the change chain bottom-up with actor and risk tags (P0 version)', () => {
-    render(<ProjectView project={fullProject()} publishedAt={T} />);
-    const toc = screen.getByRole('region', { name: 'Cum credem că se produce schimbarea' });
-    expect(within(toc).getByText('Citește de jos în sus: ce facem acum duce la ce urmează.')).toBeTruthy();
-    const t = toc.textContent!;
-    expect(t.indexOf('10 asociații')).toBeLessThan(t.indexOf('Direcția tehnică'));
-    expect(t.indexOf('Direcția tehnică')).toBeLessThan(t.indexOf('Primăria răspunde public'));
-    expect(t.indexOf('Primăria răspunde public')).toBeLessThan(t.indexOf('Blocuri întreținute'));
-    expect(within(toc).getByText(/Semn: răspunsurile apar pe site/)).toBeTruthy();
-    expect(within(toc).getAllByText('⚠ nesigur — îl testăm')).toHaveLength(2);
-    expect(t).toContain('Cetățenii');
+  it('shows the long-term outcomes and tells the first pathway top to bottom, with the map one click away', () => {
+    const p = fullProject();
+    p.preconditions = [
+      pre('o1', { text: 'Raport lunar cu sesizările nerezolvate', level: 'output', leadsTo: 'p1' }),
+      pre('p1', { text: 'Asociațiile citesc raportul', actorId: 'a2', leadsTo: 'p2', assumption: 'Raportul e ușor de citit' }),
+      pre('p2', { text: 'Direcția tehnică răspunde mai repede', actorId: 'a1', stage: 'mid', risky: true, test: 'x' }),
+    ];
+    render(<ProjectView project={p} publishedAt={T} mapHref="/p/x?v=harta" />);
+    const change = screen.getByRole('region', { name: 'Rezultatele pe care le urmărim' });
+    expect(within(change).getByText('Indicator: răspunsurile apar pe site')).toBeTruthy();
+    const t = change.textContent!;
+    expect(t.indexOf('Raport lunar')).toBeLessThan(t.indexOf('Asociațiile citesc'));
+    expect(t.indexOf('Asociațiile citesc')).toBeLessThan(t.indexOf('Direcția tehnică răspunde'));
+    expect(t).toContain('Output · Realizare');
+    expect(t).toContain('pentru că raportul e ușor de citit');
+    expect(t).toContain('Impact pe termen lung');
+    expect(within(change).getByRole('link', { name: 'Vezi toată harta schimbării →' }).getAttribute('href')).toBe('/p/x?v=harta');
   });
 
-  it('caps a chain level at 4 preconditions, then „+k”', () => {
-    const p = fullProject();
-    p.preconditions = Array.from({ length: 6 }, (_, i) => pre(`x${i}`));
-    render(<ProjectView project={p} publishedAt={T} />);
-    const toc = screen.getByRole('region', { name: 'Cum credem că se produce schimbarea' });
-    expect(within(toc).getByText('+2')).toBeTruthy();
-    expect(within(toc).queryByText('Precondiție x4')).toBeNull();
-  });
+
 
   it('lists risky assumptions with their test, or the „încă de stabilit” line', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
-    const risks = screen.getByRole('region', { name: 'Ce verificăm întâi' });
+    const risks = screen.getByRole('region', { name: 'Ce încă nu știm' });
     expect(within(risks).getByText(/Primăria acceptă sesizări din afara registraturii/)).toBeTruthy();
     expect(within(risks).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Test: O întâlnire cu direcția tehnică.')).toBeTruthy();
     expect(within(risks).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Test: încă de stabilit — idei binevenite.')).toBeTruthy();
   });
 
-  it('groups actors and shows relations as chips, never as a verb-template sentence', () => {
+  it('leaves the actors to the map variant', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
-    const actors = screen.getByRole('region', { name: 'Cine contează' });
-    expect(within(actors).getByRole('heading', { name: 'Cine decide' })).toBeTruthy();
-    expect(within(actors).getByRole('heading', { name: 'Pe cine afectează' })).toBeTruthy();
-    expect(within(actors).getByText(/lăsat pe dinafară/)).toBeTruthy();
-    expect(within(actors).getAllByText(/Putere mare/).length).toBeGreaterThan(0);
-    expect(within(actors).getByText('are datele')).toBeTruthy();
-    expect(within(actors).getByText('Primăria are registrul sesizărilor.')).toBeTruthy();
-    expect(text()).not.toContain('deține datele lui');
+    expect(screen.queryByRole('region', { name: 'Cine contează' })).toBeNull();
   });
 
   it('never shows „tu” in the team; shows hours, covered roles and the total', () => {
