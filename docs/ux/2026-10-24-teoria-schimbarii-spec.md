@@ -74,16 +74,27 @@ Surse: [Kumu: 6 principles](https://blog.kumu.io/6-principles-for-building-effec
 
 **Concluzie pentru noi:** un drum pe rând, nu toată rețeaua deodată. Fiecare drum are și o propoziție „ca să…”.
 
-### Termeni în română
+### Terminologie (decis: termenii exacți ToC, engleză / română)
 
-În fondurile UE se spune „indicatori de realizare” pentru outputs și „indicatori de rezultat” pentru outcomes. Sunt termeni de birocrație, pe care dev-ii nu-i folosesc. În interfață folosim cuvinte simple, cu termenul tehnic mic, dedesubt, pentru cine scrie o cerere de finanțare.
+În interfață folosim termenii consacrați ai teoriei schimbării, în engleză și română, ca să se potrivească cu ce citesc finanțatorii și grupul.
 
-| În interfață | Dedesubt, mic |
-| --- | --- |
-| **Ce facem** | activități |
-| **Ce livrăm** | rezultate directe · outputs |
-| **Ce se schimbă** | schimbări · outcomes |
-| **Impactul** | impact |
+Pentru română am luat echivalentele oficiale din fondurile UE: „indicatori de **realizare**” pentru outputs și „indicatori de **rezultat**” pentru outcomes. Termenii au și definiția OECD DAC: outputs sunt produse, bunuri și servicii livrate; outcomes sunt efecte pe termen scurt și mediu; impact e efectul pe termen lung ([INTRAC](https://intrac.org/wpcms/wp-content/uploads/2024/11/Outputs-outcomes-and-impact.pdf)).
+
+| Etichetă în interfață | Ce înseamnă (tooltip) | În date |
+| --- | --- | --- |
+| **Impact / Impact** | Schimbarea de stare pe termen lung la care contribuim | `direction` |
+| **Long-term outcomes / Rezultate pe termen lung** | Cine face ce diferit, peste 1–3 ani | `targetChanges` |
+| **Intermediate outcomes / Rezultate intermediare** | Schimbări de comportament în 3–12 luni | `preconditions`, `level: outcome`, `stage: mid` |
+| **Short-term outcomes / Rezultate pe termen scurt** | Primele schimbări de comportament, 0–3 luni | `preconditions`, `level: outcome`, `stage: start` |
+| **Outputs / Realizări** | Ce livrează echipa: produse, servicii, evenimente, numărabile | `preconditions`, `level: output` |
+| **Activities / Activități** | Ce face echipa | `backlog` |
+| **Assumptions / Ipoteze** | De ce duce un nivel la următorul | `assumption`, `risky`, `test` |
+| **Indicators / Indicatori** | Cum vedem că s-a întâmplat | `signal` |
+| **Sphere of control / Sferă de control** | Activități și realizări | fundalul benzilor 1–2 |
+| **Sphere of influence / Sferă de influență** | Rezultatele, adică comportamentul altora | fundalul benzilor 3–5 |
+| **Sphere of interest / Sferă de interes** | Impactul | fundalul benzii 6 |
+
+Fiecare etichetă are un tooltip „ce înseamnă” cu o propoziție simplă, pentru dev-ii care n-au mai lucrat cu ToC.
 
 ---
 
@@ -148,7 +159,7 @@ Un nod poate avea un singur `leadsTo`. Asta e suficient pentru v2. Mai multe ți
 | 4. Schimbarea țintă | Direcție + 1–3 schimbări | **„Impactul și schimbările mari”.** Impactul = „cum arată lumea dacă reușiți, peste 5–10 ani”. Schimbările mari = cine face ce diferit, cu semn. |
 | 7. Precondițiile | Lanț înapoi, de 2–3 ori | **„Drumul schimbării”.** Tot înapoi, dar AI-ul știe nivelurile (vezi mai jos). |
 | 8. Ipotezele riscante | Precondiții riscante + test | Neschimbat. Presupunerile apar pe săgeți. |
-| 10. Backlog | Funcții + test + organizare | **„Ce facem”.** Fiecare activitate se leagă de ce livrează. |
+| 10. Backlog | Funcții + test + organizare | **„Activities / Activități”.** Fiecare activitate se leagă de realizarea (output) pe care o produce. |
 
 ### Cum lucrează AI-ul la pasul 7
 
@@ -160,7 +171,7 @@ Un nod poate avea un singur `leadsTo`. Asta e suficient pentru v2. Mai multe ți
    - o schimbare are un actor și un verb de comportament („Jurnaliștii folosesc clasamentul în articole”).
 5. **Capcana civic tech:** „oamenii folosesc aplicația” nu e o schimbare. E un rezultat direct. AI-ul întreabă: „Și ce fac ei diferit după ce o folosesc?”
 
-Prompturile rămân fără jargon: AI-ul spune „ce livrați” și „ce se schimbă”, nu „output” și „outcome”.
+În conversație AI-ul folosește termenii în română (activități, realizări, rezultate, impact, ipoteze, indicatori), iar prima dată când îi folosește îi explică într-o propoziție („o realizare e ceva ce livrați voi și puteți număra”). Regula din promptul de sistem care interzicea „outcome” și „indicatori” se înlocuiește cu asta.
 
 ---
 
@@ -173,7 +184,7 @@ Alerte noi în `computeCodeAlerts`, pe stilul celor de azi:
 | `no_output` | Un drum spre o schimbare mare nu are niciun rezultat direct la bază | „Ce livrați voi ca să pornească drumul spre «X»?” |
 | `output_without_activity` | La pasul 10, un rezultat direct nu are nicio activitate legată | „Cine face și ce, ca să existe «X»?” |
 | `usage_as_change` | O schimbare care sună a folosire („folosesc aplicația”, „utilizatori”, „descărcări”) | „Folosirea aplicației e un rezultat direct. Ce fac oamenii diferit după aceea?” |
-| `team_as_actor` | O schimbare al cărei actor e un membru al echipei | „Asta faceți voi, deci e ce livrați. O mut la «Ce livrăm»?” (cu buton de mutare) |
+| `team_as_actor` | O schimbare al cărei actor e un membru al echipei | „Asta faceți voi, deci e o realizare (output). O mut la «Outputs / Realizări»?” (cu buton de mutare) |
 
 `magic_leap`, `build_and_they_come` și `orphan_feature` rămân. `orphan_feature` devine „funcție care nu ajută la niciun rezultat direct”.
 
@@ -186,12 +197,12 @@ Alerte noi în `computeCodeAlerts`, pe stilul celor de azi:
 **Ecran lat: patru benzi, de la stânga la dreapta.**
 
 ```
- CONTROLĂM ─────────────────────────┐  INFLUENȚĂM ────────────────────┐  CONTRIBUIM
- Ce facem      →   Ce livrăm        │  Ce se schimbă                  │  Impactul
- (activități)      (rezultate dir.) │  scurt → mediu → schimbare mare │
+ SPHERE OF CONTROL ───────────┐  SPHERE OF INFLUENCE ───────────────────────────┐  SPHERE OF INTEREST
+ Activities  →  Outputs         │  Short-term → Intermediate → Long-term outcomes │  Impact
+ Activități     Realizări       │  Rezultate: scurt → intermediar → lung        │  Impact
 ```
 
-- **Sferele:** benzile au trei fundaluri discrete: Controlăm, Influențăm, Contribuim. Arată fără explicații unde se termină puterea echipei.
+- **Sferele:** benzile au trei fundaluri discrete: Sphere of control / Sferă de control, Sphere of influence / Sferă de influență, Sphere of interest / Sferă de interes. Arată fără explicații unde se termină puterea echipei.
 - **Un drum pe rând:** deasupra hărții sunt butoane cu schimbările mari („Instituțiile răspund la termen”, „Răspunsurile sunt complete”, „Tot”). Implicit e selectat primul drum. Așa rămâne lizibilă și o hartă cu 20 de noduri.
 - **Clic pe un card** evidențiază tot ce duce la el și tot ce pornește din el. Restul se estompează.
 - **Pe săgeți:** „pentru că…”, cu presupunerea. Cele riscante sunt chihlimbar ⚠ și au testul la clic.
@@ -200,7 +211,7 @@ Alerte noi în `computeCodeAlerts`, pe stilul celor de azi:
 
 **Telefon:** o singură coloană, de sus în jos, în ordinea în care se întâmplă lucrurile. Între carduri stă conectorul **„ca să…”**. Pe telefon se citește mai firesc de sus în jos decât azi, când pagina publică se citește de jos în sus.
 
-### 6.2. Propoziția „ca să…”
+### 6.2. Narrative / Narațiunea schimbării („ca să…”)
 
 Sub fiecare drum apare o propoziție generată din date, fără AI:
 
@@ -211,7 +222,7 @@ Practica recomandă să pui textul narativ lângă diagramă. Această propoziț
 ### 6.3. Unde apare
 
 - **Pagina publică:** înlocuiește „Cum credem că se produce schimbarea”. Implicit e harta cu primul drum, iar pe telefon e varianta verticală.
-- **Editor, pașii 4, 7 și 10:** în coloana din dreapta, sub cardurile pasului, apare o mini-hartă care se completează pe măsură ce accepți carduri. Dev-ul vede banda care încă e goală, de exemplu „Ce livrăm: nimic încă”.
+- **Editor, pașii 4, 7 și 10:** în coloana din dreapta, sub cardurile pasului, apare o mini-hartă care se completează pe măsură ce accepți carduri. Dev-ul vede banda care încă e goală, de exemplu „Outputs / Realizări: nimic încă”.
 - **Rezumat (Overview):** harta completă cu „Tot”.
 
 ### 6.4. Accesibilitate
@@ -227,13 +238,13 @@ Practica recomandă să pui textul narativ lângă diagramă. Această propoziț
 | Faza | Ce | Cât |
 | --- | --- | --- |
 | A | `level` și `signal` în schemă, `levelOf()`, funcție `pathsOf(p)` care întoarce drumurile; teste | mic |
-| B | Prompturile pașilor 4, 7 și 10 cu niveluri; `level` validat în `stepTurn`; card editor cu „Ce livrăm / Ce se schimbă” | mediu |
+| B | Prompturile pașilor 4, 7 și 10 cu niveluri; `level` validat în `stepTurn`; card editor cu „Output / Realizare” și „Outcome / Rezultat” | mediu |
 | C | Componenta `ChangeMap`: benzi, selector de drum, evidențiere, versiune verticală; pagina publică | mare |
 | D | Mini-harta în editor; cele patru alerte noi | mediu |
 | E | Rulare de evaluare pe răspunsurile reale și pe 5 scenarii, apoi deploy | mic |
 
 **Decizii deschise pentru tine:**
 
-1. Etichetele: „Ce facem / Ce livrăm / Ce se schimbă / Impactul” sau termenii tehnici (activități, outputs, outcomes, impact) ca etichete principale?
+1. ~~Etichetele~~ — **decis:** termenii exacți ToC, engleză / română (vezi „Terminologie”).
 2. Pagina publică: harta cu un drum implicit, sau direct „Tot”?
 3. Proiectele vechi: le clasificăm automat (`levelOf`), sau AI-ul le reclasifică la următoarea deschidere a pasului 7?

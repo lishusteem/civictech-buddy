@@ -96,30 +96,30 @@
 <body>
 <main>
   <h1>Cum credem că se produce schimbarea</h1>
-  <p class="lede">Ce facem noi, ce livrăm, ce se schimbă la ceilalți și unde vrem să ajungem. Alege o schimbare ca să-i vezi drumul.</p>
+  <p class="lede">Teoria schimbării: activities → outputs → outcomes → impact. Alege un rezultat pe termen lung ca să-i vezi drumul.</p>
   <p class="note">Machetă cu datele proiectului Implicare Civica, reclasificate. Clic pe un card: se evidențiază tot drumul lui. Îngustează fereastra sub 860 px ca să vezi varianta de telefon.</p>
 
   <div class="paths" role="group" aria-label="Alege drumul"></div>
 
   <div class="map" id="map">
-    <div class="sphere s-control">Controlăm<small>ce depinde doar de noi</small></div>
-    <div class="sphere s-influence">Influențăm<small>alții fac ceva diferit</small></div>
-    <div class="sphere s-interest">Contribuim<small>pe termen lung</small></div>
+    <div class="sphere s-control">Sphere of control / Sferă de control<small>ce depinde doar de noi</small></div>
+    <div class="sphere s-influence">Sphere of influence / Sferă de influență<small>alții fac ceva diferit</small></div>
+    <div class="sphere s-interest">Sphere of interest / Sferă de interes<small>contribuim, pe termen lung</small></div>
     <div class="bg bg-control" style="grid-column:1/3"></div>
     <div class="bg bg-influence" style="grid-column:3/6"></div>
     <div class="bg bg-interest" style="grid-column:6/7"></div>
-    <div class="col" data-col="activity" style="grid-column:1"><div class="colhead">Ce facem<small>activități</small></div></div>
-    <div class="col" data-col="output" style="grid-column:2"><div class="colhead">Ce livrăm<small>rezultate directe · outputs</small></div></div>
-    <div class="col" data-col="short" style="grid-column:3"><div class="colhead">Ce se schimbă întâi<small>outcomes · 0–3 luni</small></div></div>
-    <div class="col" data-col="mid" style="grid-column:4"><div class="colhead">Apoi<small>outcomes · 3–12 luni</small></div></div>
-    <div class="col" data-col="big" style="grid-column:5"><div class="colhead">Schimbarea mare<small>outcomes pe termen lung</small></div></div>
-    <div class="col" data-col="impact" style="grid-column:6"><div class="colhead">Impactul<small>impact</small></div></div>
+    <div class="col" data-col="activity" style="grid-column:1"><div class="colhead" title="Ce face echipa">Activities<small>Activități</small></div></div>
+    <div class="col" data-col="output" style="grid-column:2"><div class="colhead" title="Ce livrează echipa: produse, servicii, evenimente, numărabile">Outputs<small>Realizări</small></div></div>
+    <div class="col" data-col="short" style="grid-column:3"><div class="colhead" title="Primele schimbări de comportament la alții">Short-term outcomes<small>Rezultate pe termen scurt · 0–3 luni</small></div></div>
+    <div class="col" data-col="mid" style="grid-column:4"><div class="colhead" title="Schimbări de comportament care urmează">Intermediate outcomes<small>Rezultate intermediare · 3–12 luni</small></div></div>
+    <div class="col" data-col="big" style="grid-column:5"><div class="colhead" title="Cine face ce diferit, peste 1–3 ani">Long-term outcomes<small>Rezultate pe termen lung</small></div></div>
+    <div class="col" data-col="impact" style="grid-column:6"><div class="colhead" title="Schimbarea de stare la care contribuim">Impact<small>Impact</small></div></div>
     <svg class="wires" aria-hidden="true"></svg>
   </div>
   <p class="detail" id="detail" aria-live="polite"></p>
 
   <section class="story" aria-labelledby="story-h">
-    <h2 id="story-h">Pe scurt, „ca să…”</h2>
+    <h2 id="story-h">Narrative / Narațiunea schimbării</h2>
     <p id="story"></p>
   </section>
 
@@ -177,7 +177,7 @@ for (const id of order) {
   if (n.actor) tags.push(`<span class="tag actor">${n.actor}</span>`);
   if (n.works) tags.push('<span class="tag works">Merge deja</span>');
   if (n.todo) tags.push('<span class="tag todo">De făcut</span>');
-  el.innerHTML = `${tags.length ? tags.join(' ') + '<br>' : ''}${n.text}${n.signal ? `<span class="sig">Semn: ${n.signal}</span>` : ''}${n.why ? `<span class="why${n.risky ? ' risky' : ''}">${n.risky ? '⚠ nesigur: ' : '→ '}pentru că ${n.why.charAt(0).toLowerCase() + n.why.slice(1)}</span>` : ''}`;
+  el.innerHTML = `${tags.length ? tags.join(' ') + '<br>' : ''}${n.text}${n.signal ? `<span class="sig">Indicator: ${n.signal}</span>` : ''}${n.why ? `<span class="why${n.risky ? ' risky' : ''}">${n.risky ? '⚠ Ipoteză riscantă' : 'Ipoteză'} (assumption): ${n.why}</span>` : ''}`;
   el.addEventListener('click', () => select(id));
   el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(id); } });
   cols[n.level].appendChild(el);
@@ -285,18 +285,18 @@ function ladder() {
   const item = (id) => {
     const n = N[id];
     const tag = n.works ? ' · merge deja' : n.todo ? ' · de făcut' : '';
-    return `<li>${n.text}${n.signal ? `<span class="sub">Semn: ${n.signal}${tag}</span>` : tag ? `<span class="sub">${tag.slice(3)}</span>` : ''}</li>`;
+    return `<li>${n.text}${n.signal ? `<span class="sub">Indicator: ${n.signal}${tag}</span>` : tag ? `<span class="sub">${tag.slice(3)}</span>` : ''}</li>`;
   };
-  const whys = (lvl) => of(lvl).filter((id) => N[id].why).map((id) => `<span class="${N[id].risky ? 'risky' : ''}">${N[id].risky ? '⚠ ' : ''}pentru că ${lower(N[id].why)}</span>`).join('');
+  const whys = (lvl) => of(lvl).filter((id) => N[id].why).map((id) => `<span class="${N[id].risky ? 'risky' : ''}">${N[id].risky ? '⚠ Ipoteză riscantă: ' : 'Ipoteză: '}${lower(N[id].why)}</span>`).join('');
   const rung = (cls, title, sub, lvl) => of(lvl).length ? `<div class="rung ${cls}"><h3>${title} <small>· ${sub}</small></h3><ul>${of(lvl).map(item).join('')}</ul></div>` : '';
   const join = (word, lvl) => `<div class="join">↓ ${word}${whys(lvl)}</div>`;
   el.innerHTML = [
-    rung('control', 'Ce facem', 'controlăm', 'activity'), join('ca să livrăm', 'activity'),
-    rung('control', 'Ce livrăm', 'controlăm', 'output'), join('ca să', 'output'),
-    rung('influence', 'Ce se schimbă întâi', 'influențăm', 'short'), join('apoi', 'short'),
-    rung('influence', 'Apoi', 'influențăm', 'mid'), join('astfel încât', 'mid'),
-    rung('big', 'Schimbarea mare', 'influențăm', 'big'), join('pe termen lung', 'big'),
-    rung('impact', 'Impactul', 'contribuim', 'impact'),
+    rung('control', 'Activities / Activități', 'control', 'activity'), join('ca să livrăm', 'activity'),
+    rung('control', 'Outputs / Realizări', 'control', 'output'), join('ca să', 'output'),
+    rung('influence', 'Short-term outcomes / Rezultate pe termen scurt', 'influență', 'short'), join('apoi', 'short'),
+    rung('influence', 'Intermediate outcomes / Rezultate intermediare', 'influență', 'mid'), join('astfel încât', 'mid'),
+    rung('big', 'Long-term outcomes / Rezultate pe termen lung', 'influență', 'big'), join('pe termen lung', 'big'),
+    rung('impact', 'Impact / Impact', 'interes', 'impact'),
   ].join('');
 }
 
