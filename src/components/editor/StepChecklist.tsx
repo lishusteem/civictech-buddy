@@ -2,7 +2,7 @@
 
 import { useId, type Ref } from 'react';
 import type { Project, StepId } from '@/lib/project/schema';
-import { orphanFeatures, requirementsFor, rowState, type Requirement, type RowState } from '@/lib/steps/requirements';
+import { requirementsFor, rowState, type Requirement, type RowState } from '@/lib/steps/requirements';
 
 type Props = {
   step: StepId;
@@ -12,13 +12,6 @@ type Props = {
   /** Attached to the first missing required row; the action bar focuses it. */
   firstMissingRef?: Ref<HTMLLIElement>;
   onNoneFound: () => void;
-  onAddSuggested: () => void;
-  /** "Nu sunt pași noi de adăugat." after Adaugă pașii sugerați added nothing. */
-  suggestNote: boolean;
-  onLinkFeature: (featureId: string, preconditionId: string) => void;
-  onLaterFeature: (featureId: string) => void;
-  onKeepFeature: (featureId: string) => void;
-  onLaterAll: () => void;
 };
 
 const ICON: Record<RowState, { mark: string; className: string; label: string }> = {
@@ -35,55 +28,6 @@ const smallButton = `rounded-lg border border-line-strong px-2 py-0.5 text-xs fo
 export function checklistProgress(step: StepId, draft: Project) {
   const rows = requirementsFor(step, draft);
   return { done: rows.filter((r) => r.done(draft)).length, total: rows.length };
-}
-
-function OrphanFeatures({ draft, onLink, onLater, onKeep, onLaterAll }: {
-  draft: Project;
-  onLink: Props['onLinkFeature'];
-  onLater: Props['onLaterFeature'];
-  onKeep: Props['onKeepFeature'];
-  onLaterAll: Props['onLaterAll'];
-}) {
-  const orphans = orphanFeatures(draft);
-  if (orphans.length === 0) return null;
-  return (
-    <div className="mt-2 space-y-2">
-      <p className="text-xs text-fg-muted">
-        {orphans.length === 1 ? '1 funcție nu ajută' : `${orphans.length} funcții nu ajută`} încă la nicio precondiție:
-      </p>
-      <ul className="space-y-2">
-        {orphans.map((f) => (
-          <li key={f.id} className="flex flex-wrap items-center gap-2">
-            <span className="min-w-0 flex-1 basis-full text-fg sm:basis-auto">{f.text}</span>
-            {draft.preconditions.length > 0 && (
-              <select
-                aria-label={`Leagă de… (${f.text})`}
-                value=""
-                onChange={(e) => e.target.value && onLink(f.id, e.target.value)}
-                className={`max-w-[12rem] rounded-lg border border-line-strong bg-surface px-2 py-0.5 text-xs text-fg ${focusRing}`}
-              >
-                <option value="">Leagă de…</option>
-                {draft.preconditions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.text}
-                  </option>
-                ))}
-              </select>
-            )}
-            <button type="button" aria-label={`Mai târziu: ${f.text}`} onClick={() => onLater(f.id)} className={smallButton}>
-              Mai târziu
-            </button>
-            <button type="button" aria-label={`Păstrează: ${f.text}`} onClick={() => onKeep(f.id)} className={smallButton}>
-              Păstrează
-            </button>
-          </li>
-        ))}
-      </ul>
-      <button type="button" onClick={onLaterAll} className={smallButton}>
-        Mută toate la „mai târziu”
-      </button>
-    </div>
-  );
 }
 
 /** "Ce cere pasul" (UX spec §4): saved ✓, proposed ◐ (saved once accepted) or missing ○, required or recommended. */
@@ -106,31 +50,6 @@ export function StepChecklist(props: Props) {
             Caută în Civic Tech Field Guide ↗
           </a>
         </span>
-      );
-    }
-    if (r.action === 'add_suggested') {
-      return (
-        <span className="mt-2 block">
-          <button type="button" onClick={props.onAddSuggested} className={rowButton}>
-            Adaugă pașii sugerați
-          </button>
-          {props.suggestNote && (
-            <span role="status" className="mt-1 block text-sm text-fg-muted">
-              Nu sunt pași noi de adăugat.
-            </span>
-          )}
-        </span>
-      );
-    }
-    if (r.action === 'orphan_features') {
-      return (
-        <OrphanFeatures
-          draft={draft}
-          onLink={props.onLinkFeature}
-          onLater={props.onLaterFeature}
-          onKeep={props.onKeepFeature}
-          onLaterAll={props.onLaterAll}
-        />
       );
     }
     return null;

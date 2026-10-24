@@ -48,12 +48,17 @@ describe('requirementsFor', () => {
     expect(labels).toEqual([
       ['Ce face proiectul (descrierea)', 'required'],
       ['Cine e în echipă (cel puțin un om)', 'required'],
+      ['Pentru fiecare om: skill-uri, atribuții și ore pe săptămână', 'recommended'],
       ['Funcțiile aplicației', 'recommended'],
       ['Numele tău, nu „tu”', 'recommended'],
       ['Stadiul (idee / prototip / live)', 'recommended'],
       ['Un contact pentru cine vrea să ajute', 'recommended'],
     ]);
     expect(row('project', p, 'project.names').done(p)).toBe(true);
+    p.team[0] = { ...p.team[0], skills: ['React'], hoursPerWeek: 4, role: '' };
+    expect(row('project', p, 'project.teamDetails').done(p)).toBe(false);
+    p.team[0].role = 'face frontend-ul';
+    expect(row('project', p, 'project.teamDetails').done(p)).toBe(true);
     p.team[0].name = ' Tu ';
     expect(row('project', p, 'project.names').done(p)).toBe(false);
     expect(row('project', createEmptyProject('P'), 'project.names').done(createEmptyProject('P'))).toBe(false);

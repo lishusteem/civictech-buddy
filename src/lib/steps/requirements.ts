@@ -1,4 +1,5 @@
 import { ALERT_MESSAGES } from '../alerts/messages';
+import { isFeatureWorking } from '../project/features';
 import type { AlertCode, Project, StepId } from '../project/schema';
 
 /**
@@ -17,7 +18,7 @@ export type Requirement = {
   /** The code alert this row replaces. */
   alertCode?: AlertCode;
   /** An inline button inside the row. */
-  action?: 'none_found' | 'add_suggested' | 'orphan_features';
+  action?: 'none_found';
 };
 
 export type RowState = 'saved' | 'proposed' | 'missing';
@@ -67,8 +68,18 @@ export const isFeatureLinked = (p: Project, featureId: string) =>
 export const isFeatureKept = (p: Project, featureId: string) =>
   p.alerts.some((a) => a.code === 'orphan_feature' && a.status === 'dismissed' && a.refs.includes(featureId));
 
-/** Features that help no precondition yet and were not kept or moved to "mai târziu". */
-export const orphanFeatures = (p: Project) => p.features.filter((f) => !isFeatureLinked(p, f.id) && !isFeatureKept(p, f.id));
+/**
+ * Planned functions that lead to no pathway step yet (and were not set aside). Functions that already
+ * work are outputs, not plans, so they never count here.
+ */
+export const orphanFeatures = (p: Project) =>
+  p.features.filter((f) => !isFeatureWorking(p, f.id) && !isFeatureLinked(p, f.id) && !isFeatureKept(p, f.id));
+
+/** The step-10 row names how many planned functions are left; the AI asks about them in the chat. */
+const orphanLabel = (n: number) =>
+  n === 0
+    ? 'Fiecare funcție plănuită duce la un pas din drum'
+    : `Fiecare funcție plănuită duce la un pas din drum (${n === 1 ? '1 încă nu' : `${n} încă nu`}; AI-ul te întreabă de ele)`;
 
 /** The checklist rows of a step; `p` fills in the labels that name something from the project. */
 export function requirementsFor(step: StepId, p: Project): Requirement[] {
@@ -77,6 +88,12 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
       return [
         req('project.description', 'Ce face proiectul (descrierea)', (x) => filled(x.project.description)),
         req('project.team', 'Cine e în echipă (cel puțin un om)', (x) => x.team.length >= 1),
+        rec(
+          'project.teamDetails',
+          'Pentru fiecare om: skill-uri, atribuții și ore pe săptămână',
+          (x) => everyNonEmpty(x.team, (m) => m.skills.length > 0 && filled(m.role ?? '') && m.hoursPerWeek > 0),
+          { why: 'Din ele se vede ce poate duce echipa singură și ce roluri lipsesc.' },
+        ),
         rec('project.features', 'Funcțiile aplicației', (x) => x.features.length >= 1, {
           why: 'Fără ele, la pasul 10 n-avem ce ordona.',
         }),
@@ -167,15 +184,15 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
       ];
     case 'backlog':
       return [
-        req('backlog.any', 'Cel puțin un element', (x) => x.backlog.length >= 1, { action: 'add_suggested' }),
+        req('backlog.any', 'Cel puțin o activitate', (x) => x.backlog.length >= 1),
         rec('backlog.offCode', 'Cel puțin un pas în afara codului', (x) => x.backlog.some((b) => b.kind !== 'feature'), {
           alertCode: 'only_code',
         }),
         rec(
           'backlog.orphans',
-          'Fiecare funcție e legată de o precondiție sau mutată la „mai târziu”',
+          orphanLabel(orphanFeatures(p).length),
           (x) => orphanFeatures(x).length === 0,
-          { alertCode: 'orphan_feature', action: 'orphan_features' },
+          { alertCode: 'orphan_feature' },
         ),
       ];
   }

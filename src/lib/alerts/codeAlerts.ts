@@ -1,5 +1,6 @@
 import { STEPS } from '../steps/definitions';
 import type { Alert, AlertCode, Project } from '../project/schema';
+import { isFeatureWorking } from '../project/features';
 import { ALERT_MESSAGES } from './messages';
 
 // Alerts marked "Cod" or "Cod + LLM" in PRD section 5. The rest are LLM-only;
@@ -90,7 +91,8 @@ export function computeCodeAlerts(p: Project): Project['alerts'] {
   }
 
   if (on('orphan_feature')) {
-    for (const f of p.features) {
+    // Functions that already work are outputs, not plans: they never count as orphans.
+    for (const f of p.features.filter((x) => !isFeatureWorking(p, x.id))) {
       const linked = p.backlog.some((b) => b.featureId === f.id && b.preconditionId !== null);
       if (!linked) out.push(make('orphan_feature', [f.id], ALERT_MESSAGES.orphan_feature.message.replace('{text}', () => shorten(f.text))));
     }

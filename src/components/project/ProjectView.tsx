@@ -317,6 +317,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
               <li key={m.id}>
                 <span className="font-medium">{memberName(m.name)}</span>
                 {m.skills.length > 0 && ` — ${m.skills.join(', ')}`}
+                {m.role?.trim() && ` · ${clean(m.role.trim())}`}
                 {` · ${hours(m.hoursPerWeek)} h/săpt.`}
                 {covered.length > 0 && ` · acoperă: ${covered.map((r) => r.name).join(', ')}`}
               </li>

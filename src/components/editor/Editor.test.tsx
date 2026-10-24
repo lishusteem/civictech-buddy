@@ -294,29 +294,15 @@ describe('Editor', () => {
     });
   });
 
-  it('appends organizing items on the first entry only; the button adds them back on demand', async () => {
+  it('entering the activities step adds nothing by itself: the AI proposes the steps as cards', () => {
     stubFetch(() => ({ alerts: [], draftUpdatedAt: T1 }));
-    // Steps 1-9 complete: the editor opens on the backlog, which is entered "for the first time" through the sidebar.
     const draft = fillSteps(createEmptyProject('P'), BEFORE_BACKLOG);
     draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Câți oameni?' }];
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
-    const backlogBtn = () => screen.getByRole('button', { name: /Activitățile/ });
     fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
-    fireEvent.click(backlogBtn());
-    expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
-    const card = screen.getByText('Află: Câți oameni?').closest('li')!;
-    fireEvent.click(within(card).getByRole('button', { name: 'Șterge' }));
+    fireEvent.click(screen.getByRole('button', { name: /Activitățile/ }));
     expect(screen.queryByText('Află: Câți oameni?')).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
-    fireEvent.click(backlogBtn());
-    expect(screen.queryByText('Află: Câți oameni?')).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Adaugă pașii sugerați' }));
-    expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Adaugă pașii sugerați' }));
-    expect(screen.getByText('Nu sunt pași noi de adăugat.')).toBeTruthy();
-    expect(screen.getAllByText('Află: Câți oameni?')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Adaugă pașii sugerați' })).toBeNull();
   });
 
   it('first publish shows KeepLinks with absolute links; later publishes only show a notice', async () => {

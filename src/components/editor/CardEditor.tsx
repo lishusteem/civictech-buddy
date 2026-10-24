@@ -58,6 +58,7 @@ export const FIELDS: Record<EntityKind, Field[]> = {
   teamMember: [
     { key: 'name', label: 'Nume', type: 'text', required: true },
     { key: 'skills', label: 'Ce știe (una pe rând)', type: 'lines' },
+    { key: 'role', label: 'Atribuții (ce face în proiect)', type: 'text' },
     { key: 'hoursPerWeek', label: 'Ore pe săptămână', type: 'number' },
   ],
   feature: [

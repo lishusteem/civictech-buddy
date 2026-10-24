@@ -7,7 +7,7 @@ describe('ALERT_MESSAGES', () => {
     for (const code of AlertCodeSchema.options) expect(ALERT_MESSAGES[code].why.trim(), code).not.toBe('');
     expect(ALERT_MESSAGES.team_no_time.why).toBe('Cu puține ore, contează mai mult ce alegi să nu faci în primele 3 luni.');
     expect(ALERT_MESSAGES.orphan_feature.why).toBe(
-      'Ce nu ajută la o precondiție poate aștepta; rămâne timp pentru ce mișcă proiectul acum.',
+      'O funcție care nu duce la niciun pas din drum poate aștepta; rămâne timp pentru ce mișcă proiectul acum.',
     );
   });
 

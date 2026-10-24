@@ -447,3 +447,15 @@ describe('runStepTurn: nothing cards and ids in text', () => {
     expect(turn.cards.find((c) => c.kind === 'relation')!.data.note).toBe('Ziarul Local scrie pentru Cititorii');
   });
 });
+
+describe('backlog step', () => {
+  it('drops a card for a function that already works', async () => {
+    const p = withFeature();
+    p.features = [{ id: 'f1', text: 'Hartă cu parcuri', done: true }, { id: 'f2', text: 'Export', done: false }];
+    const item = (featureId: string) => ({ kind: 'backlogItem', data: { id: '', stage: 'start', kind: 'feature', featureId, preconditionId: 'p1', text: 'x', order: 1 } });
+    const { provider } = scripted(JSON.stringify({ kind: 'proposal', text: 'Activități', cards: [item('f1'), item('f2')] }));
+    const turn = await runStepTurn(p, 'backlog', [], provider);
+    expect(turn.kind).toBe('proposal');
+    if (turn.kind !== 'question') expect(turn.cards.map((c) => c.data.featureId)).toEqual(['f2']);
+  });
+});

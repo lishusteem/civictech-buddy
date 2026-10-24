@@ -94,8 +94,8 @@ export const ALERT_MESSAGES: Record<AlertCode, { title: string; step: number; me
   orphan_feature: {
     title: 'Feature orfan',
     step: 10,
-    message: 'Funcția «{text}» nu ajută la nicio precondiție. La ce ajută? Poate așteaptă în lista „mai târziu”.',
-    why: 'Ce nu ajută la o precondiție poate aștepta; rămâne timp pentru ce mișcă proiectul acum.',
+    message: 'Funcția plănuită «{text}» nu duce încă la niciun pas din drum. La ce ajută? Poate aștepta.',
+    why: 'O funcție care nu duce la niciun pas din drum poate aștepta; rămâne timp pentru ce mișcă proiectul acum.',
   },
   only_code: {
     title: 'Doar cod',

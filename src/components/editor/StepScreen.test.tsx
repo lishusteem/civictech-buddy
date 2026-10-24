@@ -511,49 +511,37 @@ describe('StepScreen', () => {
       expect(primary().getAttribute('aria-disabled')).toBeNull();
     });
 
-    it('step 10: Adaugă pașii sugerați sits in the first row', () => {
-      setup('backlog');
-      const row = within(checklist()).getByText('Cel puțin un element').closest('li')!;
-      fireEvent.click(within(row).getByRole('button', { name: 'Adaugă pașii sugerați' }));
-      expect(within(row).getByText('Nu sunt pași noi de adăugat.')).toBeTruthy();
-    });
-
-    describe('orphan features', () => {
-      function orphans() {
+    describe('step 10: planned functions', () => {
+      function withFunctions() {
         const draft = createEmptyProject('P');
         draft.features = [
-          { id: 'f1', text: 'Harta' },
-          { id: 'f2', text: 'Export CSV' },
+          { id: 'f1', text: 'Harta', done: false },
+          { id: 'f2', text: 'Export CSV', done: false },
+          { id: 'f3', text: 'Trimite sesizarea', done: true },
         ];
         draft.preconditions = [{ ...precondition, text: 'Primăria acceptă', stage: 'mid' }];
         draft.backlog = [{ id: 'b1', stage: 'start', kind: 'test', featureId: null, preconditionId: null, text: 't', order: 1 }];
         return draft;
       }
-      const orphanRow = () => within(checklist()).getByText(/Fiecare funcție e legată/).closest('li')!;
+      const row = () => within(checklist()).getByText(/Fiecare funcție plănuită duce la un pas din drum/).closest('li')!;
 
-      it('lists the unlinked features; Leagă de… links one to a precondition', () => {
-        const { last } = setup('backlog', orphans());
-        expect(within(orphanRow()).getByText('2 funcții nu ajută încă la nicio precondiție:')).toBeTruthy();
-        fireEvent.change(within(orphanRow()).getByLabelText('Leagă de… (Harta)'), { target: { value: 'p1' } });
-        expect(last().backlog.at(-1)).toMatchObject({ kind: 'feature', featureId: 'f1', preconditionId: 'p1', stage: 'mid', text: 'Harta' });
-        expect(within(orphanRow()).queryByText('Harta')).toBeNull();
+      it('only counts planned functions, leaves the questions to the AI and shows no controls', () => {
+        setup('backlog', withFunctions());
+        expect(row().textContent).toContain('2 încă nu; AI-ul te întreabă de ele');
+        expect(row().getAttribute('data-state')).toBe('missing');
+        expect(within(row()).queryByRole('button')).toBeNull();
+        expect(within(row()).queryByRole('combobox')).toBeNull();
+        expect(within(checklist()).queryByRole('button', { name: 'Adaugă pașii sugerați' })).toBeNull();
       });
 
-      it('Mai târziu stores the feature unlinked and keeps it; Păstrează keeps it; the row turns ✓', () => {
-        const { last } = setup('backlog', orphans());
-        fireEvent.click(within(orphanRow()).getByRole('button', { name: 'Mai târziu: Harta' }));
-        expect(last().backlog.at(-1)).toMatchObject({ kind: 'feature', featureId: 'f1', preconditionId: null, stage: 'mid' });
-        expect(last().alerts).toContainEqual(expect.objectContaining({ code: 'orphan_feature', refs: ['f1'], status: 'dismissed' }));
-        fireEvent.click(within(orphanRow()).getByRole('button', { name: 'Păstrează: Export CSV' }));
-        expect(last().alerts.filter((a) => a.status === 'dismissed')).toHaveLength(2);
-        expect(orphanRow().getAttribute('data-state')).toBe('saved');
-      });
-
-      it('Mută toate la „mai târziu” moves every orphan', () => {
-        const { last } = setup('backlog', orphans());
-        fireEvent.click(within(orphanRow()).getByRole('button', { name: 'Mută toate la „mai târziu”' }));
-        expect(last().backlog.filter((b) => b.kind === 'feature').map((b) => b.featureId)).toEqual(['f1', 'f2']);
-        expect(orphanRow().getAttribute('data-state')).toBe('saved');
+      it('turns ✓ once every planned function leads to a pathway step', () => {
+        const draft = withFunctions();
+        draft.backlog.push(
+          { id: 'b2', stage: 'mid', kind: 'feature', featureId: 'f1', preconditionId: 'p1', text: 'Harta', order: 2 },
+          { id: 'b3', stage: 'mid', kind: 'feature', featureId: 'f2', preconditionId: 'p1', text: 'Export CSV', order: 3 },
+        );
+        setup('backlog', draft);
+        expect(row().getAttribute('data-state')).toBe('saved');
       });
     });
   });

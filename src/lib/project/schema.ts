@@ -72,6 +72,8 @@ export const ProjectSchema = z.object({
         id: z.string(),
         name: z.string().max(80),
         skills: z.array(z.string().max(60)).max(20),
+        /** What the person does in the project („face backend-ul și vorbește cu primăria”). */
+        role: z.string().max(200).optional(),
         hoursPerWeek: z.number().min(0).max(80),
       }),
     )

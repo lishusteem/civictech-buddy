@@ -17,9 +17,7 @@ import {
 import type { Alert, Message, Project, StepId } from '@/lib/project/schema';
 import { isStepComplete } from '@/lib/steps/completion';
 import { PHASES, STEPS, type StepDef } from '@/lib/steps/definitions';
-import { keepFeature, laterFeature, linkFeature } from '@/lib/steps/orphans';
-import { firstMissingRequired, NONE_FOUND_NAME, openRecommended, orphanFeatures } from '@/lib/steps/requirements';
-import { appendOrganizingItems, buildOrganizingItems } from '@/lib/backlog/organizing';
+import { firstMissingRequired, NONE_FOUND_NAME, openRecommended } from '@/lib/steps/requirements';
 import { ActionBar } from './ActionBar';
 import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
@@ -86,7 +84,6 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   const tracker = askTracker ?? ownTracker;
   const busy = useBusy(tracker, step.id);
   const [editing, setEditing] = useState<Editing | null>(null);
-  const [suggestNote, setSuggestNote] = useState(false);
   const [savedLine, setSavedLine] = useState<SavedLine | null>(null);
   const [announce, setAnnounce] = useState('');
   const [tab, setTab] = useState<'chat' | 'result'>('chat');
@@ -232,13 +229,6 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
     } catch {
       // Background check: on failure the step simply shows no new LLM alerts.
     }
-  }
-
-  /** On demand: appends the suggested organizing steps that are not in the backlog yet. */
-  function addSuggested() {
-    const none = buildOrganizingItems(draft).length === 0;
-    setSuggestNote(none);
-    if (!none) setDraft(appendOrganizingItems);
   }
 
   /** The existing-initiatives step can be completed by saying that nothing similar was found. */
@@ -388,12 +378,6 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
                 afterAccept={afterAccept}
                 firstMissingRef={firstMissingRef}
                 onNoneFound={noneFound}
-                onAddSuggested={addSuggested}
-                suggestNote={suggestNote}
-                onLinkFeature={(f, c) => setDraft((p) => linkFeature(p, f, c))}
-                onLaterFeature={(f) => setDraft((p) => laterFeature(p, f))}
-                onKeepFeature={(f) => setDraft((p) => keepFeature(p, f))}
-                onLaterAll={() => setDraft((p) => orphanFeatures(p).reduce((acc, f) => laterFeature(acc, f.id), p))}
               />
             }
             afterSaved={

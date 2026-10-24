@@ -10,6 +10,7 @@ import {
   type EntityKind,
   type ListKind,
 } from '../project/entities';
+import { isFeatureWorking } from '../project/features';
 import { nameIndex, polishCard, scrubCardIds, scrubIds } from '../project/humanText';
 import type { Message, Project, StepId } from '../project/schema';
 import { buildMessages, contextMessage, loadPrompt } from './prompts';
@@ -281,9 +282,13 @@ function parseTurn(raw: string, p: Project, step: StepId): Parsed {
 }
 
 /** Internal ids must not leak into the text the dev reads (and that goes on the public page). */
+/** A function that already works is an output, not an activity: its backlog card is dropped. */
+const dropWorkingFeatures = (p: Project, cards: Card[]) =>
+  cards.filter((c) => !(c.kind === 'backlogItem' && c.data.kind === 'feature' && isFeatureWorking(p, c.data.featureId as string | null)));
+
 function finish(p: Project, cards: Card[]): Card[] {
   const names = nameIndex(p, cards);
-  const clean = dropUnanchoredRoles(p, cards).map((c) => polishCard(scrubCardIds(c, names)));
+  const clean = dropWorkingFeatures(p, dropUnanchoredRoles(p, cards)).map((c) => polishCard(scrubCardIds(c, names)));
   return normalizeCardIds(p, clean);
 }
 

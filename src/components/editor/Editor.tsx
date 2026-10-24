@@ -5,7 +5,6 @@ import { useState, type ReactNode } from 'react';
 import type { Card } from '@/lib/project/entities';
 import { firstIncompleteStep, isStepUnlocked } from '@/lib/steps/completion';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
-import { appendOrganizingItems } from '@/lib/backlog/organizing';
 import type { Project, StepId } from '@/lib/project/schema';
 import { AskTracker } from './ChatPanel';
 import { ConflictDialog } from './ConflictDialog';
@@ -69,18 +68,11 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   const neverPublished = publishedAt === null;
   const stepDef = view === 'overview' || view === 'summary' ? null : STEPS.find((s) => s.id === view)!;
 
-  /** Moves to a view. The first entry into the backlog step appends the organizing items (never removes anything). */
+  /** Moves to a view. */
   function go(next: View, afterFinish = false) {
     // Steps open in order: a step is reachable once every step before it is complete.
     // (After finishing a step the draft in this closure is one update behind, and the button was gated already.)
     if (!afterFinish && next !== 'overview' && next !== 'summary' && !isStepUnlocked(draft, next)) return;
-    if (next === 'backlog' && view !== 'backlog' && draft.steps.backlog.status === 'untouched') {
-      // First visit only; the step becomes in_progress so deleted items are not suggested again.
-      setDraft((prev) => {
-        const withItems = appendOrganizingItems(prev);
-        return { ...withItems, steps: { ...withItems.steps, backlog: { ...withItems.steps.backlog, status: 'in_progress' } } };
-      });
-    }
     setView(next);
   }
 
