@@ -645,7 +645,7 @@ describe('StepScreen', () => {
       draft.preconditions = [precondition];
       const { last } = setup('preconditions', draft, onNext);
       expect(within(bar()).getByText('✓ Pasul e complet · 1 recomandare deschisă')).toBeTruthy();
-      expect(primary().textContent).toBe('Treci la pasul următor: Ipotezele riscante →');
+      expect(primary().textContent).toBe('Treci la pasul următor: Ipotezele →');
       fireEvent.click(primary());
       expect(onNext).toHaveBeenCalledTimes(1);
       await waitFor(() => expect(fetchMock).toHaveBeenCalled());

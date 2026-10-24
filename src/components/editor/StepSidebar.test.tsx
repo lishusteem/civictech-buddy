@@ -56,7 +56,7 @@ describe('StepSidebar', () => {
     for (const t of ['Contextul', 'Teoria schimbării', 'Organizarea']) {
       expect(screen.getByText(t)).toBeTruthy();
     }
-    fireEvent.click(screen.getByRole('button', { name: /Ipotezele riscante/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Ipotezele/ }));
     expect(onSelect).toHaveBeenCalledWith('risks');
   });
 
@@ -79,7 +79,7 @@ describe('StepSidebar', () => {
     const btn = (name: RegExp) => screen.getByRole('button', { name }) as HTMLButtonElement;
     expect(btn(/Proiectul și echipa/).disabled).toBe(false);
     expect(btn(/Ce există deja/).disabled).toBe(false);
-    const blocked = btn(/Schimbarea țintă/);
+    const blocked = btn(/Impact și rezultate/);
     expect(blocked.disabled).toBe(true);
     expect(blocked.getAttribute('title')).toBe('Termină întâi pașii anteriori.');
     fireEvent.click(blocked);

@@ -1,12 +1,22 @@
 ## Pasul 5 — Actorii
 
-Obiectiv: lista oamenilor, grupurilor și instituțiilor care contează pentru problemă, cu tip, putere și poziție.
+Obiectiv: lista oamenilor, grupurilor și instituțiilor care contează pentru problemă, cu tip, putere și poziție față de proiect.
 
-Întrebări-ghid (una pe rând):
-- Cine suferă de problemă?
-- Cine decide? Cine poate schimba regula din spatele problemei?
-- Cine are datele?
-- Cine lipsește din discuție sau pierde ceva dacă reușești?
+De ce contează: schimbarea se întâmplă prin oameni și instituții. Rezultatele (outcomes) sunt comportamente noi ale acestor actori. Dacă dev-ul nu știe cine decide și cine poate bloca, nu știe pe cine să convingă.
+
+Cum facilitezi (una pe rând):
+- „Cine trăiește problema direct?”
+- „Cine decide? Cine poate schimba regula, procedura sau bugetul din spatele problemei?”
+- „Cine are datele?”
+- „Cine ar fi deranjat sau ar pierde ceva dacă reușești?”
+- „Cine e lăsat pe dinafară: cine n-ar putea folosi soluția?”
+- Pentru putere și poziție: „Cât de mult poate influența asta, și cum ți se pare că vede proiectul?” „Nu știu încă” e un răspuns bun.
+
+Greșeli frecvente (le prinzi blând, într-o propoziție, și pui întrebarea care le repară):
+- Actori generici („autoritățile”, „statul”, „comunitatea”) → „Ce instituție sau ce departament, mai exact?”
+- Puterea citită din titlul funcției → „Cine decide de fapt? Uneori e un șef de birou sau un consilier.”
+- Lipsesc oamenii fără putere dar afectați (vârstnici, oameni fără smartphone) → „Cine are problema, dar nu ar ajunge la aplicație?”
+- Doar aliați → „Cine ar putea bloca proiectul?”
 
 Card permis (câte unul pentru fiecare actor):
 - {"kind": "actor", "data": {"id": "a1", "name": "...", "note": "<de ce contează pentru problemă>", "type": "user" | "institution" | "ngo" | "media" | "funder" | "business" | "other", "power": "low" | "medium" | "high", "stance": "supports" | "neutral" | "opposes" | "unknown", "excluded": true | false}}

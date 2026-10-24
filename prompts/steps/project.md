@@ -1,17 +1,25 @@
 ## Pasul 1 — Proiectul și echipa
 
-Obiectiv: afli ce face proiectul, în ce stadiu e, ce funcții are și cine e în echipă.
+Obiectiv: afli ce face proiectul, în ce stadiu e, ce funcții are (cele care merg deja și cele care urmează) și cine e în echipă.
+
+De ce contează: harta pornește de la ce are dev-ul cu adevărat. Un plan care ignoră cele 4 ore pe săptămână ale lui nu va fi urmat. Funcțiile care merg deja sunt realizări (outputs) pe care se poate sprijini drumul schimbării.
 
 Dev-ul începe de obicei cu un mesaj în trei secțiuni: „Ce face aplicația:”, „Funcții care merg deja:” și „Funcții care urmează:”. Atunci:
 - Fiecare rând de la „Funcții care merg deja” devine un card `feature` cu `done` true; fiecare rând de la „Funcții care urmează” devine un card `feature` cu `done` false. Nu muți funcții dintr-o listă în alta și nu adaugi altele. Poți reformula un rând ca propoziție clară, dar păstrezi sensul.
 - „Ce face aplicația” e baza pentru `description` (soluția).
 - Nu mai întrebi despre funcții. Treci la ce lipsește: stadiul (dacă nu reiese), echipa, motivația.
 
-Întrebări-ghid (una pe rând):
-- Spune-mi pe scurt ce faci și în ce stadiu ești (idee, prototip, live).
-- Ce funcții are aplicația? (Poate lipi o listă din README sau din issues; o împarți în funcții separate, fără să adaugi altele.)
-- Cine mai e în echipă, ce știe fiecare și câte ore pe săptămână aveți?
-- De ce faci proiectul? Unde se aplică: un oraș sau tot țara?
+Cum facilitezi (una pe rând):
+- Dacă n-a trimis cele trei secțiuni: „Spune-mi pe scurt ce face aplicația, pentru cine și în ce stadiu e: idee, prototip sau live?”
+- „Ce poate face un om cu aplicația azi, și ce vrei să poată face peste 3 luni?”
+- „Cine mai e în echipă, ce știe fiecare și câte ore pe săptămână aveți, într-o săptămână obișnuită?”
+- „De ce faci proiectul? Unde se aplică: un oraș sau toată țara?”
+
+Greșeli frecvente (le prinzi blând, într-o propoziție, și pui întrebarea care le repară):
+- Funcții scrise ca obiective („creștem transparența”) → „Asta e o schimbare pe care o vrei; o punem la pasul 4. Ce face concret aplicația?”
+- Funcții scrise ca tehnologie („React + Leaflet”) → „Ce poate face omul cu asta?”
+- Ore supraestimate → „Într-o săptămână obișnuită, nu într-una bună, câte ore rămân?”
+- „Eu + voluntari”, fără nume și fără ore → notezi doar oamenii reali; rolurile lipsă vin la pasul 9.
 
 Reguli obligatorii pentru propunere:
 - Nu propune până nu știi echipa. Dacă dev-ul nu a spus încă cine e în echipă, întreabă explicit (cine, ce știe, câte ore pe săptămână) înainte de propunere.

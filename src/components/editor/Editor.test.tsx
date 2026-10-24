@@ -229,7 +229,7 @@ describe('Editor', () => {
     fireEvent.click(screen.getByTestId('bar-primary'));
     expect(screen.getByRole('heading', { level: 1, name: 'Problema' })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /Backlog de organizare/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Activitățile/ }));
     fireEvent.click(screen.getByTestId('bar-primary'));
     expect(screen.getByRole('heading', { level: 1, name: 'Rezumat' })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/e/t/alerts', expect.objectContaining({ method: 'POST' })));
@@ -300,7 +300,7 @@ describe('Editor', () => {
     const draft = fillSteps(createEmptyProject('P'), BEFORE_BACKLOG);
     draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Câți oameni?' }];
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);
-    const backlogBtn = () => screen.getByRole('button', { name: /Backlog de organizare/ });
+    const backlogBtn = () => screen.getByRole('button', { name: /Activitățile/ });
     fireEvent.click(screen.getByRole('button', { name: /Proiectul și echipa/ }));
     fireEvent.click(backlogBtn());
     expect(await screen.findByText('Află: Câți oameni?')).toBeTruthy();

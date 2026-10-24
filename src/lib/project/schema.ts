@@ -143,6 +143,10 @@ export const ProjectSchema = z.object({
         test: z.string().max(500),
         /** Who called it risky: the dev or an AI suggestion; older drafts and manual edits have none (the dev). */
         riskBy: z.enum(['dev', 'ai']).optional(),
+        /** ToC level: an output the team delivers or an outcome (someone else does something differently). */
+        level: z.enum(['output', 'outcome']).optional(),
+        /** Indicator: how we see it happened (who, how many, how much, by when). */
+        signal: z.string().max(300).optional(),
       }),
     )
     .max(40),

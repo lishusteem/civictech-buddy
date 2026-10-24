@@ -73,10 +73,10 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'url', label: 'Link', type: 'text', nullable: true },
     { key: 'difference', label: 'Ce faci diferit', type: 'textarea' },
   ],
-  direction: [{ key: 'text', label: 'Direcția pe termen lung', type: 'textarea', required: true }],
+  direction: [{ key: 'text', label: 'Impactul', type: 'textarea', required: true }],
   targetChange: [
-    { key: 'text', label: 'Schimbarea', type: 'text', required: true },
-    { key: 'signal', label: 'Semnul observabil', type: 'text' },
+    { key: 'text', label: 'Rezultatul pe termen lung', type: 'text', required: true },
+    { key: 'signal', label: 'Indicator', type: 'text' },
   ],
   actor: [
     { key: 'name', label: 'Nume', type: 'text', required: true },
@@ -111,12 +111,22 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'note', label: 'Notă', type: 'text' },
   ],
   precondition: [
-    { key: 'text', label: 'Precondiția', type: 'text', required: true },
+    { key: 'text', label: 'Pasul din drum', type: 'text', required: true },
+    {
+      key: 'level',
+      label: 'Nivel',
+      type: 'enum',
+      options: [
+        ['output', 'Output / Realizare (livrați voi)'],
+        ['outcome', 'Outcome / Rezultat (alții fac ceva diferit)'],
+      ],
+    },
+    { key: 'signal', label: 'Indicator', type: 'text' },
     { key: 'actorId', label: 'Cine face ceva diferit', type: 'ref', refs: ['actors', 'team'], nullable: true },
     { key: 'stage', label: 'Etapa', type: 'enum', options: STAGE },
     { key: 'leadsTo', label: 'Duce la', type: 'ref', refs: ['preconditions', 'targetChanges'], required: true },
     { key: 'coveredByApp', label: 'O acoperă aplicația', type: 'checkbox' },
-    { key: 'assumption', label: 'Ce presupunem', type: 'textarea' },
+    { key: 'assumption', label: 'Ipoteză (assumption)', type: 'textarea' },
     { key: 'risky', label: 'Ipoteză riscantă', type: 'checkbox' },
     { key: 'test', label: 'Test ieftin', type: 'textarea' },
     { key: 'riskBy', label: 'Cine a spus-o', type: 'enum', options: [['dev', 'tu'], ['ai', 'sugestie AI']] },
@@ -167,7 +177,7 @@ export function defaultData(kind: EntityKind, project: Project, step: StepId): C
     case 'relation':
       return { id: '', from: '', to: '', type: 'influences', note: '' };
     case 'precondition':
-      return { id: '', text: '', actorId: null, stage: 'start', leadsTo: '', coveredByApp: false, assumption: '', risky: false, test: '' };
+      return { id: '', text: '', actorId: null, stage: 'start', leadsTo: '', coveredByApp: false, assumption: '', risky: false, test: '', level: 'outcome', signal: '' };
     case 'role':
       return { id: '', name: '', reason: '', reasonRefs: [], stage: 'start', status: 'seeking', coveredBy: null };
     case 'backlogItem': {
