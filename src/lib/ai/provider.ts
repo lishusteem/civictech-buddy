@@ -131,6 +131,9 @@ export function defaultProposal(step: StepId, context: Card[]): string {
 
 export class FakeProvider implements ChatProvider {
   async complete(messages: ChatMessage[]): Promise<string> {
+    // FAKE_AI_DELAY_MS makes local runs feel like a thinking model (to see the waiting state).
+    const delay = Number(process.env.FAKE_AI_DELAY_MS);
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     const next = fakeQueue.shift();
     if (next instanceof Error) throw next;
     if (next !== undefined) return next;

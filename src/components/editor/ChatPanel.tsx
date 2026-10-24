@@ -6,6 +6,7 @@ import { normalizeCardIds, upsertEntity } from '@/lib/project/entities';
 import type { Message, Project, StepId } from '@/lib/project/schema';
 import { isAffirmative, normalizeReply } from '@/lib/steps/affirm';
 import type { SetDraft } from './StepScreen';
+import { WaitTips } from './WaitTips';
 
 export const MAX_CHARS = 4000;
 const COUNTER_FROM = 3500;
@@ -268,9 +269,12 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
       )}
 
       {pending && (
-        <p role="status" className="max-w-[90%] animate-pulse rounded-xl border border-dashed border-stone-300 bg-stone-50 p-3 text-stone-600">
-          {messages.length === 0 ? LOADING.first : LOADING[loading]}
-        </p>
+        <div className="max-w-[90%] rounded-xl border border-dashed border-stone-300 bg-stone-50 p-3">
+          <p role="status" className="animate-pulse text-stone-600">
+            {messages.length === 0 ? LOADING.first : LOADING[loading]}
+          </p>
+          <WaitTips step={step} />
+        </div>
       )}
       {footer}
       {notice && (

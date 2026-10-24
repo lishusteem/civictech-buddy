@@ -90,7 +90,7 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
       ];
     case 'problem':
       return [
-        req('problem.statement', 'Problema, în 2–3 propoziții', (x) => filled(x.problem.statement)),
+        req('problem.statement', 'Problema: cine pățește ce, azi', (x) => filled(x.problem.statement)),
         rec('problem.evidence', 'De unde știi (o dovadă)', (x) => x.problem.evidence.length >= 1, { alertCode: 'no_evidence' }),
       ];
     case 'existing':
