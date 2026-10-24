@@ -107,7 +107,7 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
       ];
     case 'target':
       return [
-        req('target.any', 'Cel puțin o schimbare țintă', (x) => x.targetChanges.length >= 1),
+        req('target.any', 'Cel puțin o schimbare țintită', (x) => x.targetChanges.length >= 1),
         rec('target.signals', 'Un semn observabil pentru fiecare', (x) => everyNonEmpty(x.targetChanges, (t) => filled(t.signal))),
         rec('target.direction', 'Direcția pe termen lung', (x) => filled(x.direction)),
       ];

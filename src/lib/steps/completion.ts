@@ -17,7 +17,7 @@ const RULES: Record<StepId, Rule> = {
     done: (p) => p.existing.length >= 1,
     hint: 'Adaugă cel puțin o inițiativă similară sau apasă «Nu am găsit nimic similar».',
   },
-  target: { done: (p) => p.targetChanges.length >= 1, hint: 'Acceptă cel puțin o schimbare țintă.' },
+  target: { done: (p) => p.targetChanges.length >= 1, hint: 'Acceptă cel puțin o schimbare țintită.' },
   actors: { done: (p) => p.actors.length >= 1, hint: 'Acceptă cel puțin un actor.' },
   relations: { done: (p) => p.relations.length >= 1, hint: 'Acceptă cel puțin o relație între actori.' },
   preconditions: { done: (p) => p.preconditions.length >= 1, hint: 'Acceptă cel puțin o precondiție.' },

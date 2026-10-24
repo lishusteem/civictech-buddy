@@ -35,7 +35,7 @@ export const KIND_LABEL: Record<EntityKind, string> = {
   problem: 'Problema',
   existing: 'Inițiativă existentă',
   direction: 'Direcția',
-  targetChange: 'Schimbare țintă',
+  targetChange: 'Schimbare țintită',
   actor: 'Actor',
   relation: 'Relație',
   precondition: 'Precondiție',

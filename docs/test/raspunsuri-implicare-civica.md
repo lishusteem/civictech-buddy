@@ -57,7 +57,7 @@ nu exista deja nimic de genul
 notam ca nu am gasit nimic
 ```
 
-## 4. Schimbarea țintă
+## 4. Schimbarea țintită
 
 ```
 cetatenii au informatii mai bune dupa care isi pot ghida actiunile iar insitutiile sunt mai responsabile cu raspunsuirle

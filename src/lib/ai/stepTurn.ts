@@ -135,7 +135,7 @@ function refError(card: Card, has: HasId): string | null {
     case 'precondition':
       if (d.actorId !== null && !has(d.actorId, 'actor', 'teamMember')) return bad('actorId', 'actor sau membru al echipei');
       if (d.leadsTo === d.id || !has(d.leadsTo, 'precondition', 'targetChange')) {
-        return bad('leadsTo', 'precondiții sau al unei schimbări țintă');
+        return bad('leadsTo', 'precondiții sau al unei schimbări țintite');
       }
       return null;
     case 'role':
