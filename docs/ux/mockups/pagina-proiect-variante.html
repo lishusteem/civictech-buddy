@@ -3,81 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pagina proiectului — variante</title>
+<title>Pagina proiectului — variantele A și B</title>
 <style>
   :root {
     --teal-900: #134e4a; --teal-800: #115e59; --teal-700: #0f766e; --teal-100: #ccfbf1; --teal-50: #f0fdfa;
     --stone-900: #1c1917; --stone-700: #44403c; --stone-600: #57534e; --stone-500: #78716c; --stone-300: #d6d3d1; --stone-200: #e7e5e4; --stone-100: #f5f5f4; --stone-50: #fafaf9;
-    --amber-800: #92400e; --amber-100: #fef3c7; --amber-300: #fcd34d; --emerald-900: #064e3b; --emerald-100: #d1fae5; --emerald-50: #ecfdf5; --sky-100: #e0f2fe; --sky-900: #0c4a6e;
-    --violet-100: #ede9fe; --violet-900: #4c1d95;
+    --amber-800: #92400e; --amber-100: #fef3c7; --amber-300: #fcd34d; --emerald-900: #064e3b; --emerald-100: #d1fae5; --emerald-50: #ecfdf5;
+    --sky-100: #e0f2fe; --sky-900: #0c4a6e; --violet-100: #ede9fe; --violet-900: #4c1d95; --pink-50: #fdf2f8; --pink-300: #f9a8d4; --pink-800: #9d174d;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--stone-50); color: var(--stone-900); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin: 0; background: var(--stone-50); color: var(--stone-900); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
   .top { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--stone-200); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .top b { margin-right: 6px; }
   .top button { border: 1px solid var(--stone-300); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 14px; cursor: pointer; }
   .top button[aria-pressed="true"] { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
   .top .desc { flex-basis: 100%; font-size: 13px; color: var(--stone-600); }
-  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 34px; letter-spacing: -0.02em; margin: 6px 0 8px; line-height: 1.15; }
-  h2 { font-size: 22px; margin: 36px 0 10px; letter-spacing: -0.01em; }
-  h3 { margin: 0 0 6px; font-size: 16px; }
+  .top .legend { font-size: 12px; color: var(--pink-800); }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 34px; letter-spacing: -0.02em; margin: 4px 0 10px; line-height: 1.15; }
+  h2 { font-size: 22px; line-height: 1.3; margin: 2px 0 12px; letter-spacing: -0.01em; }
+  h3 { margin: 0 0 4px; font-size: 16px; }
   p { margin: 0 0 10px; }
-  ul { margin: 0; padding-left: 20px; }
+  ul, ol { margin: 0; padding-left: 20px; }
   li { margin: 4px 0; }
+  section.block { margin-top: 40px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--teal-700); }
   .muted { color: var(--stone-600); }
-  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; }
-  .chip.live { background: var(--teal-50); color: var(--teal-800); border: 1px solid var(--teal-100); }
-  .chip.works { background: var(--emerald-100); color: var(--emerald-900); }
-  .chip.todo { background: var(--sky-100); color: var(--sky-900); }
-  .chip.org { background: var(--violet-100); color: var(--violet-900); }
-  .chip.test { background: var(--amber-100); color: var(--amber-800); }
+  .small { font-size: 14px; }
   .card { background: #fff; border: 1px solid var(--stone-300); border-radius: 14px; padding: 16px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; margin-right: 4px; }
+  .chip.live { background: var(--teal-50); color: var(--teal-800); border: 1px solid var(--teal-100); }
+  .chip.plain { background: var(--stone-100); color: var(--stone-700); }
+  .chip.works { background: var(--emerald-100); color: var(--emerald-900); }
+  .chip.test { background: var(--amber-100); color: var(--amber-800); }
+  .chip.org { background: var(--violet-100); color: var(--violet-900); }
+  .chip.out { background: var(--sky-100); color: var(--sky-900); }
   .cta { display: inline-block; background: var(--teal-800); color: #fff; border-radius: 10px; padding: 10px 18px; font-weight: 600; text-decoration: none; }
   .cta.outline { background: #fff; color: var(--teal-900); border: 1px solid var(--teal-800); }
   .hero { background: #fff; border: 1px solid var(--teal-100); border-radius: 18px; padding: 28px; }
-  .sentence { font-size: 19px; line-height: 1.6; }
-  .sentence b { color: var(--teal-800); }
-  .label { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--stone-500); }
-  .role h3 { margin-bottom: 2px; }
-  .role .why { font-size: 14px; color: var(--stone-700); }
+  .summary { display: grid; gap: 6px; margin: 14px 0 18px; font-size: 18px; }
+  .summary b { color: var(--teal-800); display: inline-block; min-width: 92px; }
+  .new { border: 1.5px dashed var(--pink-300); background: var(--pink-50); border-radius: 12px; padding: 12px 14px; }
+  .new .tag { font-size: 11px; font-weight: 700; color: var(--pink-800); text-transform: uppercase; letter-spacing: .05em; }
+  .path { display: grid; gap: 0; }
+  .step { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: start; }
+  .step .lvl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--stone-500); padding-top: 12px; text-align: right; }
+  .step .box { background: #fff; border: 1px solid var(--stone-300); border-radius: 12px; padding: 10px 14px; }
+  .step .box.goal { border: 2px solid var(--teal-700); background: var(--teal-50); }
+  .step .ind { display: block; font-size: 13px; color: var(--stone-600); margin-top: 2px; }
+  .join { display: grid; grid-template-columns: 150px 1fr; gap: 14px; }
+  .join span { font-size: 13px; color: var(--teal-800); padding: 6px 0 6px 14px; border-left: 2px solid var(--teal-100); margin-left: 18px; }
+  .join span.risky { color: var(--amber-800); border-left-color: var(--amber-300); }
+  .risk { border-left: 4px solid var(--amber-300); }
+  .role { display: grid; gap: 8px; }
+  footer { margin-top: 44px; background: var(--teal-800); color: #fff; border-radius: 18px; padding: 24px; }
 
-  /* B: map */
-  .bands { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .band { border-radius: 14px; padding: 12px; }
+  /* B */
+  .layoutB { display: grid; grid-template-columns: 290px 1fr; gap: 22px; align-items: start; }
+  .side { position: sticky; top: 64px; display: grid; gap: 12px; }
+  .legend-line { font-size: 14px; color: var(--stone-700); background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; padding: 8px 12px; }
+  .paths { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .paths button { border: 1px solid var(--stone-300); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .paths button[aria-pressed="true"] { background: var(--teal-800); border-color: var(--teal-800); color: #fff; }
+  .bands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .band { border-radius: 14px; padding: 10px; min-width: 0; }
   .band.c { background: var(--stone-100); } .band.i { background: var(--teal-50); } .band.x { background: var(--emerald-50); }
-  .band .node { background: #fff; border: 1px solid var(--stone-300); border-radius: 10px; padding: 8px 10px; font-size: 14px; margin-top: 8px; }
-  .band .node small { display: block; color: var(--stone-600); font-size: 12px; }
-  .band .node .why { display: block; margin-top: 4px; font-size: 12px; color: var(--amber-800); }
+  .band h3 { font-size: 14px; margin: 0; }
+  .band small { display: block; font-size: 11px; color: var(--stone-500); margin-bottom: 6px; }
+  .node { background: #fff; border: 1px solid var(--stone-300); border-radius: 10px; padding: 8px 10px; font-size: 13px; margin-top: 8px; cursor: pointer; line-height: 1.4; }
+  .node:hover, .node:focus-visible { border-color: var(--teal-700); outline: none; }
+  .node.sel { box-shadow: 0 0 0 2px var(--teal-800); }
+  .node.dim { opacity: .3; }
+  .node .who { display: inline-block; font-size: 11px; font-weight: 600; color: var(--teal-800); background: var(--teal-50); border-radius: 6px; padding: 0 5px; margin-bottom: 2px; }
+  .node.goal { border: 2px solid var(--teal-700); }
+  .node.risky { border-color: var(--amber-300); background: #fffbeb; }
   .band.x .node { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
-  .side { position: sticky; top: 70px; }
+  .detail { margin-top: 12px; }
+  .actors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  /* C: dashboard */
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .kpi { background: #fff; border: 1px solid var(--stone-300); border-radius: 14px; padding: 14px; }
-  .kpi b { display: block; font-size: 26px; letter-spacing: -0.02em; }
-  .kpi span { font-size: 13px; color: var(--stone-600); }
-  .bar { height: 8px; border-radius: 99px; background: var(--stone-200); overflow: hidden; margin-top: 8px; }
-  .bar i { display: block; height: 100%; background: var(--teal-700); }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--stone-200); vertical-align: top; }
-  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--stone-500); }
-  .status { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
-  .s-done { background: var(--emerald-100); color: var(--emerald-900); }
-  .s-doing { background: var(--sky-100); color: var(--sky-900); }
-  .s-next { background: var(--stone-100); color: var(--stone-600); }
-  .s-risk { background: var(--amber-100); color: var(--amber-800); }
-
-  footer { margin-top: 40px; background: var(--teal-800); color: #fff; border-radius: 18px; padding: 24px; }
-  footer a { color: #fff; }
-
-  @media (max-width: 760px) {
-    h1 { font-size: 27px; }
-    .grid2, .grid3, .bands, .kpis, .twocol { grid-template-columns: 1fr !important; }
+  @media (max-width: 820px) {
+    h1 { font-size: 28px; }
+    .grid2, .layoutB, .bands, .actors { grid-template-columns: 1fr; }
     .side { position: static; }
-    .hero { padding: 20px; }
+    .step, .join { grid-template-columns: 1fr; }
+    .step .lvl { text-align: left; padding-top: 0; }
+    .join span { margin-left: 6px; }
   }
 </style>
 </head>
@@ -86,157 +96,236 @@
   <b>Pagina proiectului:</b>
   <button data-v="A" aria-pressed="true">A · Povestea</button>
   <button data-v="B" aria-pressed="false">B · Harta</button>
-  <button data-v="C" aria-pressed="false">C · Panou de progres</button>
+  <span class="legend">Chenarele roz punctate = informații pe care nu le cerem încă (câmpuri noi propuse).</span>
   <span class="desc" id="desc"></span>
 </div>
 <main id="view"></main>
+
 <script>
-const DESC = {
-  A: 'Pentru cine are 2 minute: o poveste de sus în jos (problemă → soluție → drum → cum ajuți). Harta e un rezumat liniar. Cea mai potrivită pentru un link trimis pe grup.',
-  B: 'Pentru cine vrea să înțeleagă strategia: harta teoriei schimbării e chiar pagina, cu detalii la clic. Problema și soluția stau într-o coloană laterală.',
-  C: 'Pentru grupul care revine lunar: ce s-a livrat, ce indicatori se mișcă, ce ipoteze s-au testat, ce urmează și cine lipsește. Cere ca dev-ul să actualizeze stările.',
+// Content: the replay of the owner's real answers through the new prompts (Haiku standing in for DeepSeek), lightly trimmed.
+const D = {
+  name: 'Implicare Civica', stage: 'Funcționează deja', team: '1 om, ~4 ore/săpt.', updated: '24 oct 2026',
+  summary: {
+    problem: 'Cetățenii nu știu ce instituție răspunde la o cerere pe Legea 544 și uită de cererile fără răspuns.',
+    work: 'O platformă care trimite cererile, le urmărește și publică lunar cât de repede răspunde fiecare instituție.',
+    goal: 'Instituțiile publice răspund la cereri în termenul legal de 30 de zile.',
+  },
+  problem: [
+    'Cetățenii obișnuiți care vor informații de interes public pe Legea 544 nu știu care instituție e responsabilă să răspundă.',
+    'După ce trimit cererea, trebuie s-o urmărească manual ca să vadă dacă au primit răspuns.',
+    'Mulți uită dacă instituția n-a răspuns la timp și pierd ocazia să reclame.',
+    'Nu există date publice despre cât de repede răspund instituțiile, deci nimeni nu le poate evalua transparența.',
+  ],
+  evidence: ['Experiență proprie ca activist civic și discuții cu cetățeni care au cerut informații.', 'ONG-urile și jurnaliștii urmăresc cererile manual, în tabele.'],
+  solution: [
+    'Platformă pentru cereri pe Legea 544: ajută cetățenii să ceară informații de interes public.',
+    'Fiecare cerere primește o adresă @implicarecivica.ro; un AI găsește instituția responsabilă și ajută la formularea întrebărilor.',
+    'Trimite cererile pe email și urmărește statusul fiecăreia.',
+    'Publică rata de răspuns a fiecărei instituții.',
+  ],
+  works: ['Adresă de email @implicarecivica.ro pentru fiecare cerere', 'AI care găsește instituția responsabilă', 'AI care ajută la formularea întrebărilor', 'Trimiterea cererilor pe email', 'Urmărirea statusului fiecărei cereri', 'Rata de răspuns publicată pe instituție'],
+  impact: 'Cetățenii au informații mai bune după care își ghidează acțiunile, iar instituțiile răspund mai responsabil la cereri.',
+  long: [
+    { id: 't1', text: 'Instituțiile publice răspund la cereri în termenul legal de 30 de zile.', ind: '90% din cereri primesc răspuns în 30 de zile, până la finalul lui 2027.' },
+    { id: 't2', text: 'Instituțiile publice dau răspunsuri complete, cu toată informația cerută.', ind: 'Răspunsurile nu mai sunt parțiale sau refuzuri nejustificate.' },
+  ],
+  path: [
+    { id: 'p1', level: 'output', who: 'Echipa', text: 'Clasament lunar public cu rata de răspuns a instituțiilor.', ind: '12 clasamente pe an', why: 'ONG-urile și presa vor folosi datele în investigații.', to: 'p2' },
+    { id: 'p2', level: 'outcome', who: 'ONG-uri și jurnaliști', text: 'Se abonează la clasament și găsesc instituțiile care nu răspund.', ind: 'cel puțin 5 ONG-uri și publicații îl urmăresc lunar', why: 'Presa vede în instituțiile restanțiere un subiect de investigație.', to: 'p3', stage: 'scurt' },
+    { id: 'p3', level: 'outcome', who: 'ONG-uri și jurnaliști', text: 'Scriu articole și fac campanii care expun instituțiile restanțiere.', ind: '5–10 articole pe an', why: 'Instituțiile răspund mai repede ca să evite expunerea negativă.', to: 't1', stage: 'intermediar' },
+    { id: 'p4', level: 'outcome', who: 'ONG-uri și jurnaliști', text: 'Cer Guvernului penalizări pentru nerăspuns, pe baza datelor lunare.', ind: 'întâlniri cu oficiali, rapoarte de advocacy', why: 'Cu destulă presiune și documentare, Guvernul ia în calcul penalizări.', risky: true, test: 'Roundtable cu 10–15 ONG-uri și publicații în două săptămâni: cine are timp și resurse pentru o campanie? Dacă peste jumătate spun da, se pot mobiliza; dacă nu, planul se schimbă.', to: 'p5', stage: 'intermediar' },
+    { id: 'p5', level: 'outcome', who: 'Guvernul României', text: 'Adoptă penalizări pentru instituțiile care nu răspund în termen.', ind: '—', why: 'Instituțiile respectă termenul de teama penalizărilor.', to: 't1', stage: 'intermediar' },
+  ],
+  activities: [
+    { kind: 'org', text: 'Publică clasamentul lunar și trimite-l la 20–30 de ONG-uri și redacții; urmărește cine se abonează.', for: 'p1' },
+    { kind: 'test', text: 'Roundtable cu 10–15 ONG-uri și jurnaliști: prezinți datele și întrebi cine poate face campanie.', for: 'p4' },
+    { kind: 'test', text: 'Cerere pe Legea 544 la Ministerul Justiției despre penalizări + întâlnire la Departamentul pentru Relația cu Societatea Civilă.', for: 'p5' },
+  ],
+  actors: [
+    { name: 'Cetățeni obișnuiți', group: 'Pe cine afectează', power: 'Putere mică', stance: 'susține', note: 'Vor informații pe Legea 544, dar nu știu cui să scrie și uită de cererile fără răspuns.' },
+    { name: 'ONG-uri și jurnaliști', group: 'Aliați posibili', power: 'Putere medie', stance: 'susține', note: 'Urmăresc cererile pentru investigații și campanii, manual, în tabele care consumă mult timp.' },
+    { name: 'Instituții publice', group: 'Cine decide', power: 'Putere mare', stance: 'poziție necunoscută', note: 'Trebuie să răspundă în 30 de zile; vor fi evaluate prin ratele de răspuns publicate.' },
+    { name: 'Guvernul României', group: 'Cine decide', power: 'Putere mare', stance: 'poziție necunoscută', note: 'Ar putea reglementa mai strict răspunsurile; azi regulile sunt fragmentate pe instituții.' },
+  ],
+  roles: [
+    { name: 'Advocacy / relații instituționale', when: 'În 3–12 luni', why: 'Duce cererea de penalizări la Guvern, pe baza datelor lunare: contacte cu oficiali, negociere, argumente pentru schimbarea legii. Nu încape în 4 ore pe săptămână.' },
+    { name: 'Avocat pe dreptul la informație', when: 'În 3–12 luni', why: 'Când instituțiile refuză sau răspund parțial, oamenii și ONG-urile au nevoie de contestații și, uneori, de proces. Cu sprijin juridic, campaniile pot merge mai departe.' },
+  ],
 };
 
-const footer = `<footer><h3 style="font-size:20px">Vrei să ajuți?</h3><p>Scrie-ne pe <a href="#">Discord</a> sau la <a href="#">contact@implicarecivica.ro</a>.</p><p style="font-size:13px;opacity:.8;margin:0">Pagină făcută cu Ghidul de pornire · actualizată 24 oct 2026</p></footer>`;
+const DESC = {
+  A: 'Pentru un link trimis pe grup (2 minute). Ordinea răspunde pe rând la: ce e asta → de ce m-ar interesa → ce face → ce iese din asta → e realist → e viu → ce pot face eu. Titlurile spun ideea, nu doar eticheta.',
+  B: 'Pentru cine vrea să înțeleagă strategia: harta teoriei schimbării e centrul paginii, cu detalii la clic. În stânga, rezumatul rămâne mereu vizibil.',
+};
 
-const roles = `<div class="grid3">
-  <div class="card role"><span class="chip org">Acum</span><h3>Jurist drept administrativ</h3><p class="why">Scrie propunerea de penalizări pentru nerăspuns. 2 ore/lună.</p></div>
-  <div class="card role"><span class="chip org">Acum</span><h3>Organizator comunitar</h3><p class="why">Strânge ONG-urile în coaliția „Răspunde la timp”.</p></div>
-  <div class="card role"><span class="chip">În 3–12 luni</span><h3>Advocacy / lobby</h3><p class="why">Duce propunerea la Guvern și în Parlament.</p></div>
-</div>`;
+const NEW = (title, body) => `<div class="new"><span class="tag">Câmp nou · ${title}</span><p class="small" style="margin:4px 0 0">${body}</p></div>`;
+const list = (xs) => `<ul>${xs.map((x) => `<li>${x}</li>`).join('')}</ul>`;
+const byId = Object.fromEntries(D.path.map((p) => [p.id, p]));
+const roles = () => `<div class="grid2">${D.roles.map((r) => `<div class="card role">
+    <div><span class="chip plain">${r.when}</span></div><h3>${r.name}</h3><p class="small" style="margin:0">${r.why}</p>
+    ${NEW('Cât timp + prima sarcină', 'Ex.: „~2 ore pe lună. Prima sarcină: o discuție de 30 de minute despre cum ajungem la Ministerul Justiției.”')}
+  </div>`).join('')}</div>
+  <p class="small muted" style="margin-top:10px">Nu trebuie să știi cod: aici e nevoie mai ales de oameni de advocacy, juriști și organizatori.</p>`;
+const footer = `<footer><h3 style="font-size:20px">Vrei să ajuți?</h3>${NEW('Contact', 'Lipsește din conversație: canalul de contact (Discord, email). AI-ul ar trebui să-l ceară la pasul 1.').replace('class="new"', 'class="new" style="background:#fff;color:#1c1917"')}<p style="font-size:13px;opacity:.85;margin:12px 0 0">Pagină făcută cu Ghidul de pornire · actualizată ${D.updated}</p></footer>`;
+
+// The first pathway, read from the deliverable up to the long-term outcome.
+function chainTo(target) {
+  const chain = [];
+  let start = D.path.find((p) => p.level === 'output');
+  for (let n = start; n; n = byId[n.to]) chain.push(n);
+  return chain.concat(D.long.filter((t) => t.id === target));
+}
 
 function A() {
+  const chain = chainTo('t1');
+  const LVL = { output: 'Output · Realizare', outcome: 'Outcome · Rezultat' };
   return `
   <section class="hero">
-    <span class="chip live">Funcționează deja</span> <span class="muted" style="font-size:14px">· 1 om, ~4 ore/săpt. · Legea 544</span>
-    <h1>Implicare Civica</h1>
-    <p class="sentence">Cetățenii nu știu cui să trimită o cerere pe Legea 544 și uită dacă au primit răspuns. <b>Noi</b> le dăm o platformă care trimite și urmărește cererile <b>și</b> publicăm lunar care instituții nu răspund, <b>ca</b> presa și ONG-urile să pună presiune, <b>astfel încât</b> instituțiile să răspundă la termen.</p>
-    <p style="margin-top:16px"><a class="cta" href="#ajuta">Vreau să ajut ↓</a> <a class="cta outline" href="#">Încearcă platforma ↗</a></p>
+    <span class="chip live">${D.stage}</span><span class="chip plain">${D.team}</span><span class="chip plain">Legea 544 · toată țara</span>
+    <h1>${D.name}</h1>
+    <div class="summary">
+      <div><b>Problema</b> ${D.summary.problem}</div>
+      <div><b>Ce facem</b> ${D.summary.work}</div>
+      <div><b>Ținta</b> ${D.summary.goal}</div>
+    </div>
+    <a class="cta" href="#ajuta">Vreau să ajut ↓</a> <a class="cta outline" href="#">Încearcă platforma ↗</a>
   </section>
 
-  <h2>Problema</h2>
-  <div class="grid2">
-    <div class="card"><ul>
-      <li>Cetățenii obișnuiți nu știu cărei instituții să-i trimită cererea pe Legea 544.</li>
-      <li>După ce trimit, uită dacă au primit răspuns; nu au unde să urmărească cererile.</li>
-      <li>ONG-urile și jurnaliștii țin evidența în tabele proprii, cu mult efort.</li>
-      <li>Nu există date publice despre cât de repede răspund instituțiile.</li></ul></div>
-    <div class="card"><p class="label">De unde știm</p><ul><li>Activitate de activist civic, discuții cu cetățeni</li><li>Experiență proprie cu cereri fără răspuns</li></ul></div>
-  </div>
+  <section class="block">
+    <p class="eyebrow">Ce e în joc · problema</p>
+    <h2>Oamenii nu știu cui să ceară informații publice și nu află dacă li s-a răspuns.</h2>
+    <div class="grid2">
+      <div class="card">${list(D.problem)}<p class="small muted" style="margin:10px 0 0"><b>De unde știm:</b> ${D.evidence.join(' ')}</p></div>
+      ${NEW('Un caz concret', 'Ex.: „O mamă din Iași a cerut primăriei date despre locurile din creșe. N-a știut la ce direcție să scrie, iar după 40 de zile tot nu primise răspuns.” Pasul 2 deja cere un caz; trebuie doar salvat.')}
+    </div>
+  </section>
 
-  <h2>Soluția</h2>
-  <div class="grid2">
-    <div class="card"><p class="label">Merge deja</p><ul><li>Adresă de email @implicarecivica.ro pentru fiecare utilizator</li><li>AI care găsește instituția responsabilă</li><li>AI care ajută la formularea întrebărilor</li><li>Trimite cererile și urmărește statusul</li></ul></div>
-    <div class="card"><p class="label">Urmează</p><ul><li>Clasament lunar public cu rata de răspuns</li><li>Marcaj „răspuns incomplet”</li></ul></div>
-  </div>
+  <section class="block">
+    <p class="eyebrow">Ce facem · soluția</p>
+    <h2>O singură platformă trimite cererea, o urmărește și arată cine nu răspunde.</h2>
+    <div class="grid2">
+      <div class="card">${list(D.solution)}</div>
+      <div class="card"><p class="small" style="margin:0 0 6px"><span class="chip works">Merge deja</span> toate cele ${D.works.length} funcții de bază</p>${list(D.works)}
+        <div style="margin-top:10px">${NEW('Cifrele de până acum', 'Ex.: „320 de cereri trimise, 140 de instituții urmărite.” Arată că proiectul e real.')}</div></div>
+    </div>
+  </section>
 
-  <h2>Cum credem că se produce schimbarea</h2>
-  <div class="card">
-    <ol style="margin:0;padding-left:20px">
-      <li><b>Activities / Activități:</b> calculăm lunar rata de răspuns; organizăm un roundtable cu ONG-uri și jurnaliști.</li>
-      <li><b>Outputs / Realizări:</b> clasament lunar public (12/an, 300+ instituții); coaliția „Răspunde la timp”.</li>
-      <li><b>Outcomes / Rezultate:</b> jurnaliștii scriu despre instituțiile restanțiere → instituțiile restanțiere răspund mai repede.</li>
-      <li><b>Long-term outcome / Rezultat pe termen lung:</b> instituțiile răspund la cererile pe Legea 544 în termenul legal <span class="muted">(indicator: sub 10% din cereri peste termen)</span>.</li>
-      <li><b>Impact:</b> cetățenii au informațiile de care au nevoie, iar instituțiile răspund de ce fac.</li>
-    </ol>
-    <p style="margin:10px 0 0;font-size:14px"><span class="chip test">⚠ Ipoteză pe care o testăm</span> Instituțiile se tem de presa negativă — test: întrebăm 5 jurnaliști ce s-a schimbat după articolele lor.</p>
-    <p style="margin:10px 0 0"><a href="#" style="color:var(--teal-900)">Vezi harta completă →</a></p>
-  </div>
+  <section class="block">
+    <p class="eyebrow">Ce se schimbă · rezultatele</p>
+    <h2>Ținta: instituțiile răspund la timp și complet.</h2>
+    <div class="grid2" style="margin-bottom:18px">${D.long.map((t) => `<div class="card" style="border:2px solid var(--teal-700)"><p class="eyebrow" style="color:var(--stone-500)">Long-term outcome · Rezultat pe termen lung</p><h3>${t.text}</h3><p class="small muted" style="margin:0">Indicator: ${t.ind}</p></div>`).join('')}</div>
+    <div class="card">
+      <h3>Cum ajungem acolo: drumul spre primul rezultat</h3>
+      <p class="small muted">Citit de sus în jos: ce livrăm noi duce, pas cu pas, la ce fac alții diferit.</p>
+      <div class="path">
+        ${chain.map((n, i) => `
+          <div class="step"><span class="lvl">${n.level ? LVL[n.level] + (n.stage ? ` · ${n.stage}` : '') : 'Rezultat pe termen lung'}</span>
+            <div class="box ${n.level ? '' : 'goal'}">${n.who ? `<b>${n.who}:</b> ` : ''}${n.text}${n.ind && n.ind !== '—' ? `<span class="ind">Indicator: ${n.ind}</span>` : ''}</div></div>
+          ${i < chain.length - 1 ? `<div class="join"><span></span><span>↓ ca să… <span class="muted">(pentru că ${n.why.charAt(0).toLowerCase() + n.why.slice(1)})</span></span></div>` : ''}`).join('')}
+      </div>
+      <p class="small" style="margin:12px 0 0"><b>Impact pe termen lung:</b> ${D.impact} · <a href="#" onclick="show('B');return false" style="color:var(--teal-900)">Vezi toată harta →</a></p>
+    </div>
+  </section>
 
-  <h2>Următorii pași</h2>
-  <div class="card"><ol style="margin:0;padding-left:20px">
-    <li><span class="chip test">Test</span> Roundtable cu ONG-uri și jurnaliști</li>
-    <li><span class="chip todo">Cod</span> Pagina publică a clasamentului</li>
-    <li><span class="chip org">Organizare</span> Găsim un jurist pe drept administrativ</li></ol></div>
+  <section class="block">
+    <p class="eyebrow">Ce încă nu știm · ipoteze</p>
+    <h2>Mergem pe ipoteza că ONG-urile au timp să facă presiune. O verificăm întâi.</h2>
+    ${D.path.filter((p) => p.risky).map((p) => `<div class="card risk"><p style="margin:0"><span class="chip test">⚠ Nesigur</span> ${p.why}</p><p class="small" style="margin:8px 0 0"><b>Testul, în 2 săptămâni:</b> ${p.test}</p></div>`).join('')}
+  </section>
 
-  <h2 id="ajuta">Cum poți ajuta</h2>
-  ${roles}
+  <section class="block">
+    <p class="eyebrow">Unde suntem</p>
+    <h2>Platforma merge; urmează să o folosim ca pârghie.</h2>
+    <div class="card"><ol>${D.activities.map((a) => `<li><span class="chip ${a.kind}">${a.kind === 'test' ? 'Test' : 'Organizare'}</span> ${a.text}</li>`).join('')}</ol>
+    <p class="small muted" style="margin:10px 0 0">Actualizat ${D.updated}.</p></div>
+  </section>
+
+  <section class="block" id="ajuta">
+    <p class="eyebrow">Cum poți ajuta</p>
+    <h2>Căutăm oameni pentru partea din afara codului.</h2>
+    ${roles()}
+  </section>
   ${footer}`;
 }
 
 function B() {
-  const node = (t, s, why) => `<div class="node">${t}${s ? `<small>${s}</small>` : ''}${why ? `<span class="why">⚠ ${why}</span>` : ''}</div>`;
+  const col = (lvl) => D.path.filter((p) => p.level === lvl);
+  const node = (n, extra = '') => `<div class="node ${n.risky ? 'risky' : ''} ${extra}" tabindex="0" data-id="${n.id}">${n.who ? `<span class="who">${n.who}</span><br>` : ''}${n.text}</div>`;
   return `
-  <div class="twocol" style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+  <div class="layoutB">
     <aside class="side">
-      <span class="chip live">Funcționează deja</span>
-      <h1 style="font-size:28px">Implicare Civica</h1>
-      <p class="muted">Platformă pentru cereri pe Legea 544 + clasament public al instituțiilor care nu răspund.</p>
-      <div class="card" style="margin-top:12px"><p class="label">Problema</p><p style="font-size:14px;margin:0">Cetățenii nu știu cui să scrie și uită de cereri; nu există date despre cine răspunde.</p></div>
-      <div class="card" style="margin-top:10px"><p class="label">Echipa</p><p style="font-size:14px;margin:0">1 om, ~4 ore/săpt. Căutăm: jurist, organizator, advocacy.</p></div>
-      <p style="margin-top:14px"><a class="cta" href="#ajuta">Vreau să ajut ↓</a></p>
+      <div><span class="chip live">${D.stage}</span><span class="chip plain">${D.team}</span></div>
+      <h1 style="font-size:28px;margin:0">${D.name}</h1>
+      <div class="card small"><p style="margin:0 0 6px"><b>Problema.</b> ${D.summary.problem}</p><p style="margin:0 0 6px"><b>Ce facem.</b> ${D.summary.work}</p><p style="margin:0"><b>Ținta.</b> ${D.summary.goal}</p></div>
+      <a class="cta" href="#ajuta" style="text-align:center">Vreau să ajut ↓</a>
     </aside>
     <section>
-      <p class="label">Theory of Change / Teoria schimbării · drumul: răspuns la termen</p>
-      <div class="bands" style="margin-top:8px">
-        <div class="band c"><b>Activities</b><br><small class="muted">Activități</small>
-          ${node('Calculăm lunar rata de răspuns')}${node('Construim pagina clasamentului', 'de făcut')}${node('Roundtable cu ONG-uri și jurnaliști')}</div>
-        <div class="band c"><b>Outputs</b><br><small class="muted">Realizări</small>
-          ${node('Clasament lunar public', 'Indicator: 12/an, 300+ instituții', 'presa caută date ușor de citat')}${node('Platforma pentru cereri 544', 'merge deja')}${node('Coaliția „Răspunde la timp”', 'Indicator: 5+ ONG-uri')}</div>
-        <div class="band i"><b>Outcomes</b><br><small class="muted">Rezultate</small>
-          ${node('Jurnaliștii scriu despre instituțiile restanțiere', 'termen scurt', 'instituțiile se tem de presa negativă')}${node('ONG-urile cer public penalizări', 'termen scurt')}${node('Instituțiile restanțiere răspund mai repede', 'intermediar')}${node('<b>Instituțiile răspund în termenul legal</b>', 'termen lung · Indicator: sub 10% peste termen')}</div>
-        <div class="band x"><b>Impact</b><br><small style="opacity:.7">Impact</small>
-          ${node('Cetățenii au informațiile de care au nevoie, iar instituțiile răspund de ce fac')}</div>
+      <p class="eyebrow">Theory of Change / Teoria schimbării</p>
+      <h2>Cum credem că se produce schimbarea</h2>
+      <p class="legend-line">De la stânga la dreapta: ce facem → ce livrăm → ce fac alții diferit → impactul. Galben = încă nesigur. Clic pe un card pentru detalii.</p>
+      <div class="paths" role="group" aria-label="Alege rezultatul">
+        <button aria-pressed="true">Răspuns la termen</button><button aria-pressed="false">Răspunsuri complete</button><button aria-pressed="false">Tot</button>
       </div>
-      <p class="muted" style="font-size:13px;margin-top:8px">Pe pagina reală: săgeți între carduri, clic pe un card evidențiază drumul lui, butoane pentru fiecare rezultat pe termen lung (vezi macheta „harta-schimbarii.html”).</p>
-      <h2 id="ajuta">Cum poți ajuta</h2>
-      ${roles}
+      <div class="bands">
+        <div class="band c"><h3>Activities</h3><small>Activități · ce facem</small>${D.activities.map((a, i) => `<div class="node" tabindex="0" data-act="${i}">${a.text}</div>`).join('')}</div>
+        <div class="band c"><h3>Outputs</h3><small>Realizări · ce livrăm</small>${col('output').map((n) => node(n)).join('')}<div class="node" tabindex="0"><span class="who">merge deja</span><br>Platforma: trimite și urmărește cererile</div></div>
+        <div class="band i"><h3>Outcomes</h3><small>Rezultate · ce fac alții diferit</small>${col('outcome').map((n) => node(n)).join('')}${D.long.map((t) => `<div class="node goal" tabindex="0" data-long="${t.id}"><span class="who">pe termen lung</span><br>${t.text}</div>`).join('')}</div>
+        <div class="band x"><h3>Impact</h3><small style="opacity:.7">Impact</small><div class="node">${D.impact}</div></div>
+      </div>
+      <div class="card detail" id="detail"><p class="muted small" style="margin:0">Clic pe un card din hartă: aici apar indicatorul, ipoteza de pe săgeată și, dacă e nesigur, testul.</p></div>
+
+      <section class="block">
+        <p class="eyebrow">Narative / Narațiunea schimbării</p>
+        <div class="card"><p style="margin:0">Publicăm lunar un <b>clasament al ratelor de răspuns</b> → ca ONG-urile și jurnaliștii să găsească instituțiile care nu răspund → să scrie despre ele și să facă presiune → și să ceară Guvernului penalizări → astfel încât <b>instituțiile să răspundă în 30 de zile</b> → iar, pe termen lung, cetățenii să aibă informațiile de care au nevoie.</p></div>
+      </section>
+
+      <section class="block">
+        <p class="eyebrow">Cine contează</p>
+        <div class="actors">${D.actors.map((a) => `<div class="card small"><p class="eyebrow" style="color:var(--stone-500)">${a.group}</p><h3>${a.name}</h3><p class="muted" style="margin:0 0 4px;font-size:12px">${a.power} · ${a.stance}</p><p style="margin:0">${a.note}</p></div>`).join('')}</div>
+      </section>
+
+      <section class="block">
+        <p class="eyebrow">Ce încă nu știm</p>
+        ${D.path.filter((p) => p.risky).map((p) => `<div class="card risk small"><span class="chip test">⚠ Nesigur</span> ${p.why}<br><b>Test:</b> ${p.test}</div>`).join('')}
+      </section>
+
+      <section class="block" id="ajuta">
+        <p class="eyebrow">Cum poți ajuta</p>
+        ${roles()}
+      </section>
     </section>
   </div>
   ${footer}`;
 }
 
-function C() {
-  const row = (st, cls, what, ind, prog) => `<tr><td><span class="status ${cls}">${st}</span></td><td>${what}</td><td>${ind}</td><td style="width:120px">${prog != null ? `<div class="bar"><i style="width:${prog}%"></i></div><small class="muted">${prog}%</small>` : '—'}</td></tr>`;
-  return `
-  <section class="hero">
-    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span><span class="chip live">Funcționează deja</span> <span class="muted" style="font-size:14px">· actualizat 24 oct 2026 · următoarea revizuire: ianuarie</span></span><a class="cta" href="#ajuta">Vreau să ajut ↓</a></div>
-    <h1>Implicare Civica</h1>
-    <p class="muted">Cereri pe Legea 544 trimise și urmărite + clasament public al instituțiilor care nu răspund, ca instituțiile să răspundă la termen.</p>
-  </section>
-
-  <h2>Unde suntem pe drum</h2>
-  <div class="kpis">
-    <div class="kpi"><b>4 / 6</b><span>Activities în lucru sau gata</span><div class="bar"><i style="width:66%"></i></div></div>
-    <div class="kpi"><b>1 / 3</b><span>Outputs livrate</span><div class="bar"><i style="width:33%"></i></div></div>
-    <div class="kpi"><b>0 / 3</b><span>Outcomes observate</span><div class="bar"><i style="width:0%"></i></div></div>
-    <div class="kpi"><b>1 / 2</b><span>Ipoteze testate</span><div class="bar"><i style="width:50%"></i></div></div>
-  </div>
-
-  <h2>Outputs / Realizări</h2>
-  <div class="card"><table><thead><tr><th>Stare</th><th>Realizare</th><th>Indicator</th><th>Progres</th></tr></thead><tbody>
-    ${row('Livrat', 's-done', 'Platforma pentru cereri pe Legea 544', '320 de cereri trimise', null)}
-    ${row('În lucru', 's-doing', 'Clasament lunar public', '0 / 12 clasamente', 10)}
-    ${row('Următor', 's-next', 'Coaliția „Răspunde la timp”', '0 / 5 ONG-uri', 0)}
-  </tbody></table></div>
-
-  <h2>Outcomes / Rezultate și Assumptions / Ipoteze</h2>
-  <div class="grid2">
-    <div class="card"><table><thead><tr><th>Rezultat</th><th>Indicator</th></tr></thead><tbody>
-      <tr><td>Jurnaliștii scriu despre instituțiile restanțiere</td><td>0 articole</td></tr>
-      <tr><td>Instituțiile restanțiere răspund mai repede</td><td>termen mediu: 34 de zile (ținta: 30)</td></tr>
-      <tr><td><b>Instituțiile răspund în termenul legal</b></td><td>27% peste termen (ținta: sub 10%)</td></tr></tbody></table></div>
-    <div class="card"><table><thead><tr><th>Ipoteză</th><th>Test</th></tr></thead><tbody>
-      <tr><td>Instituțiile se tem de presa negativă</td><td><span class="status s-done">Confirmată</span> 4 din 5 jurnaliști au văzut reacții</td></tr>
-      <tr><td>Guvernul reacționează la presiune publică</td><td><span class="status s-risk">Netestată</span> roundtable în noiembrie</td></tr></tbody></table></div>
-  </div>
-
-  <h2>Următorii pași</h2>
-  <div class="card"><ol style="margin:0;padding-left:20px"><li><span class="chip test">Test</span> Roundtable cu ONG-uri și jurnaliști</li><li><span class="chip todo">Cod</span> Pagina publică a clasamentului</li><li><span class="chip org">Organizare</span> Găsim un jurist</li></ol></div>
-
-  <h2 id="ajuta">Cum poți ajuta</h2>
-  ${roles}
-  <p class="muted" style="font-size:13px;margin-top:10px">Cifrele din panou sunt exemple: cer câmpuri noi (stare pe realizări și rezultate, valoare curentă a indicatorului, rezultat al testului) pe care dev-ul le actualizează la revizuire.</p>
-  ${footer}`;
+function wireB() {
+  const detail = document.getElementById('detail');
+  document.querySelectorAll('.node').forEach((el) => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.node').forEach((x) => x.classList.remove('sel'));
+      el.classList.add('sel');
+      const n = byId[el.dataset.id];
+      const t = D.long.find((x) => x.id === el.dataset.long);
+      const a = D.activities[el.dataset.act];
+      if (n) detail.innerHTML = `<p class="eyebrow">${n.level === 'output' ? 'Output · Realizare' : 'Outcome · Rezultat'}${n.stage ? ` · termen ${n.stage}` : ''}</p><h3>${n.who}: ${n.text}</h3>
+        <p class="small" style="margin:6px 0 0"><b>Indicator:</b> ${n.ind}</p>
+        <p class="small" style="margin:4px 0 0"><b>De ce duce mai departe (ipoteză):</b> ${n.why}</p>${n.risky ? `<p class="small" style="margin:4px 0 0"><span class="chip test">⚠ Nesigur</span> <b>Test:</b> ${n.test}</p>` : ''}`;
+      else if (t) detail.innerHTML = `<p class="eyebrow">Long-term outcome · Rezultat pe termen lung</p><h3>${t.text}</h3><p class="small" style="margin:6px 0 0"><b>Indicator:</b> ${t.ind}</p>`;
+      else if (a) detail.innerHTML = `<p class="eyebrow">Activity · Activitate</p><h3>${a.text}</h3><p class="small" style="margin:6px 0 0"><b>Pentru:</b> ${byId[a.for]?.text ?? ''}</p>`;
+      else detail.innerHTML = `<p class="small" style="margin:0">${el.textContent}</p>`;
+    });
+  });
 }
 
-const V = { A, B, C };
 const view = document.getElementById('view');
 function show(v) {
-  view.innerHTML = V[v]();
+  view.innerHTML = v === 'A' ? A() : B();
   document.getElementById('desc').textContent = DESC[v];
   document.querySelectorAll('.top button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  if (v === 'B') wireB();
+  window.scrollTo(0, 0);
 }
+window.show = show;
 document.querySelectorAll('.top button').forEach((b) => (b.onclick = () => show(b.dataset.v)));
 show('A');
 </script>
