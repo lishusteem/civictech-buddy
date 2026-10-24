@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagina proiectului — variante</title>
+<style>
+  :root {
+    --teal-900: #134e4a; --teal-800: #115e59; --teal-700: #0f766e; --teal-100: #ccfbf1; --teal-50: #f0fdfa;
+    --stone-900: #1c1917; --stone-700: #44403c; --stone-600: #57534e; --stone-500: #78716c; --stone-300: #d6d3d1; --stone-200: #e7e5e4; --stone-100: #f5f5f4; --stone-50: #fafaf9;
+    --amber-800: #92400e; --amber-100: #fef3c7; --amber-300: #fcd34d; --emerald-900: #064e3b; --emerald-100: #d1fae5; --emerald-50: #ecfdf5; --sky-100: #e0f2fe; --sky-900: #0c4a6e;
+    --violet-100: #ede9fe; --violet-900: #4c1d95;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--stone-50); color: var(--stone-900); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .top { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--stone-200); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .top b { margin-right: 6px; }
+  .top button { border: 1px solid var(--stone-300); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .top button[aria-pressed="true"] { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
+  .top .desc { flex-basis: 100%; font-size: 13px; color: var(--stone-600); }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 34px; letter-spacing: -0.02em; margin: 6px 0 8px; line-height: 1.15; }
+  h2 { font-size: 22px; margin: 36px 0 10px; letter-spacing: -0.01em; }
+  h3 { margin: 0 0 6px; font-size: 16px; }
+  p { margin: 0 0 10px; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .muted { color: var(--stone-600); }
+  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; }
+  .chip.live { background: var(--teal-50); color: var(--teal-800); border: 1px solid var(--teal-100); }
+  .chip.works { background: var(--emerald-100); color: var(--emerald-900); }
+  .chip.todo { background: var(--sky-100); color: var(--sky-900); }
+  .chip.org { background: var(--violet-100); color: var(--violet-900); }
+  .chip.test { background: var(--amber-100); color: var(--amber-800); }
+  .card { background: #fff; border: 1px solid var(--stone-300); border-radius: 14px; padding: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cta { display: inline-block; background: var(--teal-800); color: #fff; border-radius: 10px; padding: 10px 18px; font-weight: 600; text-decoration: none; }
+  .cta.outline { background: #fff; color: var(--teal-900); border: 1px solid var(--teal-800); }
+  .hero { background: #fff; border: 1px solid var(--teal-100); border-radius: 18px; padding: 28px; }
+  .sentence { font-size: 19px; line-height: 1.6; }
+  .sentence b { color: var(--teal-800); }
+  .label { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--stone-500); }
+  .role h3 { margin-bottom: 2px; }
+  .role .why { font-size: 14px; color: var(--stone-700); }
+
+  /* B: map */
+  .bands { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .band { border-radius: 14px; padding: 12px; }
+  .band.c { background: var(--stone-100); } .band.i { background: var(--teal-50); } .band.x { background: var(--emerald-50); }
+  .band .node { background: #fff; border: 1px solid var(--stone-300); border-radius: 10px; padding: 8px 10px; font-size: 14px; margin-top: 8px; }
+  .band .node small { display: block; color: var(--stone-600); font-size: 12px; }
+  .band .node .why { display: block; margin-top: 4px; font-size: 12px; color: var(--amber-800); }
+  .band.x .node { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
+  .side { position: sticky; top: 70px; }
+
+  /* C: dashboard */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi { background: #fff; border: 1px solid var(--stone-300); border-radius: 14px; padding: 14px; }
+  .kpi b { display: block; font-size: 26px; letter-spacing: -0.02em; }
+  .kpi span { font-size: 13px; color: var(--stone-600); }
+  .bar { height: 8px; border-radius: 99px; background: var(--stone-200); overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: var(--teal-700); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--stone-200); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--stone-500); }
+  .status { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  .s-done { background: var(--emerald-100); color: var(--emerald-900); }
+  .s-doing { background: var(--sky-100); color: var(--sky-900); }
+  .s-next { background: var(--stone-100); color: var(--stone-600); }
+  .s-risk { background: var(--amber-100); color: var(--amber-800); }
+
+  footer { margin-top: 40px; background: var(--teal-800); color: #fff; border-radius: 18px; padding: 24px; }
+  footer a { color: #fff; }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 27px; }
+    .grid2, .grid3, .bands, .kpis, .twocol { grid-template-columns: 1fr !important; }
+    .side { position: static; }
+    .hero { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="top" role="group" aria-label="Varianta">
+  <b>Pagina proiectului:</b>
+  <button data-v="A" aria-pressed="true">A · Povestea</button>
+  <button data-v="B" aria-pressed="false">B · Harta</button>
+  <button data-v="C" aria-pressed="false">C · Panou de progres</button>
+  <span class="desc" id="desc"></span>
+</div>
+<main id="view"></main>
+<script>
+const DESC = {
+  A: 'Pentru cine are 2 minute: o poveste de sus în jos (problemă → soluție → drum → cum ajuți). Harta e un rezumat liniar. Cea mai potrivită pentru un link trimis pe grup.',
+  B: 'Pentru cine vrea să înțeleagă strategia: harta teoriei schimbării e chiar pagina, cu detalii la clic. Problema și soluția stau într-o coloană laterală.',
+  C: 'Pentru grupul care revine lunar: ce s-a livrat, ce indicatori se mișcă, ce ipoteze s-au testat, ce urmează și cine lipsește. Cere ca dev-ul să actualizeze stările.',
+};
+
+const footer = `<footer><h3 style="font-size:20px">Vrei să ajuți?</h3><p>Scrie-ne pe <a href="#">Discord</a> sau la <a href="#">contact@implicarecivica.ro</a>.</p><p style="font-size:13px;opacity:.8;margin:0">Pagină făcută cu Ghidul de pornire · actualizată 24 oct 2026</p></footer>`;
+
+const roles = `<div class="grid3">
+  <div class="card role"><span class="chip org">Acum</span><h3>Jurist drept administrativ</h3><p class="why">Scrie propunerea de penalizări pentru nerăspuns. 2 ore/lună.</p></div>
+  <div class="card role"><span class="chip org">Acum</span><h3>Organizator comunitar</h3><p class="why">Strânge ONG-urile în coaliția „Răspunde la timp”.</p></div>
+  <div class="card role"><span class="chip">În 3–12 luni</span><h3>Advocacy / lobby</h3><p class="why">Duce propunerea la Guvern și în Parlament.</p></div>
+</div>`;
+
+function A() {
+  return `
+  <section class="hero">
+    <span class="chip live">Funcționează deja</span> <span class="muted" style="font-size:14px">· 1 om, ~4 ore/săpt. · Legea 544</span>
+    <h1>Implicare Civica</h1>
+    <p class="sentence">Cetățenii nu știu cui să trimită o cerere pe Legea 544 și uită dacă au primit răspuns. <b>Noi</b> le dăm o platformă care trimite și urmărește cererile <b>și</b> publicăm lunar care instituții nu răspund, <b>ca</b> presa și ONG-urile să pună presiune, <b>astfel încât</b> instituțiile să răspundă la termen.</p>
+    <p style="margin-top:16px"><a class="cta" href="#ajuta">Vreau să ajut ↓</a> <a class="cta outline" href="#">Încearcă platforma ↗</a></p>
+  </section>
+
+  <h2>Problema</h2>
+  <div class="grid2">
+    <div class="card"><ul>
+      <li>Cetățenii obișnuiți nu știu cărei instituții să-i trimită cererea pe Legea 544.</li>
+      <li>După ce trimit, uită dacă au primit răspuns; nu au unde să urmărească cererile.</li>
+      <li>ONG-urile și jurnaliștii țin evidența în tabele proprii, cu mult efort.</li>
+      <li>Nu există date publice despre cât de repede răspund instituțiile.</li></ul></div>
+    <div class="card"><p class="label">De unde știm</p><ul><li>Activitate de activist civic, discuții cu cetățeni</li><li>Experiență proprie cu cereri fără răspuns</li></ul></div>
+  </div>
+
+  <h2>Soluția</h2>
+  <div class="grid2">
+    <div class="card"><p class="label">Merge deja</p><ul><li>Adresă de email @implicarecivica.ro pentru fiecare utilizator</li><li>AI care găsește instituția responsabilă</li><li>AI care ajută la formularea întrebărilor</li><li>Trimite cererile și urmărește statusul</li></ul></div>
+    <div class="card"><p class="label">Urmează</p><ul><li>Clasament lunar public cu rata de răspuns</li><li>Marcaj „răspuns incomplet”</li></ul></div>
+  </div>
+
+  <h2>Cum credem că se produce schimbarea</h2>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px">
+      <li><b>Activities / Activități:</b> calculăm lunar rata de răspuns; organizăm un roundtable cu ONG-uri și jurnaliști.</li>
+      <li><b>Outputs / Realizări:</b> clasament lunar public (12/an, 300+ instituții); coaliția „Răspunde la timp”.</li>
+      <li><b>Outcomes / Rezultate:</b> jurnaliștii scriu despre instituțiile restanțiere → instituțiile restanțiere răspund mai repede.</li>
+      <li><b>Long-term outcome / Rezultat pe termen lung:</b> instituțiile răspund la cererile pe Legea 544 în termenul legal <span class="muted">(indicator: sub 10% din cereri peste termen)</span>.</li>
+      <li><b>Impact:</b> cetățenii au informațiile de care au nevoie, iar instituțiile răspund de ce fac.</li>
+    </ol>
+    <p style="margin:10px 0 0;font-size:14px"><span class="chip test">⚠ Ipoteză pe care o testăm</span> Instituțiile se tem de presa negativă — test: întrebăm 5 jurnaliști ce s-a schimbat după articolele lor.</p>
+    <p style="margin:10px 0 0"><a href="#" style="color:var(--teal-900)">Vezi harta completă →</a></p>
+  </div>
+
+  <h2>Următorii pași</h2>
+  <div class="card"><ol style="margin:0;padding-left:20px">
+    <li><span class="chip test">Test</span> Roundtable cu ONG-uri și jurnaliști</li>
+    <li><span class="chip todo">Cod</span> Pagina publică a clasamentului</li>
+    <li><span class="chip org">Organizare</span> Găsim un jurist pe drept administrativ</li></ol></div>
+
+  <h2 id="ajuta">Cum poți ajuta</h2>
+  ${roles}
+  ${footer}`;
+}
+
+function B() {
+  const node = (t, s, why) => `<div class="node">${t}${s ? `<small>${s}</small>` : ''}${why ? `<span class="why">⚠ ${why}</span>` : ''}</div>`;
+  return `
+  <div class="twocol" style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+    <aside class="side">
+      <span class="chip live">Funcționează deja</span>
+      <h1 style="font-size:28px">Implicare Civica</h1>
+      <p class="muted">Platformă pentru cereri pe Legea 544 + clasament public al instituțiilor care nu răspund.</p>
+      <div class="card" style="margin-top:12px"><p class="label">Problema</p><p style="font-size:14px;margin:0">Cetățenii nu știu cui să scrie și uită de cereri; nu există date despre cine răspunde.</p></div>
+      <div class="card" style="margin-top:10px"><p class="label">Echipa</p><p style="font-size:14px;margin:0">1 om, ~4 ore/săpt. Căutăm: jurist, organizator, advocacy.</p></div>
+      <p style="margin-top:14px"><a class="cta" href="#ajuta">Vreau să ajut ↓</a></p>
+    </aside>
+    <section>
+      <p class="label">Theory of Change / Teoria schimbării · drumul: răspuns la termen</p>
+      <div class="bands" style="margin-top:8px">
+        <div class="band c"><b>Activities</b><br><small class="muted">Activități</small>
+          ${node('Calculăm lunar rata de răspuns')}${node('Construim pagina clasamentului', 'de făcut')}${node('Roundtable cu ONG-uri și jurnaliști')}</div>
+        <div class="band c"><b>Outputs</b><br><small class="muted">Realizări</small>
+          ${node('Clasament lunar public', 'Indicator: 12/an, 300+ instituții', 'presa caută date ușor de citat')}${node('Platforma pentru cereri 544', 'merge deja')}${node('Coaliția „Răspunde la timp”', 'Indicator: 5+ ONG-uri')}</div>
+        <div class="band i"><b>Outcomes</b><br><small class="muted">Rezultate</small>
+          ${node('Jurnaliștii scriu despre instituțiile restanțiere', 'termen scurt', 'instituțiile se tem de presa negativă')}${node('ONG-urile cer public penalizări', 'termen scurt')}${node('Instituțiile restanțiere răspund mai repede', 'intermediar')}${node('<b>Instituțiile răspund în termenul legal</b>', 'termen lung · Indicator: sub 10% peste termen')}</div>
+        <div class="band x"><b>Impact</b><br><small style="opacity:.7">Impact</small>
+          ${node('Cetățenii au informațiile de care au nevoie, iar instituțiile răspund de ce fac')}</div>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:8px">Pe pagina reală: săgeți între carduri, clic pe un card evidențiază drumul lui, butoane pentru fiecare rezultat pe termen lung (vezi macheta „harta-schimbarii.html”).</p>
+      <h2 id="ajuta">Cum poți ajuta</h2>
+      ${roles}
+    </section>
+  </div>
+  ${footer}`;
+}
+
+function C() {
+  const row = (st, cls, what, ind, prog) => `<tr><td><span class="status ${cls}">${st}</span></td><td>${what}</td><td>${ind}</td><td style="width:120px">${prog != null ? `<div class="bar"><i style="width:${prog}%"></i></div><small class="muted">${prog}%</small>` : '—'}</td></tr>`;
+  return `
+  <section class="hero">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span><span class="chip live">Funcționează deja</span> <span class="muted" style="font-size:14px">· actualizat 24 oct 2026 · următoarea revizuire: ianuarie</span></span><a class="cta" href="#ajuta">Vreau să ajut ↓</a></div>
+    <h1>Implicare Civica</h1>
+    <p class="muted">Cereri pe Legea 544 trimise și urmărite + clasament public al instituțiilor care nu răspund, ca instituțiile să răspundă la termen.</p>
+  </section>
+
+  <h2>Unde suntem pe drum</h2>
+  <div class="kpis">
+    <div class="kpi"><b>4 / 6</b><span>Activities în lucru sau gata</span><div class="bar"><i style="width:66%"></i></div></div>
+    <div class="kpi"><b>1 / 3</b><span>Outputs livrate</span><div class="bar"><i style="width:33%"></i></div></div>
+    <div class="kpi"><b>0 / 3</b><span>Outcomes observate</span><div class="bar"><i style="width:0%"></i></div></div>
+    <div class="kpi"><b>1 / 2</b><span>Ipoteze testate</span><div class="bar"><i style="width:50%"></i></div></div>
+  </div>
+
+  <h2>Outputs / Realizări</h2>
+  <div class="card"><table><thead><tr><th>Stare</th><th>Realizare</th><th>Indicator</th><th>Progres</th></tr></thead><tbody>
+    ${row('Livrat', 's-done', 'Platforma pentru cereri pe Legea 544', '320 de cereri trimise', null)}
+    ${row('În lucru', 's-doing', 'Clasament lunar public', '0 / 12 clasamente', 10)}
+    ${row('Următor', 's-next', 'Coaliția „Răspunde la timp”', '0 / 5 ONG-uri', 0)}
+  </tbody></table></div>
+
+  <h2>Outcomes / Rezultate și Assumptions / Ipoteze</h2>
+  <div class="grid2">
+    <div class="card"><table><thead><tr><th>Rezultat</th><th>Indicator</th></tr></thead><tbody>
+      <tr><td>Jurnaliștii scriu despre instituțiile restanțiere</td><td>0 articole</td></tr>
+      <tr><td>Instituțiile restanțiere răspund mai repede</td><td>termen mediu: 34 de zile (ținta: 30)</td></tr>
+      <tr><td><b>Instituțiile răspund în termenul legal</b></td><td>27% peste termen (ținta: sub 10%)</td></tr></tbody></table></div>
+    <div class="card"><table><thead><tr><th>Ipoteză</th><th>Test</th></tr></thead><tbody>
+      <tr><td>Instituțiile se tem de presa negativă</td><td><span class="status s-done">Confirmată</span> 4 din 5 jurnaliști au văzut reacții</td></tr>
+      <tr><td>Guvernul reacționează la presiune publică</td><td><span class="status s-risk">Netestată</span> roundtable în noiembrie</td></tr></tbody></table></div>
+  </div>
+
+  <h2>Următorii pași</h2>
+  <div class="card"><ol style="margin:0;padding-left:20px"><li><span class="chip test">Test</span> Roundtable cu ONG-uri și jurnaliști</li><li><span class="chip todo">Cod</span> Pagina publică a clasamentului</li><li><span class="chip org">Organizare</span> Găsim un jurist</li></ol></div>
+
+  <h2 id="ajuta">Cum poți ajuta</h2>
+  ${roles}
+  <p class="muted" style="font-size:13px;margin-top:10px">Cifrele din panou sunt exemple: cer câmpuri noi (stare pe realizări și rezultate, valoare curentă a indicatorului, rezultat al testului) pe care dev-ul le actualizează la revizuire.</p>
+  ${footer}`;
+}
+
+const V = { A, B, C };
+const view = document.getElementById('view');
+function show(v) {
+  view.innerHTML = V[v]();
+  document.getElementById('desc').textContent = DESC[v];
+  document.querySelectorAll('.top button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+}
+document.querySelectorAll('.top button').forEach((b) => (b.onclick = () => show(b.dataset.v)));
+show('A');
+</script>
+</body>
+</html>

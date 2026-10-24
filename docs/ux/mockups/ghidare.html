@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ghidare — machetă</title>
+<style>
+  :root {
+    --teal-900: #134e4a; --teal-800: #115e59; --teal-700: #0f766e; --teal-100: #ccfbf1; --teal-50: #f0fdfa;
+    --stone-900: #1c1917; --stone-700: #44403c; --stone-600: #57534e; --stone-500: #78716c; --stone-300: #d6d3d1; --stone-200: #e7e5e4; --stone-100: #f5f5f4; --stone-50: #fafaf9;
+    --amber-800: #92400e; --amber-100: #fef3c7; --red-800: #991b1b; --red-50: #fef2f2; --green-800: #166534; --green-50: #f0fdf4;
+    --emerald-50: #ecfdf5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--stone-50); color: var(--stone-900); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 64px; }
+  .switch { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .switch button { border: 1px solid var(--stone-300); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--teal-800); color: #fff; border-color: var(--teal-800); }
+  .panel { background: #fff; border: 1px solid var(--stone-300); border-radius: 16px; padding: 24px; }
+  h1 { font-size: 28px; letter-spacing: -0.01em; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 24px 0 8px; }
+  p { margin: 0 0 10px; }
+  ul { margin: 0 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .muted { color: var(--stone-600); }
+  .chain { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 16px 0 6px; text-align: center; font-size: 14px; }
+  .chain div { padding: 10px 6px; position: relative; }
+  .chain b { display: block; font-size: 15px; }
+  .chain small { display: block; color: var(--stone-600); }
+  .chain .c { background: var(--stone-100); }
+  .chain .i { background: var(--teal-50); }
+  .chain .x { background: var(--emerald-50); }
+  .chain div:first-child { border-radius: 12px 0 0 12px; }
+  .chain div:last-child { border-radius: 0 12px 12px 0; }
+  .chain div:not(:last-child)::after { content: "→"; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); color: var(--teal-800); font-weight: 700; z-index: 1; }
+  .spheres { display: grid; grid-template-columns: 2fr 1fr 1fr; font-size: 12px; text-align: center; color: var(--stone-600); }
+  .spheres span { border-top: 2px solid var(--stone-300); margin: 0 6px; padding-top: 2px; }
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .phase { border: 1px solid var(--stone-200); border-radius: 12px; padding: 12px; }
+  .phase h3 { margin: 0 0 6px; font-size: 14px; color: var(--teal-800); text-transform: uppercase; letter-spacing: .04em; }
+  .phase ol { margin: 0; padding-left: 18px; font-size: 14px; }
+  .btns { display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+  .primary { background: var(--teal-800); color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  .link { color: var(--teal-900); text-decoration: underline; background: none; border: 0; font: inherit; cursor: pointer; }
+
+  /* step screen */
+  .stephead small { color: var(--teal-800); font-size: 14px; }
+  .stephead h1 { margin-top: 2px; }
+  .lane { display: flex; gap: 4px; margin: 8px 0 0; font-size: 12px; }
+  .lane span { padding: 3px 8px; border-radius: 6px; background: var(--stone-100); color: var(--stone-500); }
+  .lane span.on { background: var(--teal-800); color: #fff; font-weight: 600; }
+  .guide { margin-top: 14px; border: 1px solid var(--teal-100); background: var(--teal-50); border-radius: 14px; padding: 14px 16px; }
+  .guide .why { font-size: 15px; }
+  .guide .q { font-weight: 600; margin: 10px 0 4px; }
+  .guide details { margin-top: 8px; border-top: 1px dashed var(--teal-100); padding-top: 8px; }
+  .guide summary { cursor: pointer; color: var(--teal-900); font-weight: 600; }
+  .ex { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .ex div { border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+  .ex .good { background: var(--green-50); color: var(--green-800); }
+  .ex .bad { background: var(--red-50); color: var(--red-800); }
+  .ex b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cols h4 { margin: 6px 0 4px; font-size: 14px; }
+  .collapsed { display: flex; justify-content: space-between; align-items: center; }
+  .work { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .work div { border: 1px dashed var(--stone-300); border-radius: 12px; padding: 14px; color: var(--stone-500); font-size: 14px; min-height: 110px; }
+  @media (max-width: 720px) {
+    .chain { grid-template-columns: 1fr; }
+    .chain div { border-radius: 0 !important; }
+    .chain div:first-child { border-radius: 12px 12px 0 0 !important; }
+    .chain div:last-child { border-radius: 0 0 12px 12px !important; }
+    .chain div:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -12px; transform: translateX(50%); }
+    .spheres { display: none; }
+    .phases, .ex, .cols, .work { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="switch" role="group" aria-label="Ecran"></div>
+  <div id="view"></div>
+</main>
+<script>
+const LEVELS = ['Activities / Activități', 'Outputs / Realizări', 'Outcomes / Rezultate', 'Impact / Impact'];
+const G = {
+  1: { title: 'Proiectul și echipa', why: 'Harta pornește de la ce ai cu adevărat: ce merge deja, ce urmează și câte ore aveți. Un plan care ignoră cele 4 ore pe săptămână ale tale nu va fi urmat.',
+    q: 'Ce poate face un om cu aplicația mea azi, și ce vreau să poată face peste 3 luni?',
+    think: ['Pune separat funcțiile care merg deja și cele care urmează.', 'Scrie funcția ca ce face omul, nu ca tehnologie.', 'Orele = o săptămână obișnuită, nu una bună.'],
+    good: 'Cetățenii pun o groapă pe hartă cu o poză; sesizarea pleacă automat la primărie.', bad: 'Hartă interactivă cu React și Leaflet.',
+    mistakes: ['Funcții scrise ca obiective („creștem transparența”); acelea vin la pasul 4.', 'Ore supraestimate: 10 pe săptămână când realist sunt 3.', '„Eu + voluntari”, fără nume și fără ore.'],
+    tips: ['Lipește lista din README sau din issues.', 'Rolurile care lipsesc vin la pasul 9; acum scrie doar ce știi.'] },
+  2: { title: 'Problema', why: 'Totul se agață de problemă. O problemă vagă face vagi toți pașii de după; una clară îți spune pe cine să întrebi și ce să măsori.',
+    q: 'Cine anume pățește ce, azi, și de unde știu?',
+    think: ['Numește oamenii („părinții din Sectorul 3”), nu „cetățenii”.', 'Ce se întâmplă pas cu pas și ce îi costă: timp, bani, un drept.', 'De unde știi: discuții, date, o cerere 544, un articol.'],
+    good: 'Locuitorii din Mănăștur raportează gropile prin telefon; nu primesc număr de înregistrare și nu află dacă s-a reparat. Știu din 12 discuții la asociația de proprietari.', bad: 'Nu există o aplicație pentru raportat gropi.',
+    mistakes: ['Soluția în problemă: „nu există o aplicație care…”.', 'Problemă prea mare („corupția”); alege bucata pe care o atingi tu.', 'Singura dovadă e experiența ta; verifică și cu alții.'],
+    tips: ['Întreabă „de ce?” de 3 ori până la cauza care contează.', 'Vorbește săptămâna asta cu 3 oameni care au problema.'] },
+  3: { title: 'Ce există deja', why: 'Probabil altcineva a încercat ceva asemănător: poți refolosi, colabora sau învăța din ce n-a mers. Și grupul te va întreba exact asta.',
+    q: 'Cine a mai încercat asta, aici sau în altă țară, și ce fac eu altfel?',
+    think: ['Caută și soluții ne-tech: Excelul unui ONG, un grup de Facebook.', 'Diferența concretă, nu „mai bun” sau „mai modern”.'],
+    good: 'FixMyStreet (UK) face raportarea; noi trimitem sesizarea ca cerere oficială, cu număr de înregistrare.', bad: '„Nu există nimic asemănător.” (fără să fi căutat)',
+    mistakes: ['„Primul din lume” fără căutare.', 'Ignori soluțiile ne-tech pe care oamenii le folosesc deja.', 'Diferența e doar tehnologică, nu pentru utilizator.'],
+    tips: ['Civic Tech Field Guide, GitHub, Code for Romania.', 'Scrie-le celor care au făcut ceva similar; pot deveni parteneri.'] },
+  4: { title: 'Impact și rezultate pe termen lung', lane: [2, 3], why: 'E destinația. Restul hărții se construiește înapoi de aici; o destinație vagă dă un drum vag.',
+    q: 'Dacă reușim, ce face cineva anume diferit peste 1–3 ani, și ce aș vedea concret?',
+    think: ['Long-term outcome / Rezultat pe termen lung = un actor numit + un comportament nou + un indicator.', 'Impact = cum arată lumea pentru oameni pe termen lung; contribuim, nu controlăm.', 'Un card, o schimbare.'],
+    good: 'Primăria Cluj repară gropile raportate în 15 zile. Indicator: 80% din sesizări rezolvate în termen.', bad: '„Oamenii folosesc aplicația.” · „Mai multă transparență.”',
+    mistakes: ['Aplicația ca scop: folosirea e un output, nu un outcome.', 'Ținte vagi fără cine și fără ce.', 'Două schimbări într-un card.', 'Impact atât de larg încât nu se leagă de nimic.'],
+    tips: ['Testul jurnalistului: ce ar scrie un jurnalist peste 2 ani dacă ai reușit?', 'Maximum 3 rezultate pe termen lung.'] },
+  5: { title: 'Actorii', lane: [2], why: 'Schimbarea se întâmplă prin oameni și instituții. Dacă nu știi cine decide și cine poate bloca, nu știi pe cine să convingi.',
+    q: 'Cine suferă, cine decide, cine are datele, cine pierde dacă reușim, cine e lăsat pe dinafară?',
+    think: ['Instituția sau grupul precis: departamentul, nu „statul”.', 'Puterea și poziția, cinstit; „nu știu încă” e un răspuns bun.'],
+    good: 'Direcția de Drumuri a Primăriei Cluj: putere mare, poziție necunoscută. Decide ordinea reparațiilor.', bad: '„Autoritățile.”',
+    mistakes: ['Actori generici („autoritățile”, „comunitatea”).', 'Puterea citită din funcție; uneori un șef de birou decide de fapt.', 'Uiți oamenii fără putere, dar afectați.', 'Pui doar aliați.'],
+    tips: ['Întreabă: „Cine ar fi deranjat dacă reușim?”', 'Pozițiile necunoscute le afli la pasul 8.'] },
+  6: { title: 'Relațiile', lane: [2], why: 'Relațiile arată pârghiile: pe cine poți influența ca să ajungi la cine decide. De aici vin și rolurile de la pasul 9.',
+    q: 'Cine poate face pe cine să se miște, prin ce anume?',
+    think: ['Urmărește trei fire: banii, datele, deciziile.', 'Direcția (cine acționează asupra cui) și cum.'],
+    good: 'Consiliul Local → decide → Direcția de Drumuri: aprobă bugetul de reparații.', bad: '„Toți se influențează reciproc.”',
+    mistakes: ['Totul e „influențează”.', 'Săgeata pe dos.', 'Relații inventate ca să arate harta plină.'],
+    tips: ['Pornește de la actorul care decide rezultatul pe termen lung: cine are acces la el?'] },
+  7: { title: 'Drumul schimbării', lane: [1, 2], why: 'E inima hărții: leagă ce livrezi de schimbarea pe care o vrei. Fără drum, aplicația și schimbarea sunt două insule.',
+    q: 'Ca [rezultatul pe termen lung] să se întâmple, ce trebuie să facă cineva diferit chiar înainte? Repetă până ajungi la ceva ce livrați voi.',
+    think: ['Outcome / Rezultat = un actor + un verb de comportament.', 'Output / Realizare = ceva livrat de voi, numărabil.', 'Citește drumul înainte cu „ca să…”; dacă sună a salt, lipsește un pas.'],
+    good: 'Output „Raport lunar cu gropile nereparate pe cartiere” → „Consilierii întreabă în ședință de cartierele restante” → „Direcția de Drumuri prioritizează gropile vechi”.', bad: '„Aplicația” → „Primăria repară toate gropile.”',
+    mistakes: ['Folosirea luată drept schimbare: „500 de utilizatori” e un output.', 'Saltul de la aplicație direct la lege.', '„Guvernul adoptă și aplică” într-un singur card.', 'Un drum fără nicio realizare la bază.'],
+    tips: ['Fiecare card: o propoziție, un singur verb.', 'O întâlnire sau o scrisoare pot fi realizări; nu totul trece prin aplicație.'] },
+  8: { title: 'Ipotezele (Assumptions)', lane: [1, 2], why: 'Planurile cad la săgeți, nu la cutii. O ipoteză greșită aflată acum costă două săptămâni; aflată după lansare, un an.',
+    q: 'De ce ar duce A la B? Ce trebuie să fie adevărat ca să meargă?',
+    think: ['Tu spui primul ce ți se pare nesigur, măcar două lucruri.', 'Pentru fiecare: un test fără cod, în 2 săptămâni, și ce rezultat te-ar contrazice.'],
+    good: 'Ipoteză: Direcția de Drumuri ține cont de presă. Test: întreb 2 jurnaliști locali ce s-a întâmplat după ce au scris despre gropi.', bad: 'Test: „lansăm aplicația și vedem”.',
+    mistakes: ['Testul e să construiești: cel mai scump test posibil.', 'Alegi doar ipoteze sigure.', 'Ipoteza scrisă ca speranță („o să le placă”).'],
+    tips: ['Pre-mortem: e anul viitor și n-a mers. De ce? Primele trei motive sunt ipotezele tale riscante.', 'O cerere pe Legea 544 sau 5 discuții sunt teste excelente.'] },
+  9: { title: 'Oamenii de care ai nevoie', why: 'Un dev singur nu poate face lobby, drept și organizare de comunitate. Harta arată ce roluri lipsesc ca drumul să meargă.',
+    q: 'Ce realizări sau rezultate din hartă nu poate duce nimeni din echipă?',
+    think: ['Fiecare rol vine dintr-un loc din hartă.', 'Rolul poate fi un partener (un ONG), nu neapărat un om nou.'],
+    good: 'Jurist pe drept administrativ, 2 ore/lună: verifică formularul ca sesizarea să fie cerere oficială.', bad: '„Voluntari.”',
+    mistakes: ['Cauți doar încă un dev.', 'Rol vag, fără ce face și cât timp.', 'Uiți că un ONG partener poate aduce rolul.'],
+    tips: ['Cere puțin și concret („2 ore pe lună”).'] },
+  10: { title: 'Activities / Activități', lane: [0], why: 'Transformă harta în ce faci în săptămânile următoare. Fiecare activitate produce o realizare din hartă; altfel e muncă fără direcție.',
+    q: 'Ce fac săptămâna asta ca să existe prima realizare?',
+    think: ['Fiecare activitate e legată de o realizare (output).', 'Pune și activitățile fără cod: teste, discuții, căutat oameni.', 'Funcțiile care merg deja sunt realizări, nu activități.'],
+    good: 'Sun la Direcția de Drumuri să aflu cum primesc sesizările (pentru: sesizare oficială cu număr).', bad: '„Refactor la tot frontend-ul.” (nu duce la nicio realizare)',
+    mistakes: ['Doar cod.', '15 activități la „început”.', 'Funcții care nu ajută la nicio realizare, păstrate din inerție.'],
+    tips: ['Maximum 3 activități în lucru deodată.', 'Prima activitate trebuie să încapă în săptămâna asta.'] },
+};
+
+const view = document.getElementById('view');
+const list = (xs) => `<ul>${xs.map((x) => `<li>${x}</li>`).join('')}</ul>`;
+
+function intro() {
+  view.innerHTML = `<div class="panel">
+    <h1>Din idee la schimbare, în 10 pași</h1>
+    <p class="muted">Un proiect civic tech reușește când schimbă ce fac oamenii și instituțiile, nu doar când aplicația merge. Ghidul te ajută să scrii drumul de la ce faci tu până la schimbarea pe care o vrei, ca să-l poată înțelege, critica și susține și alții.</p>
+    <h2>Lanțul: Theory of Change / Teoria schimbării</h2>
+    <div class="chain">
+      <div class="c"><b>Activities</b><small>Activități · ce faceți</small></div>
+      <div class="c"><b>Outputs</b><small>Realizări · ce livrați, numărabil</small></div>
+      <div class="i"><b>Outcomes</b><small>Rezultate · ce fac alții diferit</small></div>
+      <div class="x"><b>Impact</b><small>cum arată lumea pe termen lung</small></div>
+    </div>
+    <div class="spheres"><span>Sphere of control / Sferă de control</span><span>Sphere of influence / Sferă de influență</span><span>Sphere of interest / Sferă de interes</span></div>
+    <p style="margin-top:12px">Citit cu „ca să”: <b>facem</b> X <b>ca să livrăm</b> Y, <b>ca</b> Z să facă ceva diferit, <b>astfel încât</b>, pe termen lung, lumea să arate altfel. Îl construim <b>invers</b>: de la schimbarea pe care o vrei, înapoi la ce poți face săptămâna asta.</p>
+    <h2>De ce merită</h2>
+    ${list(['<b>Vezi unde se termină controlul tău.</b> Aplicația e în mâna ta; ce fac primăria, presa sau oamenii, nu. Acolo ai nevoie de aliați, nu de mai mult cod.', '<b>Prinzi devreme ipotezele</b> care te pot costa luni de muncă și le testezi în două săptămâni, fără cod.', '<b>Grupul înțelege ce faci și unde poate ajuta.</b> Pagina finală arată drumul și rolurile care îți lipsesc.'])}
+    <h2>Cum lucrăm</h2>
+    ${list(['AI-ul pune întrebări și propune carduri; tu le accepți, le editezi sau le refuzi.', 'Se salvează singur. Durează ~30 de minute; te poți opri oricând.', 'AI-ul nu inventează: dacă nu știi ceva, notăm „de aflat” și mergem mai departe.'])}
+    <h2>Cele trei faze</h2>
+    <div class="phases">
+      <div class="phase"><h3>Contextul</h3><ol><li>Proiectul și echipa</li><li>Problema</li><li>Ce există deja</li></ol></div>
+      <div class="phase"><h3>Teoria schimbării</h3><ol start="4"><li>Impact și rezultate pe termen lung</li><li>Actorii</li><li>Relațiile</li><li>Drumul schimbării</li><li>Ipotezele</li></ol></div>
+      <div class="phase"><h3>Organizarea</h3><ol start="9"><li>Oamenii de care ai nevoie</li><li>Activitățile</li></ol></div>
+    </div>
+    <h2>Ce iese</h2>
+    ${list(['O pagină publică pentru grupul de civic tech.', 'Un plan de lucru pe următoarele luni.', 'Un link privat de editare, ca să revii când afli ceva nou.'])}
+    <div class="btns"><button class="primary" onclick="show(1)">Încep cu pasul 1</button><button class="link" onclick="show(1)">Știu deja, încep</button></div>
+  </div>`;
+}
+
+function step(n, collapsed) {
+  const g = G[n];
+  const lane = g.lane ? `<div class="lane" aria-label="Unde ești în lanț">${LEVELS.map((l, i) => `<span class="${g.lane.includes(i) ? 'on' : ''}">${l}</span>`).join('')}</div>` : '';
+  const body = collapsed
+    ? `<div class="collapsed"><span><b>Ghidul pasului</b> · ${g.why.split('.')[0]}.</span><button class="link" onclick="show(${n})">Deschide ▸</button></div>`
+    : `<p class="why"><b>De ce contează.</b> ${g.why}</p>
+       <p class="q">Cum să gândești: „${g.q}”</p>${list(g.think)}
+       <details><summary>Exemple, greșeli și sfaturi</summary>
+         <div class="ex"><div class="good"><b>✓ Bun</b>${g.good}</div><div class="bad"><b>✗ Slab</b>${g.bad}</div></div>
+         <div class="cols"><div><h4>Greșeli frecvente</h4>${list(g.mistakes)}</div><div><h4>Sfaturi</h4>${list(g.tips)}</div></div>
+       </details>
+       <p style="margin:8px 0 0"><button class="link" onclick="show(${n}, true)">Restrânge (se restrânge singur după primul card acceptat)</button></p>`;
+  view.innerHTML = `<div class="panel">
+    <div class="stephead"><small>Pasul ${n} din 10</small><h1>${g.title}</h1>${lane}</div>
+    <section class="guide" aria-label="Ghidul pasului">${body}</section>
+    <div class="work"><div>Conversația cu AI-ul (neschimbată)</div><div>Ce cere pasul + cardurile (neschimbate)</div></div>
+  </div>`;
+}
+
+const sw = document.querySelector('.switch');
+const keys = ['intro', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+window.show = (k, collapsed = false) => {
+  sw.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.k === String(k))));
+  if (k === 'intro') intro(); else step(k, collapsed);
+  window.scrollTo(0, 0);
+};
+for (const k of keys) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.k = String(k);
+  b.textContent = k === 'intro' ? 'Cum funcționează' : `Pasul ${k}`;
+  b.onclick = () => show(k);
+  sw.appendChild(b);
+}
+show('intro');
+</script>
+</body>
+</html>
