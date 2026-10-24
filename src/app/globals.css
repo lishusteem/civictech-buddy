@@ -1,27 +1,171 @@
 @import "tailwindcss";
 
-/* The UI is designed for a light palette only (stone + teal); keep it light even when the OS is in dark mode. */
+/* `dark:` follows the theme next-themes puts on <html> (light, dark, or the system's). */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/*
+ * Colours by role, not by value (docs/ux/2026-10-24-ui-modern-light-dark-plan.md §4).
+ * Components use these (bg-surface, text-fg-muted, bg-primary…) and never raw stone or teal shades,
+ * so both themes come from this one place. Meanings follow ux-redesign-spec §1.1:
+ * primary = action and saved, proposed = not saved yet / uncertain, question = open question, danger = error.
+ */
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --canvas: #fafaf9;
+  --subtle: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --surface-3: #e7e5e4;
+  --line: #d6d3d1;
+  --line-strong: #78716c;
+  --fg: #1c1917;
+  --fg-muted: #57534e;
+  --fg-subtle: #78716c;
+
+  --primary: #115e59;
+  --primary-hover: #134e4a;
+  --on-primary: #ffffff;
+  --accent: #134e4a;
+  --primary-soft: #f0fdfa;
+  --primary-soft-2: #ccfbf1;
+  --primary-line: #99f6e4;
+  --focus: #115e59;
+
+  --proposed: #fffbeb;
+  --proposed-2: #fef3c7;
+  --proposed-line: #fcd34d;
+  --proposed-fg: #78350f;
+  --question: #f0f9ff;
+  --question-2: #e0f2fe;
+  --question-line: #0369a1;
+  --question-fg: #075985;
+  --danger: #fef2f2;
+  --danger-line: #fca5a5;
+  --danger-fg: #991b1b;
+  --success: #ecfdf5;
+  --success-2: #d1fae5;
+  --success-line: #a7f3d0;
+  --success-fg: #065f46;
+  --tag: #ede9fe;
+  --tag-fg: #4c1d95;
+
+  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.06), 0 1px 3px rgb(28 25 23 / 0.04);
+  --shadow-bar: 0 -4px 16px rgb(28 25 23 / 0.06);
   color-scheme: light;
 }
 
+[data-theme="dark"] {
+  --canvas: #0c0a09;
+  --subtle: #141110;
+  --surface: #1c1917;
+  --surface-2: #292524;
+  --surface-3: #44403c;
+  --line: #3a3532;
+  --line-strong: #78716c;
+  --fg: #f5f5f4;
+  --fg-muted: #a8a29e;
+  --fg-subtle: #8f8780;
+
+  --primary: #2dd4bf;
+  --primary-hover: #5eead4;
+  --on-primary: #042f2e;
+  --accent: #5eead4;
+  --primary-soft: #12302d;
+  --primary-soft-2: #134e4a;
+  --primary-line: #1f6b63;
+  --focus: #5eead4;
+
+  --proposed: #2a2110;
+  --proposed-2: #3d2e10;
+  --proposed-line: #b45309;
+  --proposed-fg: #fcd34d;
+  --question: #0f2533;
+  --question-2: #123247;
+  --question-line: #38bdf8;
+  --question-fg: #7dd3fc;
+  --danger: #2c1414;
+  --danger-line: #b91c1c;
+  --danger-fg: #fca5a5;
+  --success: #0f2a20;
+  --success-2: #123826;
+  --success-line: #166534;
+  --success-fg: #6ee7b7;
+  --tag: #2b1f45;
+  --tag-fg: #c4b5fd;
+
+  --shadow-card: none;
+  --shadow-bar: 0 -1px 0 rgb(255 255 255 / 0.04);
+  color-scheme: dark;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-subtle: var(--subtle);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-2: var(--primary-soft-2);
+  --color-primary-line: var(--primary-line);
+  --color-focus: var(--focus);
+  --color-proposed: var(--proposed);
+  --color-proposed-2: var(--proposed-2);
+  --color-proposed-line: var(--proposed-line);
+  --color-proposed-fg: var(--proposed-fg);
+  --color-question: var(--question);
+  --color-question-2: var(--question-2);
+  --color-question-line: var(--question-line);
+  --color-question-fg: var(--question-fg);
+  --color-danger: var(--danger);
+  --color-danger-line: var(--danger-line);
+  --color-danger-fg: var(--danger-fg);
+  --color-success: var(--success);
+  --color-success-2: var(--success-2);
+  --color-success-line: var(--success-line);
+  --color-success-fg: var(--success-fg);
+  --color-tag: var(--tag);
+  --color-tag-fg: var(--tag-fg);
+  --shadow-card: var(--shadow-card);
+  --shadow-bar: var(--shadow-bar);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--canvas);
+  color: var(--fg);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* A printed public page is always light. */
+@media print {
+  [data-theme="dark"] {
+    --canvas: #ffffff;
+    --surface: #ffffff;
+    --fg: #1c1917;
+    --fg-muted: #57534e;
+    color-scheme: light;
+  }
 }
 
 /* WaitTips: each new idea fades in. */
 @keyframes fadein {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

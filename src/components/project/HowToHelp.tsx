@@ -37,18 +37,18 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
           return (
             <article
               key={r.id}
-              className={`rounded-xl bg-white p-4 ${lead ? 'border-2 border-teal-700 sm:col-span-2' : 'border border-stone-300'}`}
+              className={`rounded-xl bg-surface p-4 ${lead ? 'border-2 border-primary sm:col-span-2' : 'border border-line'}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className={lead ? 'text-lg font-semibold' : 'font-semibold'}>{r.name}</h3>
                 {r.stage === 'start' ? (
-                  <span className="shrink-0 rounded-full bg-teal-800 px-2 py-0.5 text-xs font-medium text-white">Acum</span>
+                  <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-on-primary">Acum</span>
                 ) : (
-                  <span className="shrink-0 rounded-full bg-stone-200 px-2 py-0.5 text-xs font-medium text-stone-800">În 3–12 luni</span>
+                  <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-xs font-medium text-fg">În 3–12 luni</span>
                 )}
               </div>
-              {r.status === 'partner' && <p className="text-sm text-stone-600">Căutăm o organizație parteneră</p>}
-              {r.timeCommitment?.trim() && <p className="text-sm text-stone-600">Cât timp: {r.timeCommitment.trim()}</p>}
+              {r.status === 'partner' && <p className="text-sm text-fg-muted">Căutăm o organizație parteneră</p>}
+              {r.timeCommitment?.trim() && <p className="text-sm text-fg-muted">Cât timp: {r.timeCommitment.trim()}</p>}
               {r.reason.trim() !== '' && (
                 <Points className={lead ? 'mt-2' : 'mt-2 text-sm'} label="De ce" text={clean(r.reason)} />
               )}
@@ -59,9 +59,9 @@ export function HowToHelp({ project: p, contact, clean, preview }: Props) {
           );
         })}
       </div>
-      <p className="mt-4 text-sm text-stone-600">Nu trebuie să știi cod: multe roluri sunt de advocacy, drept sau organizare.</p>
+      <p className="mt-4 text-sm text-fg-muted">Nu trebuie să știi cod: multe roluri sunt de advocacy, drept sau organizare.</p>
       {contact && (
-        <p className="mt-2 text-stone-700">
+        <p className="mt-2 text-fg-muted">
           Nu te regăsești? Scrie-ne oricum. <ContactAction contact={contact} variant="text" />
         </p>
       )}

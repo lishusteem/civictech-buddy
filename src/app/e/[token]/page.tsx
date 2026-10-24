@@ -8,10 +8,10 @@ export default async function EditPage({ params }: { params: Promise<{ token: st
 
   if (!stored) {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 py-16 text-stone-900">
+      <main className="mx-auto w-full max-w-2xl px-4 py-16 text-fg">
         <h1 className="text-2xl font-semibold">Linkul nu mai e valid.</h1>
         <p className="mt-4">
-          <Link href="/" className="font-medium text-teal-900 underline underline-offset-2">
+          <Link href="/" className="font-medium text-accent underline underline-offset-2">
             Înapoi la început
           </Link>
         </p>

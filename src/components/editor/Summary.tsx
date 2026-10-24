@@ -20,15 +20,15 @@ type Props = {
   onPublish: () => void;
 };
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
-const smallBtn = `shrink-0 rounded-lg border border-teal-800 px-3 py-1 text-sm font-medium text-teal-900 hover:bg-teal-50 ${FOCUS}`;
-const input = 'min-w-0 flex-1 rounded-lg border border-stone-400 px-3 py-1.5 text-sm';
+const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
+const smallBtn = `shrink-0 rounded-lg border border-primary px-3 py-1 text-sm font-medium text-accent hover:bg-primary-soft ${FOCUS}`;
+const input = 'min-w-0 flex-1 rounded-lg border border-line-strong px-3 py-1.5 text-sm';
 
 function CheckRow({ done, label, action, children }: { done: boolean; label: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <li className="py-2">
       <div className="flex items-start gap-3">
-        <span aria-hidden="true" className={`w-4 shrink-0 font-semibold ${done ? 'text-teal-800' : 'text-stone-500'}`}>
+        <span aria-hidden="true" className={`w-4 shrink-0 font-semibold ${done ? 'text-accent' : 'text-fg-subtle'}`}>
           {done ? '✓' : '○'}
         </span>
         <span className="sr-only">{done ? 'gata: ' : 'lipsește: '}</span>
@@ -74,14 +74,14 @@ export function Summary({ draft, setDraft, published = false, publishing, disabl
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Rezumat</h1>
-      <p className="mt-1 text-stone-700">Așa va vedea grupul pagina. Verifică întâi:</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-fg">Rezumat</h1>
+      <p className="mt-1 text-fg-muted">Așa va vedea grupul pagina. Verifică întâi:</p>
 
-      <section aria-labelledby="prepublish-title" className="mt-4 rounded-xl border border-stone-300 bg-white p-4">
-        <h2 id="prepublish-title" className="font-semibold text-stone-900">
+      <section aria-labelledby="prepublish-title" className="mt-4 rounded-xl border border-line bg-surface p-4">
+        <h2 id="prepublish-title" className="font-semibold text-fg">
           Înainte să publici
         </h2>
-        <ul className="mt-2 divide-y divide-stone-200">
+        <ul className="mt-2 divide-y divide-line">
           <CheckRow done={check.pitch} label="O propoziție despre proiect (apare sus)" />
           <CheckRow
             done={check.contact}
@@ -110,7 +110,7 @@ export function Summary({ draft, setDraft, published = false, publishing, disabl
                     Salvează
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-stone-600">Apare public. Nu folosi un număr personal dacă nu vrei să fie văzut.</p>
+                <p className="mt-1 text-xs text-fg-muted">Apare public. Nu folosi un număr personal dacă nu vrei să fie văzut.</p>
               </>
             )}
           </CheckRow>
@@ -163,18 +163,18 @@ export function Summary({ draft, setDraft, published = false, publishing, disabl
         type="button"
         onClick={onPublish}
         disabled={publishing || disabled}
-        className={`mt-4 rounded-lg bg-teal-800 px-5 py-2 font-medium text-white hover:bg-teal-900 disabled:opacity-60 ${FOCUS}`}
+        className={`mt-4 rounded-lg bg-primary px-5 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:opacity-60 ${FOCUS}`}
       >
         {published ? 'Actualizează pagina publică' : 'Publică pagina'}
       </button>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-red-800">
+        <p role="alert" className="mt-3 text-sm text-danger-fg">
           Nu am putut publica. Încearcă din nou.
         </p>
       )}
 
-      <div className="relative mt-8 rounded-2xl border-2 border-dashed border-stone-300 p-3 pt-8 sm:p-5 sm:pt-9">
-        <p className="absolute left-3 top-0 -translate-y-1/2 rounded-full bg-stone-700 px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
+      <div className="relative mt-8 rounded-2xl border-2 border-dashed border-line p-3 pt-8 sm:p-5 sm:pt-9">
+        <p className="absolute left-3 top-0 -translate-y-1/2 rounded-full bg-fg px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-canvas">
           Previzualizare
         </p>
         <ProjectView project={draft} publishedAt={null} preview />

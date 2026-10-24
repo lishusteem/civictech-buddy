@@ -12,6 +12,7 @@ import { ConflictDialog } from './ConflictDialog';
 import { KeepLinks } from './KeepLinks';
 import { Overview } from './Overview';
 import { StepScreen, type SetDraft } from './StepScreen';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { StepSidebar } from './StepSidebar';
 import { Summary } from './Summary';
 import { REJECTED_TEXT, useAutosave, type SaveStatus } from './useAutosave';
@@ -141,10 +142,10 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
 
   if (status === 'invalid') {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 py-16 text-stone-900">
+      <main className="mx-auto w-full max-w-2xl px-4 py-16 text-fg">
         <h1 className="text-2xl font-semibold">Linkul nu mai e valid.</h1>
         <p className="mt-4">
-          <Link href="/" className="font-medium text-teal-900 underline underline-offset-2">
+          <Link href="/" className="font-medium text-accent underline underline-offset-2">
             Înapoi la început
           </Link>
         </p>
@@ -153,11 +154,16 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
   }
 
   return (
-    <div className="flex min-h-screen flex-col text-stone-900">
-      <header className="flex items-center justify-between gap-4 border-b border-stone-300 px-4 py-3">
-        <p className="font-semibold">{draft.project.name || 'Proiect fără nume'}</p>
+    // Desktop: the editor is exactly one window tall; the sidebar and the main area scroll on their own.
+    <div className="flex min-h-screen flex-col text-fg lg:h-dvh lg:min-h-0">
+      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-line bg-surface px-4 py-3 lg:px-6">
+        <p className="flex items-center gap-3 font-semibold">
+          <span aria-hidden className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">G</span>
+          {draft.project.name || 'Proiect fără nume'}
+        </p>
         <div className="flex items-center gap-4">
-          <p role="status" aria-live="polite" className="text-sm text-stone-600">
+          <ThemeToggle className="max-md:hidden" />
+          <p role="status" aria-live="polite" className="text-sm text-fg-muted">
             {fatal ? 'Nu am putut salva. Reîncarcă pagina.' : rejected && status === 'error' ? REJECTED_TEXT : (STATUS_TEXT[status] ?? '')}
           </p>
           <div className="relative">
@@ -168,22 +174,22 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
                 setMenuOpen((o) => !o);
                 setLinkCopied(false);
               }}
-              className="rounded-lg border border-stone-400 px-3 py-1 text-sm font-medium text-stone-800 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+              className="rounded-lg border border-line-strong px-3 py-1 text-sm font-medium text-fg hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               Meniu
             </button>
             {menuOpen && (
-              <div className="absolute right-0 z-10 mt-1 w-64 rounded-xl border border-stone-300 bg-white p-3 shadow-md">
+              <div className="absolute right-0 z-10 mt-1 w-64 rounded-xl border border-line bg-surface p-3 shadow-md">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={copyEditLink}
-                    className="flex-1 rounded-lg px-3 py-2 text-left text-sm font-medium text-stone-900 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-teal-800"
+                    className="flex-1 rounded-lg px-3 py-2 text-left text-sm font-medium text-fg hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-focus"
                   >
                     Copiază linkul de editare
                   </button>
                   {linkCopied && (
-                    <span role="status" className="pr-2 text-sm text-teal-900">
+                    <span role="status" className="pr-2 text-sm text-accent">
                       Copiat
                     </span>
                   )}
@@ -191,13 +197,13 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
                 <button
                   type="button"
                   onClick={regenerate}
-                  className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-stone-900 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-teal-800"
+                  className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-fg hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-focus"
                 >
                   Generează link nou
                 </button>
-                <p className="mt-1 px-3 text-xs text-stone-600">Linkul vechi de editare nu va mai funcționa.</p>
+                <p className="mt-1 px-3 text-xs text-fg-muted">Linkul vechi de editare nu va mai funcționa.</p>
                 {menuError && (
-                  <p role="alert" className="mt-2 px-3 text-sm text-red-800">
+                  <p role="alert" className="mt-2 px-3 text-sm text-danger-fg">
                     Nu am putut genera linkul nou. Încearcă din nou.
                   </p>
                 )}
@@ -208,23 +214,23 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
       </header>
 
       {neverPublished && (
-        <p className="border-b border-stone-300 bg-stone-50 px-4 py-1.5 text-sm text-stone-700">
+        <p className="border-b border-line bg-subtle px-4 py-1.5 text-sm text-fg-muted">
           Păstrează linkul din bara de adrese — e singura cheie a proiectului.
         </p>
       )}
 
       {updatedNotice && !unpublished && (
-        <p role="status" className="border-b border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-950">
+        <p role="status" className="border-b border-primary-line bg-primary-soft px-4 py-2 text-sm font-medium text-accent">
           Pagina publică a fost actualizată.
         </p>
       )}
 
       {unpublished && view !== 'summary' && !keep && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2">
-          <p className="text-sm font-medium text-amber-950">Ai modificări nepublicate</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-proposed-line bg-proposed px-4 py-2">
+          <p className="text-sm font-medium text-proposed-fg">Ai modificări nepublicate</p>
           <div className="flex items-center gap-3">
             {publishError && (
-              <span role="alert" className="text-sm text-red-800">
+              <span role="alert" className="text-sm text-danger-fg">
                 Nu am putut publica. Încearcă din nou.
               </span>
             )}
@@ -233,7 +239,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
               onClick={publish}
               disabled={publishing || status !== 'saved'}
               // Outlined: on a step screen the action bar holds the single filled button.
-              className="rounded-lg border border-teal-800 bg-white px-4 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60"
+              className="rounded-lg border border-primary bg-surface px-4 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-60"
             >
               {neverPublished ? 'Publică' : 'Actualizează pagina publică'}
             </button>
@@ -241,8 +247,8 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
         </div>
       )}
 
-      <div className="flex flex-1 flex-col md:flex-row">
-        <div className="md:w-72 md:shrink-0">
+      <div className="flex flex-1 flex-col md:flex-row lg:min-h-0">
+        <div className="md:w-72 md:shrink-0 lg:min-h-0">
           <StepSidebar
             project={draft}
             current={view === 'overview' || view === 'summary' ? null : view}
@@ -250,7 +256,7 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
             onOverview={() => go('overview')}
           />
         </div>
-        <main className="w-full min-w-0 flex-1 px-4 py-6">
+        <main className="w-full min-w-0 flex-1 px-4 py-6 lg:min-h-0 lg:overflow-y-auto lg:px-8 lg:py-5">
           {keep ? (
             <KeepLinks
               slug={keep.slug}

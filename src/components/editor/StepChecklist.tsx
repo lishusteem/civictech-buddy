@@ -22,14 +22,14 @@ type Props = {
 };
 
 const ICON: Record<RowState, { mark: string; className: string; label: string }> = {
-  saved: { mark: '✓', className: 'text-teal-800', label: 'salvat' },
-  proposed: { mark: '◐', className: 'text-amber-700', label: 'propus' },
-  missing: { mark: '○', className: 'text-stone-500', label: 'lipsește' },
+  saved: { mark: '✓', className: 'text-accent', label: 'salvat' },
+  proposed: { mark: '◐', className: 'text-proposed-fg', label: 'propus' },
+  missing: { mark: '○', className: 'text-fg-subtle', label: 'lipsește' },
 };
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
-const rowButton = `rounded-lg border border-teal-800 px-3 py-1 text-sm font-medium text-teal-900 hover:bg-teal-50 ${focusRing}`;
-const smallButton = `rounded-lg border border-stone-400 px-2 py-0.5 text-xs font-medium text-stone-800 hover:bg-stone-100 ${focusRing}`;
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
+const rowButton = `rounded-lg border border-primary px-3 py-1 text-sm font-medium text-accent hover:bg-primary-soft ${focusRing}`;
+const smallButton = `rounded-lg border border-line-strong px-2 py-0.5 text-xs font-medium text-fg hover:bg-surface-2 ${focusRing}`;
 
 /** Counts "{done} din {total}" over the required and recommended rows together. */
 export function checklistProgress(step: StepId, draft: Project) {
@@ -48,19 +48,19 @@ function OrphanFeatures({ draft, onLink, onLater, onKeep, onLaterAll }: {
   if (orphans.length === 0) return null;
   return (
     <div className="mt-2 space-y-2">
-      <p className="text-xs text-stone-700">
+      <p className="text-xs text-fg-muted">
         {orphans.length === 1 ? '1 funcție nu ajută' : `${orphans.length} funcții nu ajută`} încă la nicio precondiție:
       </p>
       <ul className="space-y-2">
         {orphans.map((f) => (
           <li key={f.id} className="flex flex-wrap items-center gap-2">
-            <span className="min-w-0 flex-1 basis-full text-stone-900 sm:basis-auto">{f.text}</span>
+            <span className="min-w-0 flex-1 basis-full text-fg sm:basis-auto">{f.text}</span>
             {draft.preconditions.length > 0 && (
               <select
                 aria-label={`Leagă de… (${f.text})`}
                 value=""
                 onChange={(e) => e.target.value && onLink(f.id, e.target.value)}
-                className={`max-w-[12rem] rounded-lg border border-stone-400 bg-white px-2 py-0.5 text-xs text-stone-900 ${focusRing}`}
+                className={`max-w-[12rem] rounded-lg border border-line-strong bg-surface px-2 py-0.5 text-xs text-fg ${focusRing}`}
               >
                 <option value="">Leagă de…</option>
                 {draft.preconditions.map((c) => (
@@ -102,7 +102,7 @@ export function StepChecklist(props: Props) {
           <button type="button" onClick={props.onNoneFound} className={rowButton}>
             Nu am găsit nimic similar
           </button>
-          <a href="https://civictech.guide" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-teal-900 underline underline-offset-2">
+          <a href="https://civictech.guide" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-accent underline underline-offset-2">
             Caută în Civic Tech Field Guide ↗
           </a>
         </span>
@@ -115,7 +115,7 @@ export function StepChecklist(props: Props) {
             Adaugă pașii sugerați
           </button>
           {props.suggestNote && (
-            <span role="status" className="mt-1 block text-sm text-stone-700">
+            <span role="status" className="mt-1 block text-sm text-fg-muted">
               Nu sunt pași noi de adăugat.
             </span>
           )}
@@ -137,12 +137,12 @@ export function StepChecklist(props: Props) {
   }
 
   return (
-    <section aria-labelledby={headingId} className="rounded-xl border border-stone-300 bg-white p-4">
+    <section aria-labelledby={headingId} className="rounded-xl border border-line bg-surface p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 id={headingId} className="font-semibold text-stone-900">
+        <h2 id={headingId} className="font-semibold text-fg">
           Ce cere pasul
         </h2>
-        <span className="text-sm text-stone-600">
+        <span className="text-sm text-fg-muted">
           {done} din {total}
         </span>
       </div>
@@ -162,13 +162,13 @@ export function StepChecklist(props: Props) {
                 {icon.mark}
               </span>
               <div className="min-w-0 flex-1">
-                <span className="text-stone-900">{r.label}</span>
+                <span className="text-fg">{r.label}</span>
                 <span className="sr-only"> ({icon.label})</span>
-                {state === 'proposed' && <span className="block text-xs text-amber-900">propus — acceptă ca să salvezi</span>}
-                {state === 'missing' && r.why && <span className="block text-xs text-stone-600">{`De ce contează: ${r.why}`}</span>}
+                {state === 'proposed' && <span className="block text-xs text-proposed-fg">propus — acceptă ca să salvezi</span>}
+                {state === 'missing' && r.why && <span className="block text-xs text-fg-muted">{`De ce contează: ${r.why}`}</span>}
                 {actions(r, state)}
               </div>
-              <span className="shrink-0 text-xs text-stone-500">{r.level === 'required' ? 'obligatoriu' : 'recomandat'}</span>
+              <span className="shrink-0 text-xs text-fg-subtle">{r.level === 'required' ? 'obligatoriu' : 'recomandat'}</span>
             </li>
           );
         })}

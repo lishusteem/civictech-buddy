@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /** Owner preview only: an empty section stands in as a dashed box that says it is not public. */
 export function Placeholder({ title }: { title: string }) {
   return (
-    <p className="mt-8 rounded-xl border border-dashed border-stone-400 p-4 text-sm text-stone-600">
+    <p className="mt-8 rounded-xl border border-dashed border-line-strong p-4 text-sm text-fg-muted">
       {title}: Nimic adăugat încă. (nu apare public)
     </p>
   );
@@ -29,10 +29,10 @@ export function Section({ headingId, title, empty, preview, id, small = false, e
   if (empty) return preview ? <Placeholder title={title} /> : null;
   return (
     <section id={id} aria-labelledby={headingId} className="mt-10 scroll-mt-4">
-      {eyebrow && <p className="text-xs font-bold uppercase tracking-wider text-teal-700">{eyebrow}</p>}
+      {eyebrow && <p className="text-xs font-bold uppercase tracking-wider text-accent">{eyebrow}</p>}
       <h2
         id={headingId}
-        className={small ? 'text-sm font-semibold uppercase tracking-wide text-teal-800' : 'text-2xl font-semibold text-stone-900'}
+        className={small ? 'text-sm font-semibold uppercase tracking-wide text-accent' : 'text-2xl font-semibold text-fg'}
       >
         {title}
       </h2>

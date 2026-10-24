@@ -44,7 +44,7 @@ function refNames(project: Project, alerts: Alert[]): string[] {
   return [...new Set(names.filter((n) => n.trim() !== ''))];
 }
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700';
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-question-line';
 
 /** "Întrebări deschise" (UX spec §5.2): one calm sky block per step; questions never block the step. */
 export function AlertList({ alerts, project, onDiscuss, onLeave }: Props) {
@@ -56,20 +56,20 @@ export function AlertList({ alerts, project, onDiscuss, onLeave }: Props) {
   const current = groups.some((g) => g.code === expanded) ? expanded : groups[0].code;
 
   return (
-    <section aria-labelledby={toggleId} className="rounded-xl border-l-4 border-sky-600 bg-sky-50 p-3">
+    <section aria-labelledby={toggleId} className="rounded-xl border-l-4 border-question-line bg-question p-3">
       <h2>
         <button
           id={toggleId}
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className={`flex w-full items-center justify-between text-left text-sm font-medium text-sky-900 ${focusRing}`}
+          className={`flex w-full items-center justify-between text-left text-sm font-medium text-question-fg ${focusRing}`}
         >
           Întrebări deschise ({groups.length})<span aria-hidden>{open ? '▾' : '▸'}</span>
         </button>
       </h2>
       {open && (
-        <ul className="mt-2 divide-y divide-sky-200">
+        <ul className="mt-2 divide-y divide-line">
           {groups.map((g) => {
             const def = ALERT_MESSAGES[g.code];
             const isOpen = g.code === current;
@@ -81,10 +81,10 @@ export function AlertList({ alerts, project, onDiscuss, onLeave }: Props) {
                     type="button"
                     aria-expanded={isOpen}
                     onClick={() => setExpanded(g.code)}
-                    className={`flex w-full items-center justify-between gap-2 text-left font-medium text-stone-900 ${focusRing}`}
+                    className={`flex w-full items-center justify-between gap-2 text-left font-medium text-fg ${focusRing}`}
                   >
                     <span>
-                      <span aria-hidden className="mr-1 text-sky-700">
+                      <span aria-hidden className="mr-1 text-question-fg">
                         ?
                       </span>
                       {def.title}
@@ -94,22 +94,22 @@ export function AlertList({ alerts, project, onDiscuss, onLeave }: Props) {
                 </h3>
                 {isOpen && (
                   <div className="mt-1 space-y-1">
-                    <p className="text-sm text-stone-800">{g.alerts[0].message || def.message}</p>
-                    <p className="text-xs text-stone-600">{`De ce contează: ${def.why}`}</p>
-                    {names.length > 0 && <p className="text-xs text-stone-600">{`Despre: ${names.join(', ')}`}</p>}
+                    <p className="text-sm text-fg">{g.alerts[0].message || def.message}</p>
+                    <p className="text-xs text-fg-muted">{`De ce contează: ${def.why}`}</p>
+                    {names.length > 0 && <p className="text-xs text-fg-muted">{`Despre: ${names.join(', ')}`}</p>}
                     <div className="flex flex-wrap items-center gap-3 pt-1">
                       <button
                         type="button"
                         onClick={() => onDiscuss(g.alerts)}
-                        className={`rounded-lg border border-sky-700 bg-white px-3 py-1 text-sm font-medium text-sky-900 hover:bg-sky-100 ${focusRing}`}
+                        className={`rounded-lg border border-question-line bg-surface px-3 py-1 text-sm font-medium text-question-fg hover:bg-question-2 ${focusRing}`}
                       >
                         Discută cu AI-ul
                       </button>
-                      <button type="button" onClick={() => onLeave(g.alerts)} className={`text-sm text-stone-700 underline ${focusRing}`}>
+                      <button type="button" onClick={() => onLeave(g.alerts)} className={`text-sm text-fg-muted underline ${focusRing}`}>
                         Lasă deschisă
                       </button>
                     </div>
-                    <p className="text-xs text-stone-500">Apare pe pagina publică la „Întrebări la care ne poți ajuta”.</p>
+                    <p className="text-xs text-fg-subtle">Apare pe pagina publică la „Întrebări la care ne poți ajuta”.</p>
                   </div>
                 )}
               </li>

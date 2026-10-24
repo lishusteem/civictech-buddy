@@ -56,22 +56,22 @@ export function WhoMatters({ project: p, clean, actorName, preview }: Props) {
 
   return (
     <Section headingId="h-actors" title="Cine contează" empty={groups.length === 0 && relations.length === 0} preview={preview}>
-      <p className="mt-1 text-stone-600">Oamenii și instituțiile de care depinde schimbarea, grupați după rolul lor în problemă.</p>
+      <p className="mt-1 text-fg-muted">Oamenii și instituțiile de care depinde schimbarea, grupați după rolul lor în problemă.</p>
       {groups.length > 0 && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {groups.map((g) => (
-            <div key={g.title} className="rounded-xl bg-white p-4">
-              <h3 className="font-semibold text-teal-800">{g.title}</h3>
-              {GROUP_HINT[g.title] && <p className="text-sm text-stone-600">{GROUP_HINT[g.title]}</p>}
+            <div key={g.title} className="rounded-xl bg-surface p-4">
+              <h3 className="font-semibold text-accent">{g.title}</h3>
+              {GROUP_HINT[g.title] && <p className="text-sm text-fg-muted">{GROUP_HINT[g.title]}</p>}
               <ul className="mt-3 space-y-3">
                 {g.actors.map((a) => (
                   <li key={a.id}>
                     <p className="font-medium">{capitalize(a.name)}</p>
-                    <p className="text-xs text-stone-600">
+                    <p className="text-xs text-fg-muted">
                       {POWER[a.power]} · {STANCE[a.stance]}
                       {a.excluded && ' · lăsat pe dinafară de soluțiile de azi'}
                     </p>
-                    <Points className="mt-1 text-sm text-stone-700" text={why(a)} />
+                    <Points className="mt-1 text-sm text-fg-muted" text={why(a)} />
                   </li>
                 ))}
               </ul>
@@ -84,12 +84,12 @@ export function WhoMatters({ project: p, clean, actorName, preview }: Props) {
           <h3 className="mt-5 font-medium">Legături</h3>
           <ul className="mt-2 space-y-2">
             {relations.map(({ r, from, to }) => (
-              <li key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-white p-3">
+              <li key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface p-3">
                 <span className="font-medium">{capitalize(from)}</span>
-                <span className="rounded-full border border-stone-400 px-2 text-xs">{RELATION_CHIP[r.type]}</span>
+                <span className="rounded-full border border-line-strong px-2 text-xs">{RELATION_CHIP[r.type]}</span>
                 <span aria-hidden="true">→</span>
                 <span className="font-medium">{capitalize(to)}</span>
-                {r.note.trim() !== '' && <span className="w-full text-sm text-stone-600">{clean(r.note)}</span>}
+                {r.note.trim() !== '' && <span className="w-full text-sm text-fg-muted">{clean(r.note)}</span>}
               </li>
             ))}
           </ul>

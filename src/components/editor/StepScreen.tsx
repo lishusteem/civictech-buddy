@@ -279,7 +279,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
     <button
       type="button"
       onClick={finish}
-      className="font-medium text-teal-900 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+      className="font-medium text-accent underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
     >
       Treci la pasul următor: {nextTitle}
     </button>
@@ -289,41 +289,47 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
     pending > 0 ? (
       <ProposalDigest proposed={proposed} project={draft} onAcceptAll={acceptFromDigest} onView={() => showFocus('proposals')} />
     ) : savedLine ? (
-      <div className="text-center text-sm text-teal-900">
+      <div className="text-center text-sm text-accent">
         <p>{savedLine.text}</p>
         {savedLine.complete && <p className="mt-1">{nextLink}</p>}
       </div>
     ) : null;
 
   const tabClass = (selected: boolean) =>
-    `py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 ${selected ? 'bg-teal-100 text-teal-950' : 'text-stone-800'}`;
+    `py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${selected ? 'bg-primary-soft-2 text-accent' : 'text-fg'}`;
 
   return (
-    <div>
-      <p className="text-sm font-medium text-teal-900">
-        Pasul {step.number} din {STEPS.length} · {phase}
-      </p>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">{step.title}</h1>
-      <p className="mt-1 text-stone-700">{step.summary}</p>
-      <p className="mt-2 flex gap-2 text-sm text-stone-700">
-        <span aria-hidden className="text-sky-700">
-          ⓘ
-        </span>
-        <span>
-          <span className="hidden md:inline">{EXPLAINER}</span>
-          <span className="md:hidden">{EXPLAINER_SHORT}</span>
-          {step.number === 1 && <span> {EXPLAINER_STEP1}</span>}
-        </span>
-      </p>
+    // Desktop: the step fills the window. The header (what the step asks) stays put, each column scrolls on its own,
+    // and the composer and the action bar are always in view.
+    <div className="lg:flex lg:h-full lg:min-h-0 lg:flex-col">
+      <header className="shrink-0">
+        <p className="text-sm font-medium text-accent">
+          Pasul {step.number} din {STEPS.length} · {phase}
+        </p>
+        <div className="flex flex-wrap items-baseline gap-x-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">{step.title}</h1>
+          <p className="text-fg-muted">{step.summary}</p>
+        </div>
+        <p className="mt-2 flex gap-2 rounded-lg bg-question px-3 py-2 text-sm text-fg-muted">
+          <span aria-hidden className="text-question-fg">
+            ⓘ
+          </span>
+          <span>
+            <span className="hidden md:inline">{EXPLAINER}</span>
+            <span className="md:hidden">{EXPLAINER_SHORT}</span>
+            {step.number === 1 && <span> {EXPLAINER_STEP1}</span>}
+          </span>
+        </p>
+      </header>
 
-      <div role="tablist" aria-label="Ce vezi" className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg border border-stone-300 text-sm font-medium md:hidden">
+      <div role="tablist" aria-label="Ce vezi" className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg border border-line text-sm font-medium md:hidden">
         <button type="button" role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected={tab === 'chat'} onClick={() => setTab('chat')} className={tabClass(tab === 'chat')}>
           Conversația
         </button>
         <button type="button" role="tab" id="tab-result" aria-controls="panel-result" aria-selected={tab === 'result'} onClick={() => setTab('result')} className={tabClass(tab === 'result')}>
           Rezultatul ·{' '}
           {pending > 0 ? (
-            <span className={tab === 'result' ? '' : 'text-amber-800'}>{pending} ◐</span>
+            <span className={tab === 'result' ? '' : 'text-proposed-fg'}>{pending} ◐</span>
           ) : complete ? (
             '✓'
           ) : (
@@ -332,8 +338,8 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
         </button>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" className={`min-w-0 ${tab === 'chat' ? '' : 'max-md:hidden'}`}>
+      <div className="mt-6 grid gap-6 lg:mt-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-8">
+        <div role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" className={`min-w-0 lg:min-h-0 ${tab === 'chat' ? '' : 'max-md:hidden'}`}>
           <ChatPanel
             ref={chatRef}
             step={stepId}
@@ -360,7 +366,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
             }
           />
         </div>
-        <div role="tabpanel" id="panel-result" aria-labelledby="tab-result" className={`min-w-0 ${tab === 'result' ? '' : 'max-md:hidden'}`}>
+        <div role="tabpanel" id="panel-result" aria-labelledby="tab-result" className={`min-w-0 lg:min-h-0 lg:overflow-y-auto lg:pr-1 ${tab === 'result' ? '' : 'max-md:hidden'}`}>
           <CardsPanel
             step={stepId}
             draft={draft}

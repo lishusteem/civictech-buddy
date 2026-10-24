@@ -7,18 +7,18 @@ export function ConflictDialog({ onResolve }: { onResolve: (choice: 'mine' | 'th
   useEffect(() => firstButton.current?.focus(), []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="conflict-title"
         aria-describedby="conflict-body"
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-xl bg-surface p-6 shadow-xl"
       >
-        <h2 id="conflict-title" className="text-lg font-semibold text-stone-900">
+        <h2 id="conflict-title" className="text-lg font-semibold text-fg">
           Proiectul a fost modificat în altă parte
         </h2>
-        <p id="conflict-body" className="mt-2 text-stone-700">
+        <p id="conflict-body" className="mt-2 text-fg-muted">
           Cineva (sau alt tab) a salvat o versiune mai nouă. Ce păstrezi?
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -26,14 +26,14 @@ export function ConflictDialog({ onResolve }: { onResolve: (choice: 'mine' | 'th
             ref={firstButton}
             type="button"
             onClick={() => onResolve('mine')}
-            className="rounded-lg bg-teal-800 px-4 py-2.5 font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+            className="rounded-lg bg-primary px-4 py-2.5 font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Păstrează versiunea mea
           </button>
           <button
             type="button"
             onClick={() => onResolve('theirs')}
-            className="rounded-lg border border-teal-800 px-4 py-2.5 font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+            className="rounded-lg border border-primary px-4 py-2.5 font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Încarcă versiunea salvată
           </button>

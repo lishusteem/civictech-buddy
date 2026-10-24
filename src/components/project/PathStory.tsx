@@ -22,26 +22,26 @@ export function PathStory({ project: p, targetId, clean, actorName }: Props) {
         const who = actorName(c.actorId);
         return (
           <li key={c.id}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               {LEVEL[level]}
               {level === 'outcome' && ` · ${STAGE[c.stage]}`}
             </p>
-            <div className="rounded-xl border border-stone-300 bg-white px-4 py-2">
+            <div className="rounded-xl border border-line bg-surface px-4 py-2">
               {who && level === 'outcome' && !clean(c.text).toLowerCase().startsWith(who.toLowerCase().slice(0, 5)) && <span className="font-medium">{who}: </span>}
               {clean(c.text)}
-              {c.signal?.trim() && <span className="block text-sm text-stone-600">Indicator: {clean(c.signal)}</span>}
+              {c.signal?.trim() && <span className="block text-sm text-fg-muted">Indicator: {clean(c.signal)}</span>}
             </div>
-            <p className={`ml-4 border-l-2 py-1 pl-3 text-sm ${c.risky ? 'border-amber-300 text-amber-800' : 'border-teal-100 text-teal-800'}`}>
+            <p className={`ml-4 border-l-2 py-1 pl-3 text-sm ${c.risky ? 'border-proposed-line text-proposed-fg' : 'border-primary-line text-accent'}`}>
               ↓ ca să…
-              {c.assumption.trim() && <span className="text-stone-600"> (pentru că {continueSentence(clean(c.assumption))})</span>}
+              {c.assumption.trim() && <span className="text-fg-muted"> (pentru că {continueSentence(clean(c.assumption))})</span>}
               {c.risky && ' ⚠ nesigur'}
             </p>
           </li>
         );
       })}
       <li>
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Long-term outcome · Rezultat pe termen lung</p>
-        <div className="rounded-xl border-2 border-teal-700 bg-teal-50 px-4 py-2 font-medium">{clean(target.text)}</div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Long-term outcome · Rezultat pe termen lung</p>
+        <div className="rounded-xl border-2 border-primary bg-primary-soft px-4 py-2 font-medium">{clean(target.text)}</div>
       </li>
     </ol>
   );

@@ -41,11 +41,11 @@ type Props = {
   onProposeNow: () => void;
 };
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
-const primaryClass = `w-full rounded-lg bg-teal-800 px-5 py-2 text-left font-medium text-white hover:bg-teal-900 disabled:opacity-60 aria-disabled:opacity-60 md:w-auto ${focusRing}`;
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
+const primaryClass = `w-full rounded-lg bg-primary px-5 py-2 text-left font-medium text-on-primary hover:bg-primary-hover disabled:opacity-60 aria-disabled:opacity-60 md:w-auto ${focusRing}`;
 // A text link on phones (two buttons side by side truncate Romanian labels), an outlined button from md up.
-const secondaryClass = `self-start text-sm font-medium text-teal-900 underline underline-offset-2 disabled:opacity-60 md:self-auto md:rounded-lg md:border md:border-teal-800 md:px-4 md:py-2 md:no-underline md:hover:bg-teal-50 ${focusRing}`;
-const tertiaryClass = `self-start text-sm text-stone-700 underline underline-offset-2 hover:text-stone-900 disabled:opacity-60 md:self-auto ${focusRing}`;
+const secondaryClass = `self-start text-sm font-medium text-accent underline underline-offset-2 disabled:opacity-60 md:self-auto md:rounded-lg md:border md:border-primary md:px-4 md:py-2 md:no-underline md:hover:bg-primary-soft ${focusRing}`;
+const tertiaryClass = `self-start text-sm text-fg-muted underline underline-offset-2 hover:text-fg disabled:opacity-60 md:self-auto ${focusRing}`;
 
 /** The step's single action bar, sticky at the bottom (UX spec §3.5, P0-1). */
 export function ActionBar(p: Props) {
@@ -63,7 +63,7 @@ export function ActionBar(p: Props) {
         : state === 'C'
           ? `✓ Pasul e complet${p.openRecommended > 0 ? ` · ${open}` : ''}`
           : `Mai lipsește: ${p.missing}`;
-  const statusColor = state === 'A' || state === 'B' ? 'text-amber-900' : state === 'C' ? 'text-teal-900' : 'text-stone-700';
+  const statusColor = state === 'A' || state === 'B' ? 'text-proposed-fg' : state === 'C' ? 'text-accent' : 'text-fg-muted';
 
   let primary;
   if (state === 'A') {
@@ -86,7 +86,7 @@ export function ActionBar(p: Props) {
             <span className="hidden min-[400px]:inline">{label}</span>
           </>
         )}
-        <span id={subId} className="block text-xs font-normal text-teal-100">
+        <span id={subId} className="block text-xs font-normal text-on-primary/80">
           Salvează {proposals(p.pending)} · apoi: {p.next}
         </span>
       </button>
@@ -115,7 +115,7 @@ export function ActionBar(p: Props) {
   return (
     <section
       aria-label="Acțiunile pasului"
-      className="sticky bottom-0 z-10 -mx-4 -mb-6 mt-8 border-t border-stone-300 bg-white px-4 py-3"
+      className="sticky bottom-0 z-10 -mx-4 -mb-6 mt-8 shrink-0 border-t border-line bg-surface px-4 py-3 shadow-bar lg:static lg:mx-0 lg:mb-0 lg:mt-4 lg:rounded-xl lg:border lg:px-5"
     >
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-end md:gap-4">
         <p className={`text-sm md:mr-auto ${statusColor}`}>{status}</p>

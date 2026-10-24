@@ -4,6 +4,7 @@ import { MapView } from '@/components/project/MapView';
 import { ProjectView } from '@/components/project/ProjectView';
 import { pitchOf } from '@/components/project/publicPage';
 import { getRepo } from '@/lib/db/repo';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 const tab = (active: boolean) =>
-  `rounded-full px-4 py-1.5 text-sm font-medium ${active ? 'bg-teal-800 text-white' : 'border border-stone-300 bg-white text-stone-700 hover:bg-stone-100'}`;
+  `rounded-full px-4 py-1.5 text-sm font-medium ${active ? 'bg-primary text-on-primary' : 'border border-line bg-surface text-fg-muted hover:bg-surface-2'}`;
 
 /** Two views of the same published project: the story (default) and the map of the theory of change. */
 export default async function PublicProjectPage({ params, searchParams }: Params) {
@@ -39,14 +40,17 @@ export default async function PublicProjectPage({ params, searchParams }: Params
 
   return (
     <main className={`mx-auto w-full px-4 py-6 sm:py-10 ${map ? 'max-w-6xl' : 'max-w-3xl'}`}>
-      <nav aria-label="Cum vezi proiectul" className="mb-5 flex flex-wrap gap-2">
-        <a href={storyHref} aria-current={map ? undefined : 'page'} className={tab(!map)}>
-          Povestea
-        </a>
-        <a href={mapHref} aria-current={map ? 'page' : undefined} className={tab(map)}>
-          Harta schimbării
-        </a>
-      </nav>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Cum vezi proiectul" className="flex flex-wrap gap-2">
+          <a href={storyHref} aria-current={map ? undefined : 'page'} className={tab(!map)}>
+            Povestea
+          </a>
+          <a href={mapHref} aria-current={map ? 'page' : undefined} className={tab(map)}>
+            Harta schimbării
+          </a>
+        </nav>
+        <ThemeToggle />
+      </div>
       {map ? (
         <MapView project={found.published} publishedAt={found.publishedAt} storyHref={storyHref} />
       ) : (

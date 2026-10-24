@@ -17,12 +17,13 @@ describe('StepSidebar', () => {
     expect(current[0].textContent).toContain('Actorii');
   });
 
-  it('shows remaining minutes (30 minus done steps)', () => {
+  it('shows progress as the percentage of done steps', () => {
     const p = fillSteps(createEmptyProject('P'), ['project', 'problem']);
     p.steps.project.status = 'done';
     p.steps.problem.status = 'done';
     render(<StepSidebar project={p} current="existing" onSelect={() => {}} />);
-    expect(screen.getByText('~23 min rămase')).toBeTruthy();
+    expect(screen.getByTestId('progress-percent').textContent).toBe('20% complet');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('20');
   });
 
   it('flags only steps with an open question with a ?, not checklist alerts', () => {

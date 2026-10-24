@@ -289,7 +289,7 @@ type Props = {
 };
 
 const inputClass =
-  'mt-1 w-full rounded-lg border border-stone-400 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-800';
+  'mt-1 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus';
 
 export function CardEditor({ kind, data, project, onSave, onCancel, only, title }: Props) {
   const fields = FIELDS[kind].filter((f) => !only || only.includes(f.key));
@@ -341,9 +341,9 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
   }
 
   return (
-    <form ref={formRef} onSubmit={save} noValidate className="space-y-3 rounded-xl border border-teal-300 bg-white p-4">
-      <h3 className="font-semibold text-stone-900">{title ?? KIND_LABEL[kind]}</h3>
-      {only && typeof data.text === 'string' && <p className="text-stone-800">{data.text}</p>}
+    <form ref={formRef} onSubmit={save} noValidate className="space-y-3 rounded-xl border border-primary-line bg-surface p-4">
+      <h3 className="font-semibold text-fg">{title ?? KIND_LABEL[kind]}</h3>
+      {only && typeof data.text === 'string' && <p className="text-fg">{data.text}</p>}
       {fields.map((f) => {
         const id = `${baseId}-${f.key}`;
         const err = errors[f.key];
@@ -354,11 +354,11 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
         if (f.type === 'checkbox') {
           return (
             <div key={f.key}>
-              <label htmlFor={id} className="flex items-center gap-2 text-sm text-stone-800">
-                <input id={id} type="checkbox" checked={v === true} onChange={(e) => set(f.key, e.target.checked)} className="size-4 accent-teal-800" {...aria} />
+              <label htmlFor={id} className="flex items-center gap-2 text-sm text-fg">
+                <input id={id} type="checkbox" checked={v === true} onChange={(e) => set(f.key, e.target.checked)} className="size-4 accent-primary" {...aria} />
                 {f.label}
               </label>
-              {err && <p id={errId} className="mt-1 text-sm text-red-800">{err}</p>}
+              {err && <p id={errId} className="mt-1 text-sm text-danger-fg">{err}</p>}
             </div>
           );
         }
@@ -367,20 +367,20 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
           const options = refOptions(project, f.refs, String(data.id));
           return (
             <fieldset key={f.key}>
-              <legend className="text-sm font-medium text-stone-800">{f.label}</legend>
-              {options.length === 0 && <p className="text-sm text-stone-600">Nimic în hartă încă.</p>}
+              <legend className="text-sm font-medium text-fg">{f.label}</legend>
+              {options.length === 0 && <p className="text-sm text-fg-muted">Nimic în hartă încă.</p>}
               {options.map(([value, label]) => (
-                <label key={value} className="mt-1 flex items-center gap-2 text-sm text-stone-800">
+                <label key={value} className="mt-1 flex items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
-                    className="size-4 accent-teal-800"
+                    className="size-4 accent-primary"
                     checked={chosen.includes(value)}
                     onChange={(e) => set(f.key, e.target.checked ? [...chosen, value] : chosen.filter((x) => x !== value))}
                   />
                   {label}
                 </label>
               ))}
-              {err && <p id={errId} className="mt-1 text-sm text-red-800">{err}</p>}
+              {err && <p id={errId} className="mt-1 text-sm text-danger-fg">{err}</p>}
             </fieldset>
           );
         }
@@ -414,25 +414,25 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
         }
         return (
           <div key={f.key}>
-            <label htmlFor={id} className="text-sm font-medium text-stone-800">
+            <label htmlFor={id} className="text-sm font-medium text-fg">
               {f.label}
             </label>
             {control}
-            {err && <p id={errId} className="mt-1 text-sm text-red-800">{err}</p>}
+            {err && <p id={errId} className="mt-1 text-sm text-danger-fg">{err}</p>}
           </div>
         );
       })}
       <div className="flex gap-2 pt-1">
         <button
           type="submit"
-          className="rounded-lg border border-teal-800 bg-white px-4 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="rounded-lg border border-primary bg-surface px-4 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Salvează
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-stone-400 px-4 py-1.5 text-sm font-medium text-stone-800 hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="rounded-lg border border-line-strong px-4 py-1.5 text-sm font-medium text-fg hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Renunță
         </button>

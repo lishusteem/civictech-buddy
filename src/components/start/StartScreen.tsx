@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { PHASES, STEPS } from '@/lib/steps/definitions';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const TOTAL_MINUTES = STEPS.reduce((sum, s) => sum + s.minutes, 0);
 
@@ -12,9 +13,9 @@ function extractToken(input: string): string | null {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-stone-400 bg-white px-3 py-2.5 text-base text-stone-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700';
+  'w-full rounded-lg border border-line-strong bg-surface px-3 py-2.5 text-base text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-focus';
 const primaryButton =
-  'rounded-lg bg-teal-800 px-5 py-2.5 text-base font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60';
+  'rounded-lg bg-primary px-5 py-2.5 text-base font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-60';
 
 export function StartScreen() {
   const router = useRouter();
@@ -59,9 +60,12 @@ export function StartScreen() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10 text-stone-900 sm:py-16">
+    <main className="mx-auto w-full max-w-2xl px-4 py-10 text-fg sm:py-16">
+      <div className="mb-6 flex justify-end">
+        <ThemeToggle />
+      </div>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Ghidul de pornire</h1>
-      <p className="mt-4 text-lg text-stone-700">
+      <p className="mt-4 text-lg text-fg-muted">
         În aproximativ {TOTAL_MINUTES} de minute îți transformi ideea într-un plan clar: contextul,
         schimbarea pe care o urmărești și cine trebuie să facă ce.
       </p>
@@ -78,26 +82,26 @@ export function StartScreen() {
               <section
                 key={phase.id}
                 aria-label={phase.title}
-                className="rounded-xl border border-stone-300 bg-stone-50 p-4"
+                className="rounded-xl border border-line bg-subtle p-4"
               >
-                <h3 className="flex items-baseline justify-between text-sm font-semibold uppercase tracking-wide text-teal-800">
+                <h3 className="flex items-baseline justify-between text-sm font-semibold uppercase tracking-wide text-accent">
                   <span>{phase.title}</span>
-                  <span className="font-normal normal-case text-stone-600">{minutes} min</span>
+                  <span className="font-normal normal-case text-fg-muted">{minutes} min</span>
                 </h3>
                 <ol className="mt-3 space-y-3">
                   {steps.map((s) => (
                     <li key={s.id} data-step={s.id} value={s.number} className="flex gap-3">
                       <span
                         aria-hidden
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-800 text-sm font-medium text-white"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-on-primary"
                       >
                         {s.number}
                       </span>
                       <div>
                         <p className="font-medium">
-                          {s.title} <span className="font-normal text-stone-600">· {s.minutes} min</span>
+                          {s.title} <span className="font-normal text-fg-muted">· {s.minutes} min</span>
                         </p>
-                        <p className="text-sm text-stone-700">{s.summary}</p>
+                        <p className="text-sm text-fg-muted">{s.summary}</p>
                       </div>
                     </li>
                   ))}
@@ -112,7 +116,7 @@ export function StartScreen() {
         {creating ? (
           <form onSubmit={create} className="space-y-3">
             <label htmlFor="project-name" className="block font-medium">
-              Numele proiectului <span className="font-normal text-stone-600">(opțional)</span>
+              Numele proiectului <span className="font-normal text-fg-muted">(opțional)</span>
             </label>
             <input
               id="project-name"
@@ -126,7 +130,7 @@ export function StartScreen() {
               Începe
             </button>
             {createError && (
-              <p role="alert" className="text-sm text-red-800">
+              <p role="alert" className="text-sm text-danger-fg">
                 {createError}
               </p>
             )}
@@ -138,12 +142,12 @@ export function StartScreen() {
         )}
       </section>
 
-      <section className="mt-12 border-t border-stone-300 pt-8">
+      <section className="mt-12 border-t border-line pt-8">
         <form onSubmit={resume} className="space-y-3" noValidate>
           <label htmlFor="resume-link" className="block font-medium">
             Continuă un proiect
           </label>
-          <p id="resume-hint" className="text-sm text-stone-600">
+          <p id="resume-hint" className="text-sm text-fg-muted">
             Lipește linkul de editare pe care l-ai salvat.
           </p>
           <input
@@ -157,12 +161,12 @@ export function StartScreen() {
           />
           <button
             type="submit"
-            className="rounded-lg border border-teal-800 px-5 py-2.5 text-base font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+            className="rounded-lg border border-primary px-5 py-2.5 text-base font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Continuă
           </button>
           {linkError && (
-            <p role="alert" className="text-sm text-red-800">
+            <p role="alert" className="text-sm text-danger-fg">
               {linkError}
             </p>
           )}

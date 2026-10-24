@@ -65,9 +65,9 @@ export function Overview({ token, project, onEditStep }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Tot proiectul</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-fg">Tot proiectul</h1>
       {summary && (
-        <p className="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-4 text-stone-800" data-testid="summary">
+        <p className="mt-4 rounded-xl border border-primary-line bg-primary-soft p-4 text-fg" data-testid="summary">
           {summary}
         </p>
       )}
@@ -81,12 +81,12 @@ export function Overview({ token, project, onEditStep }: Props) {
               key={s.id}
               aria-labelledby={`overview-${s.id}`}
               data-step={s.id}
-              className="rounded-xl border border-stone-300 bg-white p-4"
+              className="rounded-xl border border-line bg-surface p-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 id={`overview-${s.id}`} className="font-semibold text-stone-900">
+                <h2 id={`overview-${s.id}`} className="font-semibold text-fg">
                   {s.number}. {s.title}{' '}
-                  <span className="text-sm font-normal text-stone-600">· {STATUS_LABEL[effectiveStatus(project, s.id)]}</span>
+                  <span className="text-sm font-normal text-fg-muted">· {STATUS_LABEL[effectiveStatus(project, s.id)]}</span>
                 </h2>
                 <button
                   type="button"
@@ -94,15 +94,15 @@ export function Overview({ token, project, onEditStep }: Props) {
                   disabled={!isStepUnlocked(project, s.id)}
                   title={isStepUnlocked(project, s.id) ? undefined : 'Termină întâi pașii anteriori.'}
                   aria-label={`Editează: ${s.title}`}
-                  className="rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+                  className="rounded-lg border border-primary px-3 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 >
                   Editează
                 </button>
               </div>
               {items.length === 0 ? (
-                <p className="mt-2 text-sm text-stone-600">Nimic adăugat încă.</p>
+                <p className="mt-2 text-sm text-fg-muted">Nimic adăugat încă.</p>
               ) : (
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-stone-800">
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-fg">
                   {items.map(({ card, label }) => (
                     <li key={`${card.kind}-${card.data.id}`}>{label}</li>
                   ))}

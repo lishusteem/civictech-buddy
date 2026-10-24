@@ -87,29 +87,29 @@ function cardView(card: Card, project: Project): { title: string; details: Detai
 export const cardTitle = (card: Card, project: Project) => cardView(card, project).title;
 
 const small =
-  'rounded-lg px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
+  'rounded-lg px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 // Outlined: the step's single filled primary button is in the action bar.
-const accept = `${small} border border-teal-800 text-teal-900 hover:bg-teal-50`;
-const secondary = `${small} border border-stone-400 text-stone-800 hover:bg-stone-100`;
+const accept = `${small} border border-primary text-accent hover:bg-primary-soft`;
+const secondary = `${small} border border-line-strong text-fg hover:bg-surface-2`;
 
 function CardBody({ card, project, saved = false }: { card: Card; project: Project; saved?: boolean }) {
   const { title, details } = cardView(card, project);
   return (
     <>
       {saved ? (
-        <p className="text-xs font-medium uppercase tracking-wide text-teal-800">✓ {KIND_LABEL[card.kind]}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-accent">✓ {KIND_LABEL[card.kind]}</p>
       ) : (
-        <p className="text-xs font-medium uppercase tracking-wide text-stone-600">{KIND_LABEL[card.kind]}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-fg-muted">{KIND_LABEL[card.kind]}</p>
       )}
       {title === '' ? (
-        <p className="mt-1 font-medium italic text-stone-500">Necompletat</p>
+        <p className="mt-1 font-medium italic text-fg-subtle">Necompletat</p>
       ) : toPoints(title).length > 1 ? (
-        <Points text={title} className="mt-1 text-stone-900" />
+        <Points text={title} className="mt-1 text-fg" />
       ) : (
-        <p className="mt-1 font-medium text-stone-900">{title}</p>
+        <p className="mt-1 font-medium text-fg">{title}</p>
       )}
       {details.length > 0 && (
-        <div className="mt-1 space-y-1 text-sm text-stone-700">
+        <div className="mt-1 space-y-1 text-sm text-fg-muted">
           {details.map((t, i) => (
             <Points key={i} text={t.text} label={t.label} />
           ))}
@@ -132,7 +132,8 @@ export function CardsPanel(props: Props) {
 
   return (
     <section aria-label="Rezultatul pasului" className="min-w-0 space-y-5">
-      {props.top}
+      {/* Desktop: what the step still asks for stays visible while the cards scroll under it. */}
+      <div className="lg:sticky lg:top-0 lg:z-10 lg:bg-canvas lg:pb-1">{props.top}</div>
 
       {editing && (
         <CardEditor
@@ -150,7 +151,7 @@ export function CardsPanel(props: Props) {
       {proposed.length > 0 && (
         <section aria-label="Propuneri" className="space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 ref={props.proposalsHeadingRef} tabIndex={-1} className="text-sm font-medium text-stone-800 focus-visible:outline-2 focus-visible:outline-teal-800">
+            <h2 ref={props.proposalsHeadingRef} tabIndex={-1} className="text-sm font-medium text-fg focus-visible:outline-2 focus-visible:outline-focus">
               Propuse de AI · nesalvate ({proposed.length})
             </h2>
             <button type="button" onClick={props.onAcceptAll} className={accept}>
@@ -159,8 +160,8 @@ export function CardsPanel(props: Props) {
           </div>
           <ul className="space-y-3">
             {proposed.map((card, i) => (
-              <li key={`${card.kind}-${card.data.id}-${i}`} className="rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/40 p-3">
-                <span className="float-right rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">propus</span>
+              <li key={`${card.kind}-${card.data.id}-${i}`} className="rounded-xl border-2 border-dashed border-proposed-line bg-proposed/40 p-3">
+                <span className="float-right rounded-full bg-proposed-2 px-2 py-0.5 text-xs font-medium text-proposed-fg">propus</span>
                 <CardBody card={card} project={draft} />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button" onClick={() => props.onAccept(i)} className={accept}>
@@ -180,18 +181,18 @@ export function CardsPanel(props: Props) {
       )}
 
       <section aria-label="Salvate" className="space-y-3">
-        <h2 className="text-sm font-medium text-stone-800">
+        <h2 className="text-sm font-medium text-fg">
           Salvate ({savedCount})
         </h2>
-        {savedCount === 0 && <p className="text-sm text-stone-600">Nimic salvat încă. Răspunde în conversație sau adaugă manual.</p>}
+        {savedCount === 0 && <p className="text-sm text-fg-muted">Nimic salvat încă. Răspunde în conversație sau adaugă manual.</p>}
         {accepted.length > 0 && (
           <ul className="space-y-3">
             {accepted.map((card) => {
               const isStale = stale.has(card.data.id);
               return (
-                <li key={`${card.kind}-${card.data.id}`} className="rounded-xl border border-stone-300 bg-white p-3">
+                <li key={`${card.kind}-${card.data.id}`} className="rounded-xl border border-line bg-surface p-3">
                   {isStale && (
-                    <span className="float-right rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">de revizuit</span>
+                    <span className="float-right rounded-full bg-proposed-2 px-2 py-0.5 text-xs font-medium text-proposed-fg">de revizuit</span>
                   )}
                   <CardBody card={card} project={draft} saved />
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -225,7 +226,7 @@ export function CardsPanel(props: Props) {
               aria-label="Ce adaugi"
               value={addKind}
               onChange={(e) => setAddKind(e.target.value as EntityKind)}
-              className="rounded-lg border border-stone-400 bg-white px-2 py-1 text-sm text-stone-900 focus-visible:outline-2 focus-visible:outline-teal-800"
+              className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg focus-visible:outline-2 focus-visible:outline-focus"
             >
               {listKinds.map((k) => (
                 <option key={k} value={k}>
@@ -235,7 +236,7 @@ export function CardsPanel(props: Props) {
             </select>
           )}
           {full ? (
-            <p className="text-sm text-stone-700">Ai atins numărul maxim pentru această listă.</p>
+            <p className="text-sm text-fg-muted">Ai atins numărul maxim pentru această listă.</p>
           ) : (
             <button type="button" onClick={() => props.onAddManual(addKind)} className={secondary}>
               Adaugă manual

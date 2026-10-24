@@ -13,7 +13,7 @@ type Props = {
 };
 
 const btn =
-  'rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
+  'rounded-lg border border-primary px-3 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 
 const noSubscribe = () => () => {};
 
@@ -62,19 +62,19 @@ export function KeepLinks({ slug, editToken, projectName, published = true, onDo
 
   const copiedNote = (which: 'public' | 'edit') =>
     copied === which && (
-      <span role="status" className="text-sm text-teal-900">
+      <span role="status" className="text-sm text-accent">
         Copiat
       </span>
     );
 
   return (
-    <div className="mx-auto max-w-2xl text-stone-900">
+    <div className="mx-auto max-w-2xl text-fg">
       <h1 className="text-2xl font-semibold tracking-tight">Păstrează-ți linkurile</h1>
 
       <ul className="mt-6 space-y-4">
         {published && (
-          <li className="rounded-xl border-2 border-teal-700 bg-white p-4">
-            <p className="font-semibold text-teal-900">Pagina publică — pentru grup</p>
+          <li className="rounded-xl border-2 border-primary bg-surface p-4">
+            <p className="font-semibold text-accent">Pagina publică — pentru grup</p>
             <p className="mt-1 break-all font-mono text-sm">{publicUrl}</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <button type="button" onClick={() => copy('public', publicUrl)} aria-label="Copiază linkul public" className={btn}>
@@ -87,14 +87,14 @@ export function KeepLinks({ slug, editToken, projectName, published = true, onDo
             </div>
           </li>
         )}
-        <li className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
-          <p className="flex items-center gap-2 font-semibold text-amber-950">
+        <li className="rounded-xl border-2 border-proposed-line bg-proposed p-4">
+          <p className="flex items-center gap-2 font-semibold text-proposed-fg">
             <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 fill-current">
               <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 6H6V4.5a2 2 0 1 1 4 0V7Z" />
             </svg>
             Linkul de editare — doar pentru tine și echipă
           </p>
-          <p role="note" className="mt-2 font-medium text-amber-950">
+          <p role="note" className="mt-2 font-medium text-proposed-fg">
             Linkul de editare e singura cheie a proiectului. Dacă îl pierzi, nu-l putem recupera.
           </p>
           <p className="mt-2 break-all font-mono text-sm">{editUrl}</p>
@@ -107,7 +107,7 @@ export function KeepLinks({ slug, editToken, projectName, published = true, onDo
         </li>
       </ul>
 
-      {!published && <p className="mt-4 text-stone-700">Pagina publică apare după ce apeși Publică.</p>}
+      {!published && <p className="mt-4 text-fg-muted">Pagina publică apare după ce apeși Publică.</p>}
 
       <section aria-labelledby="send-links" className="mt-6">
         <h2 id="send-links" className="font-semibold">
@@ -134,7 +134,7 @@ export function KeepLinks({ slug, editToken, projectName, published = true, onDo
           setSaved(true);
           onDone();
         }}
-        className="mt-8 rounded-lg bg-teal-800 px-5 py-2 font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+        className="mt-8 rounded-lg bg-primary px-5 py-2 font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         Am salvat linkurile
       </button>

@@ -451,9 +451,9 @@ describe('StepScreen', () => {
       expect(await screen.findByText('Mă gândesc…')).toBeTruthy();
     });
 
-    it('shows the Ctrl+Enter hint', () => {
+    it('shows the Enter / Shift+Enter hint', () => {
       setup('actors');
-      expect(screen.getByText('Ctrl+Enter trimite')).toBeTruthy();
+      expect(screen.getByText('Enter trimite · Shift+Enter rând nou')).toBeTruthy();
     });
   });
 
@@ -730,7 +730,7 @@ describe('StepScreen', () => {
     });
 
     it('never shows more than one filled primary button', () => {
-      const count = () => document.querySelectorAll('button.bg-teal-800').length;
+      const count = () => document.querySelectorAll('button.bg-primary').length;
       const complete = createEmptyProject('P');
       complete.actors = [actor];
       for (const [draft, step, proposed] of [
@@ -741,7 +741,7 @@ describe('StepScreen', () => {
       ] as const) {
         setup(step, structuredClone(draft), vi.fn(), { proposed: [...proposed] });
         expect(count()).toBe(1);
-        expect(primary().classList.contains('bg-teal-800')).toBe(true);
+        expect(primary().classList.contains('bg-primary')).toBe(true);
         cleanup();
       }
     });
@@ -749,8 +749,8 @@ describe('StepScreen', () => {
     it("keeps the card form's Salvează outlined, so the bar stays the only filled button", () => {
       setup('actors');
       fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
-      expect(screen.getByRole('button', { name: 'Salvează' }).classList.contains('bg-teal-800')).toBe(false);
-      expect(document.querySelectorAll('button.bg-teal-800')).toHaveLength(1);
+      expect(screen.getByRole('button', { name: 'Salvează' }).classList.contains('bg-primary')).toBe(false);
+      expect(document.querySelectorAll('button.bg-primary')).toHaveLength(1);
     });
   });
 

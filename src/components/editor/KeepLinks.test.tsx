@@ -27,14 +27,14 @@ describe('KeepLinks', () => {
   it('separates the public card (Copiază, Deschide ↗) from the edit card that holds the warning', () => {
     setup();
     const publicCard = screen.getByText('Pagina publică — pentru grup').closest('li')!;
-    expect(publicCard.className).toContain('border-teal');
+    expect(publicCard.className).toContain('border-primary');
     expect(within(publicCard).getByRole('button', { name: 'Copiază linkul public' })).toBeTruthy();
     const open = within(publicCard).getByRole('link', { name: 'Deschide ↗' });
     expect(open.getAttribute('href')).toBe(`${window.location.origin}/p/proiect-abc`);
     expect(open.getAttribute('target')).toBe('_blank');
 
     const editCard = screen.getByText('Linkul de editare — doar pentru tine și echipă').closest('li')!;
-    expect(editCard.className).toContain('border-amber');
+    expect(editCard.className).toContain('border-proposed');
     expect(within(editCard).getByText(/Linkul de editare e singura cheie a proiectului/)).toBeTruthy();
     expect(within(editCard).queryByRole('link', { name: 'Deschide ↗' })).toBeNull();
   });

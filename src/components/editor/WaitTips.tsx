@@ -20,12 +20,12 @@ export function WaitTips({ step }: { step: StepId }) {
   }, [tips.length]);
 
   return (
-    <div className="mt-2 border-t border-dashed border-stone-300 pt-2 text-sm text-stone-700" aria-hidden="true">
-      <span className="font-medium text-teal-800">Între timp · </span>
+    <div className="mt-2 border-t border-dashed border-line pt-2 text-sm text-fg-muted" aria-hidden="true">
+      <span className="font-medium text-accent">Între timp · </span>
       <span key={i} className="motion-safe:animate-[fadein_400ms_ease-out]">
         {tips[i]}
       </span>
-      <span className="mt-1 block text-xs text-stone-500">
+      <span className="mt-1 block text-xs text-fg-subtle">
         {i + 1} / {tips.length}
       </span>
     </div>

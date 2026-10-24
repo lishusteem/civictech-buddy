@@ -41,7 +41,7 @@ const hours = (h: number) => (Number.isInteger(h) ? String(h) : String(h).replac
 
 function ExtLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-teal-900 underline underline-offset-2">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2">
       {children}
     </a>
   );
@@ -79,14 +79,14 @@ export function Hero({ project: p, clean, date }: { project: Project; clean: (t:
     ] as [string, string][]
   ).filter(([, text]) => text !== '');
   return (
-    <header className="rounded-2xl border border-teal-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-stone-600">
+    <header className="rounded-2xl border border-primary-line bg-surface p-6 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-fg-muted">
         <p>
-          <span className="font-medium text-teal-900">Proiect civic tech</span>
+          <span className="font-medium text-accent">Proiect civic tech</span>
           {stage && (
             <>
               {' · '}
-              <span className="rounded-full bg-teal-50 px-2 py-0.5 text-teal-900">{stage}</span>
+              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-accent">{stage}</span>
             </>
           )}
           {p.project.area.trim() !== '' && ` · ${p.project.area}`}
@@ -96,10 +96,10 @@ export function Hero({ project: p, clean, date }: { project: Project; clean: (t:
       </div>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{p.project.name || 'Proiect fără nume'}</h1>
       {lines.length > 0 && (
-        <dl className="mt-4 grid gap-1.5 text-lg text-stone-800 sm:grid-cols-[auto_1fr] sm:gap-x-4">
+        <dl className="mt-4 grid gap-1.5 text-lg text-fg sm:grid-cols-[auto_1fr] sm:gap-x-4">
           {lines.map(([label, text]) => (
             <div key={label} className="contents">
-              <dt className="font-semibold text-teal-800">{label}</dt>
+              <dt className="font-semibold text-accent">{label}</dt>
               <dd className="mb-1 sm:mb-0">{clean(text)}</dd>
             </div>
           ))}
@@ -110,7 +110,7 @@ export function Hero({ project: p, clean, date }: { project: Project; clean: (t:
           {canHelp && (
             <a
               href={`#${HELP_ANCHOR}`}
-              className="rounded-lg bg-teal-800 px-5 py-2.5 font-medium text-white hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+              className="rounded-lg bg-primary px-5 py-2.5 font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               Vreau să ajut ↓
             </a>
@@ -126,7 +126,7 @@ export function Hero({ project: p, clean, date }: { project: Project; clean: (t:
 export function PublicFooter({ project: p, date }: { project: Project; date: string | null }) {
   const contact = parseContact(p.project.contact);
   return (
-    <footer className="mt-12 rounded-2xl bg-teal-800 p-6 text-white">
+    <footer className="mt-12 rounded-2xl bg-primary p-6 text-on-primary dark:border dark:border-primary-line dark:bg-primary-soft dark:text-fg">
       {contact && (
         <>
           <p className="text-xl font-semibold">Vrei să ajuți?</p>
@@ -135,7 +135,7 @@ export function PublicFooter({ project: p, date }: { project: Project; date: str
           </div>
         </>
       )}
-      <p className={`${contact ? 'mt-4 ' : ''}text-sm text-teal-100`}>
+      <p className={`${contact ? 'mt-4 ' : ''}text-sm text-on-primary/80 dark:text-fg-muted`}>
         {date ? `Pagină făcută cu Ghidul de pornire · actualizată ${date}` : 'Pagină făcută cu Ghidul de pornire'}
       </p>
     </footer>
@@ -167,18 +167,18 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
   const questions = publicQuestions(p);
 
   return (
-    <article className="text-stone-900">
+    <article className="text-fg">
       <Hero project={p} clean={clean} date={date} />
 
       <Section headingId="h-problem" eyebrow="Ce e în joc" title="Problema" empty={!problem} preview={preview}>
         <div className={`mt-3 grid gap-3 ${example ? 'md:grid-cols-2' : ''}`}>
-          <div className="rounded-xl border border-stone-300 bg-white p-4">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <Points text={problem} />
-            {evidence.length > 0 && <Points className="mt-2 text-sm text-stone-600" label="De unde știm" text={evidence.join('\n')} />}
+            {evidence.length > 0 && <Points className="mt-2 text-sm text-fg-muted" label="De unde știm" text={evidence.join('\n')} />}
           </div>
           {example && (
-            <blockquote className="rounded-xl border-l-4 border-teal-700 bg-teal-50 p-4 text-stone-800">
-              <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">Un caz concret</p>
+            <blockquote className="rounded-xl border-l-4 border-primary bg-primary-soft p-4 text-fg">
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent">Un caz concret</p>
               <p className="mt-1">{example}</p>
             </blockquote>
           )}
@@ -188,16 +188,16 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
       <Section headingId="h-solution" eyebrow="Ce facem" title="Soluția" empty={!solution && working.length === 0 && planned.length === 0} preview={preview}>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {solution && (
-            <div className="rounded-xl border border-stone-300 bg-white p-4">
+            <div className="rounded-xl border border-line bg-surface p-4">
               <Points text={solution} />
             </div>
           )}
           {(working.length > 0 || planned.length > 0 || traction) && (
-            <div className="rounded-xl border border-stone-300 bg-white p-4 text-sm">
+            <div className="rounded-xl border border-line bg-surface p-4 text-sm">
               {working.length > 0 && (
                 <>
                   <p className="font-medium">
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">Merge deja</span>
+                    <span className="rounded-full bg-success-2 px-2 py-0.5 text-xs font-semibold text-success-fg">Merge deja</span>
                   </p>
                   <ul className="mt-1 list-disc space-y-0.5 pl-5">
                     {working.map((f) => (
@@ -209,7 +209,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
               {planned.length > 0 && (
                 <>
                   <p className="mt-3 font-medium">
-                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-900">Urmează</span>
+                    <span className="rounded-full bg-question-2 px-2 py-0.5 text-xs font-semibold text-question-fg">Urmează</span>
                   </p>
                   <ul className="mt-1 list-disc space-y-0.5 pl-5">
                     {planned.map((f) => (
@@ -218,7 +218,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
                   </ul>
                 </>
               )}
-              {traction && <Points className="mt-3 text-stone-800" label="Până acum" text={traction} />}
+              {traction && <Points className="mt-3 text-fg" label="Până acum" text={traction} />}
             </div>
           )}
         </div>
@@ -227,17 +227,17 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
       <Section headingId="h-change" eyebrow="Ce se schimbă" title="Rezultatele pe care le urmărim" empty={changes.length === 0} preview={preview}>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {changes.map((t) => (
-            <div key={t.id} className="rounded-xl border-2 border-teal-700 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Long-term outcome · Rezultat pe termen lung</p>
+            <div key={t.id} className="rounded-xl border-2 border-primary bg-surface p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Long-term outcome · Rezultat pe termen lung</p>
               <p className="mt-1 font-medium">{clean(t.text)}</p>
-              {t.signal.trim() !== '' && <p className="mt-1 text-sm text-stone-600">Indicator: {clean(t.signal)}</p>}
+              {t.signal.trim() !== '' && <p className="mt-1 text-sm text-fg-muted">Indicator: {clean(t.signal)}</p>}
             </div>
           ))}
         </div>
         {firstWithPath && (
-          <div className="mt-4 rounded-xl border border-stone-300 bg-stone-50 p-4">
+          <div className="mt-4 rounded-xl border border-line bg-subtle p-4">
             <h3 className="font-semibold">Cum ajungem acolo</h3>
-            <p className="text-sm text-stone-600">Citit de sus în jos: ce livrăm noi duce, pas cu pas, la ce fac alții diferit.</p>
+            <p className="text-sm text-fg-muted">Citit de sus în jos: ce livrăm noi duce, pas cu pas, la ce fac alții diferit.</p>
             <PathStory project={p} targetId={firstWithPath.id} clean={clean} actorName={actorName} />
           </div>
         )}
@@ -248,7 +248,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
         )}
         {mapHref && (
           <p className="mt-2">
-            <a href={mapHref} className="font-medium text-teal-900 underline underline-offset-2">
+            <a href={mapHref} className="font-medium text-accent underline underline-offset-2">
               Vezi toată harta schimbării →
             </a>
           </p>
@@ -256,12 +256,12 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
       </Section>
 
       <Section headingId="h-risk" eyebrow="E realist?" title="Ce încă nu știm" empty={risky.length === 0} preview={preview}>
-        <p className="mt-1 text-stone-600">Ipotezele de care depinde drumul și cum le verificăm, fără cod.</p>
+        <p className="mt-1 text-fg-muted">Ipotezele de care depinde drumul și cum le verificăm, fără cod.</p>
         <ul className="mt-3 space-y-3">
           {risky.map((c) => (
-            <li key={c.id} className="rounded-xl border border-amber-300 bg-white p-4">
+            <li key={c.id} className="rounded-xl border border-proposed-line bg-surface p-4">
               <p className="font-medium">⚠ {clean(c.assumption || c.text)}</p>
-              <Points className="mt-1 text-stone-700" label="Test" text={c.test.trim() !== '' ? clean(c.test) : 'încă de stabilit — idei binevenite.'} />
+              <Points className="mt-1 text-fg-muted" label="Test" text={c.test.trim() !== '' ? clean(c.test) : 'încă de stabilit — idei binevenite.'} />
             </li>
           ))}
         </ul>
@@ -273,7 +273,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
         {p.existing.length === 0 ? (
           preview && <Placeholder title="Ce există deja" />
         ) : (
-          <details className="rounded-xl bg-white p-4">
+          <details className="rounded-xl bg-surface p-4">
             <summary className="cursor-pointer font-semibold">
               {onlyNothingFound ? 'Ce există deja' : `Ce există deja (${existing.length})`}
             </summary>
@@ -297,9 +297,9 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
         {questions.length === 0 ? (
           preview && <Placeholder title="Întrebări la care ne poți ajuta" />
         ) : (
-          <details id={QUESTIONS_ANCHOR} className="scroll-mt-4 rounded-xl bg-white p-4">
+          <details id={QUESTIONS_ANCHOR} className="scroll-mt-4 rounded-xl bg-surface p-4">
             <summary className="cursor-pointer font-semibold">Întrebări la care ne poți ajuta ({questions.length})</summary>
-            <p className="mt-2 text-sm text-stone-600">Lucruri pe care încă nu le știm. Dacă ai un răspuns, scrie-ne.</p>
+            <p className="mt-2 text-sm text-fg-muted">Lucruri pe care încă nu le știm. Dacă ai un răspuns, scrie-ne.</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               {questions.map((q) => (
                 <li key={q}>{clean(q)}</li>
@@ -323,7 +323,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
             );
           })}
         </ul>
-        <p className="mt-2 text-sm text-stone-600">În total ~{hours(Math.round(p.team.reduce((sum, m) => sum + m.hoursPerWeek, 0)))} ore pe săptămână.</p>
+        <p className="mt-2 text-sm text-fg-muted">În total ~{hours(Math.round(p.team.reduce((sum, m) => sum + m.hoursPerWeek, 0)))} ore pe săptămână.</p>
       </Section>
 
       {/* Last, right before the contact: by now the reader knows the project well enough to help. */}

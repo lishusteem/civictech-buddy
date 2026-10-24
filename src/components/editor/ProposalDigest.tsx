@@ -22,21 +22,21 @@ export function ProposalDigest({ proposed, project, onAcceptAll, onView }: Props
   const items = proposed.slice(0, MAX_ITEMS).map((c) => `${KIND_LABEL[c.kind]}: ${cardTitle(c, project) || 'Necompletat'}`);
   const more = n > MAX_ITEMS ? ` și încă ${n - MAX_ITEMS}` : '';
   return (
-    <section aria-label="Propuneri în conversație" className="max-w-[90%] rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-3">
-      <p className="text-sm font-medium text-amber-950">{n === 1 ? '1 propunere, încă nesalvată' : `${proposals(n)}, încă nesalvate`}</p>
-      <p className="mt-1 text-sm text-stone-700">{`${items.join(' · ')}${more}`}</p>
+    <section aria-label="Propuneri în conversație" className="max-w-[90%] rounded-lg border border-dashed border-proposed-line bg-proposed/60 p-3">
+      <p className="text-sm font-medium text-proposed-fg">{n === 1 ? '1 propunere, încă nesalvată' : `${proposals(n)}, încă nesalvate`}</p>
+      <p className="mt-1 text-sm text-fg-muted">{`${items.join(' · ')}${more}`}</p>
       <div className="mt-2 flex flex-wrap items-center gap-4">
         <button
           type="button"
           onClick={onAcceptAll}
-          className="rounded-lg border border-teal-800 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="rounded-lg border border-primary bg-surface px-3 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Acceptă tot
         </button>
         <button
           type="button"
           onClick={onView}
-          className="text-sm font-medium text-teal-900 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="text-sm font-medium text-accent underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Vezi și editează →
         </button>

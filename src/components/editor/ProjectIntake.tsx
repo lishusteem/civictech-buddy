@@ -27,9 +27,9 @@ export function intakeMessage(description: string, done: string, planned: string
   return parts.join('\n\n');
 }
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 const field =
-  'mt-1 w-full rounded-lg border border-stone-400 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-800';
+  'mt-1 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus';
 
 type Props = {
   /** Sends the answers to the AI as the first message of step 1. */
@@ -51,18 +51,18 @@ export function ProjectIntake({ onSubmit, onSkip, disabled = false }: Props) {
   return (
     <form
       aria-label="Despre aplicație"
-      className="flex flex-col gap-4 rounded-xl border border-stone-300 bg-white p-4"
+      className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4"
       onSubmit={(e) => {
         e.preventDefault();
         if (canSend) onSubmit(message);
       }}
     >
-      <p className="text-stone-800">Spune-mi pe scurt despre aplicație. Pe baza asta îți pun apoi câteva întrebări despre echipă.</p>
+      <p className="text-fg">Spune-mi pe scurt despre aplicație. Pe baza asta îți pun apoi câteva întrebări despre echipă.</p>
       <div>
         <label htmlFor={`${id}-d`} className="font-medium">
           {INTAKE_HEADINGS.description}
         </label>
-        <p id={`${id}-dh`} className="text-sm text-stone-600">
+        <p id={`${id}-dh`} className="text-sm text-fg-muted">
           Pentru cine e, ce problemă rezolvă și cum. Câteva propoziții.
         </p>
         <textarea id={`${id}-d`} aria-describedby={`${id}-dh`} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={field} />
@@ -71,7 +71,7 @@ export function ProjectIntake({ onSubmit, onSkip, disabled = false }: Props) {
         <label htmlFor={`${id}-w`} className="font-medium">
           {INTAKE_HEADINGS.done}
         </label>
-        <p id={`${id}-wh`} className="text-sm text-stone-600">
+        <p id={`${id}-wh`} className="text-sm text-fg-muted">
           Ce pot face utilizatorii azi. Câte una pe rând.
         </p>
         <textarea id={`${id}-w`} aria-describedby={`${id}-wh`} rows={4} value={done} onChange={(e) => setDone(e.target.value)} className={field} />
@@ -80,21 +80,21 @@ export function ProjectIntake({ onSubmit, onSkip, disabled = false }: Props) {
         <label htmlFor={`${id}-p`} className="font-medium">
           {INTAKE_HEADINGS.planned}
         </label>
-        <p id={`${id}-ph`} className="text-sm text-stone-600">
+        <p id={`${id}-ph`} className="text-sm text-fg-muted">
           Ce vrei să construiești de acum încolo. Câte una pe rând.
         </p>
         <textarea id={`${id}-p`} aria-describedby={`${id}-ph`} rows={4} value={planned} onChange={(e) => setPlanned(e.target.value)} className={field} />
       </div>
-      {message.length > MAX_CHARS && <p className="text-sm text-red-800">E prea lung pentru un singur mesaj; scurtează puțin.</p>}
+      {message.length > MAX_CHARS && <p className="text-sm text-danger-fg">E prea lung pentru un singur mesaj; scurtează puțin.</p>}
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={!canSend}
-          className={`rounded-lg border border-teal-800 px-4 py-2 font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-60 ${focusRing}`}
+          className={`rounded-lg border border-primary px-4 py-2 font-medium text-accent hover:bg-primary-soft disabled:opacity-60 ${focusRing}`}
         >
           Trimite
         </button>
-        <button type="button" onClick={onSkip} disabled={disabled} className={`text-sm text-teal-900 underline ${focusRing}`}>
+        <button type="button" onClick={onSkip} disabled={disabled} className={`text-sm text-accent underline ${focusRing}`}>
           Prefer să răspund în conversație
         </button>
       </div>

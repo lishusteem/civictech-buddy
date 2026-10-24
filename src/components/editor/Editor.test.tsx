@@ -95,8 +95,8 @@ describe('Editor', () => {
     stubFetch(() => ({}));
     render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T0} />);
     expect(screen.getByText('Ai modificări nepublicate')).toBeTruthy();
-    expect(document.querySelectorAll('button.bg-teal-800')).toHaveLength(1);
-    expect(screen.getByTestId('bar-primary').classList.contains('bg-teal-800')).toBe(true);
+    expect(document.querySelectorAll('button.bg-primary')).toHaveLength(1);
+    expect(screen.getByTestId('bar-primary').classList.contains('bg-primary')).toBe(true);
   });
 
   it('hides the bar when published and offers "Publică" when never published', () => {

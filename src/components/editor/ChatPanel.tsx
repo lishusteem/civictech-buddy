@@ -6,6 +6,7 @@ import { normalizeCardIds, upsertEntity } from '@/lib/project/entities';
 import type { Message, Project, StepId } from '@/lib/project/schema';
 import { isAffirmative, normalizeReply } from '@/lib/steps/affirm';
 import type { SetDraft } from './StepScreen';
+import { MessageText } from './MessageText';
 import { WaitTips } from './WaitTips';
 
 export const MAX_CHARS = 4000;
@@ -124,9 +125,17 @@ function addToFindOut(p: Project, step: StepId, text: string): Project {
   return upsertEntity(p, card);
 }
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800';
-const secondary = `rounded-lg border border-teal-800 px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-60 ${focusRing}`;
-const chip = `rounded-full border border-stone-400 px-3 py-1 text-sm text-stone-800 hover:bg-stone-100 disabled:opacity-60 ${focusRing}`;
+/** The composer grows with the text, up to its max height (then it scrolls). */
+function grow(el: HTMLTextAreaElement) {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+}
+
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
+const secondary = `rounded-lg border border-primary px-3 py-1.5 text-sm font-medium text-accent hover:bg-primary-soft disabled:opacity-60 ${focusRing}`;
+const chip = `rounded-full border border-line px-3 py-1 text-sm text-fg-muted hover:border-line-strong hover:text-fg disabled:opacity-60 ${focusRing}`;
+// Tonal, not filled: on a step screen the action bar holds the single filled button.
+const send_ = `rounded-full bg-primary-soft-2 px-4 py-1.5 text-sm font-semibold text-accent hover:bg-primary hover:text-on-primary disabled:bg-surface-2 disabled:text-fg-subtle ${focusRing}`;
 
 export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onTurn, onFormMode, hasPending, onAffirm, footer, intake, ref }: Props) {
   const [text, setText] = useState('');
@@ -140,6 +149,7 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const focusInputNext = useRef(false);
   const lastAiRef = useRef<HTMLLIElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const seenAi = useRef<number | null>(null);
   useEffect(() => tracker.subscribe(() => rerender((n) => n + 1)), [tracker]);
   // User messages sent while proposals were pending (a hint under them; never stored).
@@ -232,6 +242,25 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Desktop: follow the newest turn, unless the user scrolled up to reread; then offer a jump back down.
+  const [atBottom, setAtBottom] = useState(true);
+  const [unseen, setUnseen] = useState(false);
+  const toBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    setUnseen(false);
+  };
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || el.scrollHeight <= el.clientHeight) return;
+    if (atBottom) toBottom();
+    else setUnseen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, pending, error, footer]);
+  useEffect(() => {
+    if (text === '' && inputRef.current) inputRef.current.style.height = '';
+  }, [text]);
+
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!canSend) return;
@@ -243,99 +272,146 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
   const canSend = !pending && !tooLong && text.trim() !== '';
 
   return (
-    <section aria-label="Conversația" className="flex min-w-0 flex-col gap-4">
-      {messages.length > 0 && (
-        <ol className="flex flex-col gap-3 lg:max-h-[60vh] lg:overflow-y-auto lg:pr-1">
-          {messages.map((m, i) =>
-            m.role === 'assistant' ? (
-              <li
-                key={i}
-                ref={i === lastAiIndex ? lastAiRef : undefined}
-                tabIndex={i === lastAiIndex ? -1 : undefined}
-                className={`max-w-[90%] whitespace-pre-wrap rounded-xl border border-stone-300 bg-white p-3 text-stone-900 ${focusRing}`}
-              >
-                <span className="sr-only">AI: </span>
-                {m.content}
-              </li>
-            ) : (
-              <li key={i} className="max-w-[90%] self-end whitespace-pre-wrap rounded-xl bg-teal-50 p-3 text-stone-900">
-                <span className="sr-only">Tu: </span>
-                {m.content}
-                {hasPending && hinted.includes(m) && <span className="mt-1 block text-sm text-amber-900">{ACCEPT_HINT}</span>}
-              </li>
-            ),
-          )}
-        </ol>
-      )}
+    <section aria-label="Conversația" className="flex min-w-0 flex-col gap-4 lg:h-full lg:min-h-0 lg:gap-3">
+      {/* Desktop: the conversation scrolls on its own; the composer below always stays in view. */}
+      <div className="relative flex flex-col lg:min-h-0 lg:flex-1">
+      <div
+        ref={scrollRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const near = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+          setAtBottom(near);
+          if (near) setUnseen(false);
+        }}
+        className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2"
+      >
+        {messages.length > 0 && (
+          <ol className="flex flex-col gap-4">
+            {messages.map((m, i) =>
+              m.role === 'assistant' ? (
+                <li
+                  key={i}
+                  ref={i === lastAiIndex ? lastAiRef : undefined}
+                  tabIndex={i === lastAiIndex ? -1 : undefined}
+                  className={`flex gap-3 rounded-lg text-fg ${focusRing}`}
+                >
+                  <span className="sr-only">AI: </span>
+                  <span aria-hidden className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft-2 text-[10px] font-bold text-accent">
+                    AI
+                  </span>
+                  <div className="min-w-0 max-w-[68ch] leading-relaxed">
+                    <MessageText text={m.content} />
+                  </div>
+                </li>
+              ) : (
+                <li key={i} className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary-soft px-4 py-2.5 text-fg">
+                  <span className="sr-only">Tu: </span>
+                  {m.content}
+                  {hasPending && hinted.includes(m) && <span className="mt-1 block text-sm text-proposed-fg">{ACCEPT_HINT}</span>}
+                </li>
+              ),
+            )}
+          </ol>
+        )}
 
-      {pending && (
-        <div className="max-w-[90%] rounded-xl border border-dashed border-stone-300 bg-stone-50 p-3">
-          <p role="status" className="animate-pulse text-stone-600">
-            {messages.length === 0 ? LOADING.first : LOADING[loading]}
-          </p>
-          <WaitTips step={step} />
-        </div>
-      )}
-      {footer}
-      {notice && (
-        <p role="status" className="rounded-lg bg-teal-50 p-3 text-sm text-teal-950">
-          {NOTED}
-        </p>
-      )}
-      {error && (
-        <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4">
-          <p className="text-red-900">{error}</p>
-          <p className="mt-1 text-sm text-red-900">Ce ai scris e salvat.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" onClick={() => void ask(messages.slice(-MAX_MESSAGES))} className={secondary}>
-              Reîncearcă
-            </button>
-            <button type="button" onClick={onFormMode} className={secondary}>
-              Completează în formular
-            </button>
+        {pending && (
+          <div className="flex max-w-[95%] gap-3">
+            <span aria-hidden className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft-2 text-[10px] font-bold text-accent">
+              AI
+            </span>
+            <div className="min-w-0 flex-1 rounded-xl border border-dashed border-line bg-subtle p-3">
+              <p role="status" className="flex items-center gap-2 text-fg-muted">
+                <span aria-hidden className="inline-flex gap-1">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle" />
+                </span>
+                {messages.length === 0 ? LOADING.first : LOADING[loading]}
+              </p>
+              <WaitTips step={step} />
+            </div>
           </div>
-        </div>
-      )}
-
-      {intake && messages.length === 0 && !pending ? (
-        intake
-      ) : (
-      <form onSubmit={submit} className="flex flex-col gap-2">
-        <label htmlFor={inputId} className="sr-only">
-          Răspunsul tău
-        </label>
-        <textarea
-          id={inputId}
-          ref={inputRef}
-          rows={3}
-          value={text}
-          disabled={pending && messages.length > 0}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit();
-          }}
-          aria-describedby={text.length > COUNTER_FROM ? `${inputId}-count` : undefined}
-          placeholder={placeholder}
-          className="w-full rounded-lg border border-stone-400 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-800 disabled:bg-stone-100 max-md:h-[4.5rem]"
-        />
-        {text.length > COUNTER_FROM && (
-          <p id={`${inputId}-count`} className={`text-right text-sm ${tooLong ? 'text-red-800' : 'text-stone-600'}`}>
-            {text.length} / {MAX_CHARS}
+        )}
+        {footer}
+        {notice && (
+          <p role="status" className="rounded-lg bg-primary-soft p-3 text-sm text-accent">
+            {NOTED}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={!canSend} className={secondary}>
-            Trimite
-          </button>
-          <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={chip}>
-            Nu știu
-          </button>
-          <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
-            Propune acum
-          </button>
-          <span className="ml-auto hidden text-xs text-stone-500 md:inline">Ctrl+Enter trimite</span>
-        </div>
-      </form>
+        {error && (
+          <div role="alert" className="rounded-xl border border-danger-line bg-danger p-4">
+            <p className="text-danger-fg">{error}</p>
+            <p className="mt-1 text-sm text-danger-fg">Ce ai scris e salvat.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={() => void ask(messages.slice(-MAX_MESSAGES))} className={secondary}>
+                Reîncearcă
+              </button>
+              <button type="button" onClick={onFormMode} className={secondary}>
+                Completează în formular
+              </button>
+            </div>
+          </div>
+        )}
+        {intake && messages.length === 0 && !pending && intake}
+      </div>
+      {unseen && (
+        <button
+          type="button"
+          onClick={toBottom}
+          className={`absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium text-accent shadow-card ${focusRing}`}
+        >
+          ↓ Mesaje noi
+        </button>
+      )}
+      </div>
+
+      {!(intake && messages.length === 0 && !pending) && (
+        <form
+          onSubmit={submit}
+          className="shrink-0 rounded-2xl border border-line-strong bg-surface shadow-card focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-focus"
+        >
+          <label htmlFor={inputId} className="sr-only">
+            Răspunsul tău
+          </label>
+          <textarea
+            id={inputId}
+            ref={inputRef}
+            rows={2}
+            value={text}
+            disabled={pending && messages.length > 0}
+            onChange={(e) => {
+              setText(e.target.value);
+              grow(e.currentTarget);
+            }}
+            onKeyDown={(e) => {
+              // Enter sends, Shift+Enter is a new line (Ctrl+Enter still sends); never while composing (IME).
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            aria-describedby={text.length > COUNTER_FROM ? `${inputId}-count` : undefined}
+            placeholder={placeholder}
+            className="block max-h-60 min-h-[3.5rem] w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-fg placeholder:text-fg-subtle focus:outline-none disabled:opacity-60 max-md:h-[4.5rem]"
+          />
+          {text.length > COUNTER_FROM && (
+            <p id={`${inputId}-count`} className={`px-4 text-right text-sm ${tooLong ? 'text-danger-fg' : 'text-fg-muted'}`}>
+              {text.length} / {MAX_CHARS}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-2 px-3 pb-3 pt-1">
+            <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={chip}>
+              Nu știu
+            </button>
+            <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
+              Propune acum
+            </button>
+            <span className="ml-auto hidden text-xs text-fg-subtle md:inline">Enter trimite · Shift+Enter rând nou</span>
+            <button type="submit" disabled={!canSend} className={send_}>
+              Trimite <span aria-hidden>↑</span>
+            </button>
+          </div>
+        </form>
       )}
     </section>
   );
