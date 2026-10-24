@@ -7,7 +7,8 @@ import { INVALID_LINK, json } from '@/lib/http';
 type Ctx = { params: Promise<{ token: string }> };
 
 /** One model call (25 s) plus its retry, with headroom. */
-export const maxDuration = 60;
+// Room for a thinking model: one call can take ~55 s and may be retried.
+export const maxDuration = 180;
 
 export async function POST(req: Request, { params }: Ctx): Promise<Response> {
   const { token } = await params;

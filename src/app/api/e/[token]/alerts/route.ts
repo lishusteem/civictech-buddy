@@ -9,7 +9,8 @@ import { StepIdSchema } from '@/lib/project/schema';
 type Ctx = { params: Promise<{ token: string }> };
 
 /** One model call (25 s) plus its retry, with headroom. */
-export const maxDuration = 60;
+// Room for a thinking model: one call can take ~55 s and may be retried.
+export const maxDuration = 180;
 
 const BodySchema = z.object({ step: StepIdSchema });
 

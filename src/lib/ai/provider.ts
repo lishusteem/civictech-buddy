@@ -1,5 +1,6 @@
 import { StepIdSchema, type StepId } from '../project/schema';
 import type { Card, EntityKind } from '../project/entities';
+import { AnthropicProvider } from './anthropic';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
@@ -144,9 +145,12 @@ export class FakeProvider implements ChatProvider {
 
 let fake: FakeProvider | undefined;
 let deepSeek: DeepSeekProvider | undefined;
+let anthropic: AnthropicProvider | undefined;
 
+/** AI_PROVIDER: "anthropic" (Claude, ANTHROPIC_MODEL / ANTHROPIC_EFFORT), "fake" for tests, else DeepSeek. */
 export function getProvider(): ChatProvider {
   if (process.env.AI_PROVIDER === 'fake') return (fake ??= new FakeProvider());
+  if (process.env.AI_PROVIDER === 'anthropic') return (anthropic ??= new AnthropicProvider());
   return (deepSeek ??= new DeepSeekProvider());
 }
 

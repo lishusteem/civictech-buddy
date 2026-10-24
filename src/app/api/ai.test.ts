@@ -103,10 +103,10 @@ describe('POST /api/e/:token/summary', () => {
 });
 
 describe('AI cost ceiling', () => {
-  it('lets the AI routes run up to 60 s', () => {
-    expect(aiRoute.maxDuration).toBe(60);
-    expect(alertsRoute.maxDuration).toBe(60);
-    expect(summaryRoute.maxDuration).toBe(60);
+  it('lets the AI routes run up to 180 s, room for a thinking model', () => {
+    expect(aiRoute.maxDuration).toBe(180);
+    expect(alertsRoute.maxDuration).toBe(180);
+    expect(summaryRoute.maxDuration).toBe(180);
   });
 
   it('keys the daily project quota on the project, so a new edit link does not reset it', async () => {
