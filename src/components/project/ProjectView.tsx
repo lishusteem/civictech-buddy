@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { nameIndex, scrubIds } from '@/lib/project/humanText';
 import { isFeatureWorking } from '@/lib/project/features';
+import { indicatorLine } from '@/lib/project/measures';
 import type { Project } from '@/lib/project/schema';
 import { ContactAction } from './ContactAction';
 import { HELP_ANCHOR, HowToHelp, helpRoles } from './HowToHelp';
+import { MeasuresSection } from './MeasuresSection';
 import { NextSteps } from './NextSteps';
 import { PathStory } from './PathStory';
 import { Placeholder, Section } from './PublicSection';
@@ -230,7 +232,7 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
             <div key={t.id} className="rounded-xl border-2 border-primary bg-surface p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Long-term outcome · Rezultat pe termen lung</p>
               <p className="mt-1 font-medium">{clean(t.text)}</p>
-              {t.signal.trim() !== '' && <p className="mt-1 text-sm text-fg-muted">Indicator: {clean(t.signal)}</p>}
+              {indicatorLine(p, t.id, t.signal) && <p className="mt-1 text-sm text-fg-muted">{clean(indicatorLine(p, t.id, t.signal) ?? '')}</p>}
             </div>
           ))}
         </div>
@@ -254,6 +256,8 @@ export function ProjectView({ project, publishedAt, preview = false, mapHref }: 
           </p>
         )}
       </Section>
+
+      <MeasuresSection project={p} clean={clean} preview={preview} />
 
       <Section headingId="h-risk" eyebrow="E realist?" title="Ce încă nu știm" empty={risky.length === 0} preview={preview}>
         <p className="mt-1 text-fg-muted">Ipotezele de care depinde drumul și cum le verificăm, fără cod.</p>

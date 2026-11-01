@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, within, cleanup } from '@testing-library/react';
 import { createEmptyProject } from '@/lib/project/empty';
 import type { Project } from '@/lib/project/schema';
+import { MeasureDetails } from './MeasuresSection';
 import { ProjectView } from './ProjectView';
 
 afterEach(cleanup);
@@ -318,5 +319,113 @@ describe('ProjectView — public page (§9)', () => {
     expect(screen.getByText(/Primăria decide și \(Primăria\) contează/)).toBeTruthy();
     expect(screen.getByText(/Spre deosebire de Primăria/)).toBeTruthy();
     expect(text()).not.toMatch(/\b(a4|o1|e1|r1)\b/);
+  });
+});
+
+describe('ProjectView — measures', () => {
+  type M = Project['measures'][number];
+  const withMeasures = (list: M[]) => {
+    const p = fullProject();
+    p.measures = list;
+    return p;
+  };
+  const keyM = (over: Partial<M> = {}): M => ({ id: 'ms1', role: 'key', stepId: 'p1', what: 'Câte asociații trimit o sesizare', ...over });
+  const section = () => screen.getByRole('region', { name: 'Cum vedem dacă merge' });
+
+  it('sits between „Rezultatele pe care le urmărim” and „Ce încă nu știm”', () => {
+    render(<ProjectView project={withMeasures([keyM()])} publishedAt={T} />);
+    const heads = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    const i = heads.indexOf('Cum vedem dacă merge');
+    expect(i).toBeGreaterThan(-1);
+    expect(heads[i - 1]).toBe('Rezultatele pe care le urmărim');
+    expect(heads[i + 1]).toBe('Ce încă nu știm');
+  });
+
+  it('shows the key measure first with the label and the step text, then the simple ones', () => {
+    const p = withMeasures([
+      { id: 'ms3', role: 'delivery', stepId: 'p3', what: 'Sesizări trimise' },
+      { id: 'ms2', role: 'longTerm', stepId: 't1', what: 'Răspunsuri publicate' },
+      keyM(),
+    ]);
+    render(<ProjectView project={p} publishedAt={T} />);
+    const t = section().textContent ?? '';
+    expect(t.indexOf('Măsura-cheie')).toBeLessThan(t.indexOf('Ce livrăm'));
+    expect(t.indexOf('Ce livrăm')).toBeLessThan(t.indexOf('Schimbarea mare'));
+    expect(t).toContain('10 asociații raportează prin platformă');
+    expect(t).toContain('Primăria răspunde public în 30 de zile');
+  });
+
+  it('says „Azi: nu știm încă” for an empty baseline and „Azi: 0” for a zero', () => {
+    const { unmount } = render(<ProjectView project={withMeasures([keyM()])} publishedAt={T} />);
+    expect(section().textContent).toContain('Azi: nu știm încă');
+    unmount();
+    render(<ProjectView project={withMeasures([keyM({ today: '0' })])} publishedAt={T} />);
+    expect(section().textContent).toContain('Azi: 0');
+    expect(section().textContent).not.toContain('nu știm încă');
+  });
+
+  it('labels the first check and the threshold, and leaves empty fields without a label', () => {
+    render(<ProjectView project={withMeasures([keyM({ firstCheck: 'Număr în prima lună', ifBelow: 'Schimbăm abordarea' })])} publishedAt={T} />);
+    const t = section().textContent ?? '';
+    expect(t).toContain('Probă:');
+    expect(t).toContain('Dacă iese sub');
+    expect(t).not.toContain('Suficient:');
+    expect(t).not.toContain('Sursa:');
+    expect(t).not.toContain('Ce se numără:');
+  });
+
+  it('shows the routine only in the owner preview', () => {
+    const p = withMeasures([keyM({ routine: 'Ana, în prima luni a lunii' })]);
+    const { unmount } = render(<ProjectView project={p} publishedAt={T} />);
+    expect(section().textContent).not.toContain('Ana, în prima luni a lunii');
+    expect(section().textContent).not.toContain('Cine o scoate');
+    unmount();
+    render(<ProjectView project={p} publishedAt={T} preview />);
+    expect(section().textContent).toContain('Cine o scoate:');
+    expect(section().textContent).toContain('Ana, în prima luni a lunii');
+  });
+
+  it('tags an incomplete key measure „schiță”, not a clear one', () => {
+    const { unmount } = render(<ProjectView project={withMeasures([keyM()])} publishedAt={T} />);
+    expect(section().textContent).toContain('schiță');
+    unmount();
+    const clear = keyM({ source: 's', counts: 'c', routine: 'r', enough: 'e', ifBelow: 'i', today: '3' });
+    render(<ProjectView project={withMeasures([clear])} publishedAt={T} />);
+    expect(section().textContent).not.toContain('schiță');
+  });
+
+  it('hides a measure whose step was deleted, and the section without live measures', () => {
+    render(<ProjectView project={withMeasures([keyM({ stepId: 'sters' })])} publishedAt={T} />);
+    expect(screen.queryByRole('region', { name: 'Cum vedem dacă merge' })).toBeNull();
+    expect(text()).not.toContain('Câte asociații trimit o sesizare');
+  });
+
+  it('renders a project without measures as before', () => {
+    render(<ProjectView project={fullProject()} publishedAt={T} />);
+    expect(screen.queryByRole('region', { name: 'Cum vedem dacă merge' })).toBeNull();
+    expect(text()).toContain('Indicator: răspunsurile apar pe site');
+  });
+
+  it('shows „Urmărim:” instead of „Indicator:” on a long-term outcome with a measure', () => {
+    render(<ProjectView project={withMeasures([{ id: 'ms2', role: 'longTerm', stepId: 't1', what: 'Răspunsuri publicate' }])} publishedAt={T} />);
+    const change = screen.getByRole('region', { name: 'Rezultatele pe care le urmărim' });
+    expect(change.textContent).toContain('Urmărim: Răspunsuri publicate');
+    expect(change.textContent).not.toContain('Indicator: răspunsurile apar pe site');
+  });
+
+  it('ignores key-only fields on delivery and long-term measures, and never shows „Azi:” for them', () => {
+    const p = fullProject();
+    const extra = { counts: 'CNT', routine: 'RTN', today: 'TDY', firstCheck: 'FCK', enough: 'ENG', ifBelow: 'IBL' };
+    const delivery: M = { id: 'ms1', role: 'delivery', stepId: 'p1', what: 'Sesizări', ...extra };
+    const longTerm: M = { id: 'ms2', role: 'longTerm', stepId: 't1', what: 'Răspunsuri', ...extra };
+    render(
+      <>
+        <MeasureDetails measure={delivery} project={p} clean={(x) => x} preview />
+        <MeasureDetails measure={longTerm} project={p} clean={(x) => x} preview />
+      </>,
+    );
+    const t = text();
+    for (const v of ['CNT', 'RTN', 'TDY', 'FCK', 'ENG', 'IBL', 'Azi:', 'Cine o scoate']) expect(t).not.toContain(v);
+    expect(t).toContain('Urmărim: Sesizări');
   });
 });

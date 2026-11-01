@@ -1,4 +1,5 @@
 import type { Project } from '@/lib/project/schema';
+import { indicatorLine } from '@/lib/project/measures';
 import { chainTo, levelOf } from '@/lib/project/pathway';
 import { continueSentence } from '@/lib/project/points';
 
@@ -29,7 +30,7 @@ export function PathStory({ project: p, targetId, clean, actorName }: Props) {
             <div className="rounded-xl border border-line bg-surface px-4 py-2">
               {who && level === 'outcome' && !clean(c.text).toLowerCase().startsWith(who.toLowerCase().slice(0, 5)) && <span className="font-medium">{who}: </span>}
               {clean(c.text)}
-              {c.signal?.trim() && <span className="block text-sm text-fg-muted">Indicator: {clean(c.signal)}</span>}
+              {indicatorLine(p, c.id, c.signal) && <span className="block text-sm text-fg-muted">{clean(indicatorLine(p, c.id, c.signal) ?? '')}</span>}
             </div>
             <p className={`ml-4 border-l-2 py-1 pl-3 text-sm ${c.risky ? 'border-proposed-line text-proposed-fg' : 'border-primary-line text-accent'}`}>
               ↓ ca să…

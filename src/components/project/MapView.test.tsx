@@ -73,4 +73,21 @@ describe('MapView — variant B', () => {
     expect(screen.getByRole('region', { name: 'Cine contează' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Ce încă nu știm' })).toBeTruthy();
   });
+
+  it('shows „Urmărim:” and „Suficient:” in the detail of a step with a measure', () => {
+    const p = project();
+    p.measures = [{ id: 'ms1', role: 'key', stepId: 'o1', what: 'Clasamente publicate', enough: '12 pe an' }];
+    render(<MapView project={p} publishedAt={null} storyHref="/p/x" />);
+    fireEvent.click(within(map()).getByRole('button', { name: /Clasament lunar public/ }));
+    expect(detail().getByText(/Urmărim:/)).toBeTruthy();
+    expect(detail().getByText(/Suficient:/)).toBeTruthy();
+    expect(detail().queryByText(/Indicator:/)).toBeNull();
+  });
+
+  it('keeps „Indicator:” on a step without a measure', () => {
+    render(<MapView project={project()} publishedAt={null} storyHref="/p/x" />);
+    fireEvent.click(within(map()).getByRole('button', { name: /Clasament lunar public/ }));
+    expect(detail().getByText(/Indicator: 12 pe an/)).toBeTruthy();
+    expect(detail().queryByText(/Urmărim:/)).toBeNull();
+  });
 });

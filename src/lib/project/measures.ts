@@ -25,3 +25,10 @@ export function measureState(m: Measure): 'clear' | 'sketch' | null {
   const defined = [m.what, m.source, m.counts, m.routine, m.enough, m.ifBelow].every(filled);
   return defined && (filled(m.today) || filled(m.firstCheck)) ? 'clear' : 'sketch';
 }
+
+/** The line under a step or long-term result: its measure, else the free-text indicator, else nothing. */
+export function indicatorLine(p: Project, stepId: string, signal: string | undefined): string | null {
+  const m = measureFor(p, stepId);
+  if (m && filled(m.what)) return `Urmărim: ${m.what.trim()}`;
+  return filled(signal) ? `Indicator: ${(signal ?? '').trim()}` : null;
+}

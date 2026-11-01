@@ -4,8 +4,10 @@ import { useState } from 'react';
 import type { Project } from '@/lib/project/schema';
 import { isFeatureWorking, isOutcomeCopy, isPendingItem } from '@/lib/project/features';
 import { chainTo, levelOf, upstreamOf } from '@/lib/project/pathway';
+import { indicatorLine, measureFor } from '@/lib/project/measures';
 import { continueSentence } from '@/lib/project/points';
 import { HELP_ANCHOR, HowToHelp, helpRoles } from './HowToHelp';
+import { MeasureDetails } from './MeasuresSection';
 import { PublicFooter, publicData } from './ProjectView';
 import { STAGE_LABEL, formatShortDate, teamLine } from './publicPage';
 import { WhoMatters } from './WhoMatters';
@@ -74,7 +76,12 @@ export function MapView({ project, publishedAt, storyHref }: { project: Project;
           </p>
           <p className="mt-1 font-medium">{clean(c.text)}</p>
           {actorName(c.actorId) && <p className="mt-1 text-sm">Cine: {actorName(c.actorId)}</p>}
-          {c.signal?.trim() && <p className="mt-1 text-sm">Indicator: {clean(c.signal)}</p>}
+          {(() => {
+            const m = measureFor(p, c.id);
+            if (m) return <MeasureDetails measure={m} project={p} clean={clean} preview={false} />;
+            const line = indicatorLine(p, c.id, c.signal);
+            return line && <p className="mt-1 text-sm">{clean(line)}</p>;
+          })()}
           {c.assumption.trim() && <p className="mt-1 text-sm">De ce duce mai departe (ipoteză): {clean(c.assumption)}</p>}
           {c.risky && <p className="mt-1 text-sm text-proposed-fg">⚠ Nesigur. Test: {c.test.trim() ? clean(c.test) : 'încă de stabilit.'}</p>}
         </>
@@ -87,7 +94,12 @@ export function MapView({ project, publishedAt, storyHref }: { project: Project;
         <>
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">Long-term outcome · Rezultat pe termen lung</p>
           <p className="mt-1 font-medium">{clean(t.text)}</p>
-          {t.signal.trim() && <p className="mt-1 text-sm">Indicator: {clean(t.signal)}</p>}
+          {(() => {
+            const m = measureFor(p, t.id);
+            if (m) return <MeasureDetails measure={m} project={p} clean={clean} preview={false} />;
+            const line = indicatorLine(p, t.id, t.signal);
+            return line && <p className="mt-1 text-sm">{clean(line)}</p>;
+          })()}
         </>
       );
     }

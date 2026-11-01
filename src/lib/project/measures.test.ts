@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { precondition } from '../steps/completion.fixtures';
 import { createEmptyProject } from './empty';
-import { isKeyMeasureSet, liveMeasures, measureFor, measureState, type Measure } from './measures';
+import { indicatorLine, isKeyMeasureSet, liveMeasures, measureFor, measureState, type Measure } from './measures';
 
 function withMeasures(list: Measure[]) {
   const p = createEmptyProject('P');
@@ -41,5 +41,21 @@ describe('liveMeasures / measureFor', () => {
     expect(liveMeasures(withMeasures([{ ...key, role: 'longTerm', stepId: 't1' }])).length).toBe(1);
     expect(measureFor(withMeasures([key]), 'p1')?.id).toBe('ms1');
     expect(measureFor(withMeasures([key]), 'p2')).toBeUndefined();
+  });
+});
+
+describe('indicatorLine', () => {
+  it('prefers the measure of the step, then the free indicator, then nothing', () => {
+    const p = withMeasures([key]);
+    expect(indicatorLine(p, 'p1', 'semnal')).toBe('Urmărim: % cereri cu răspuns');
+    expect(indicatorLine(p, 'p1', undefined)).toBe('Urmărim: % cereri cu răspuns');
+    expect(indicatorLine(withMeasures([]), 'p1', 'semnal')).toBe('Indicator: semnal');
+    expect(indicatorLine(withMeasures([]), 'p1', '  ')).toBeNull();
+    expect(indicatorLine(withMeasures([]), 'p1', undefined)).toBeNull();
+  });
+
+  it('falls back to the indicator when the measure’s step was deleted', () => {
+    const p = withMeasures([{ ...key, stepId: 'sters' }]);
+    expect(indicatorLine(p, 'sters', 'semnal')).toBe('Indicator: semnal');
   });
 });
