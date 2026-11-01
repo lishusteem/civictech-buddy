@@ -164,17 +164,33 @@ export const FIELDS: Record<EntityKind, Field[]> = {
   ],
   toFindOut: [{ key: 'text', label: 'Întrebarea', type: 'text', required: true }],
   measure: [
-    { key: 'what', label: 'Ce măsori', type: 'text', required: true },
-    { key: 'stepId', label: 'Pasul din drum', type: 'ref', refs: ['preconditions', 'targetChanges'], required: true },
-    { key: 'source', label: 'Cine o scoate / de unde', type: 'text' },
-    { key: 'counts', label: 'Ce se numără', type: 'textarea' },
-    { key: 'routine', label: 'Cât de des', type: 'text' },
-    { key: 'today', label: 'Cât e azi', type: 'text' },
-    { key: 'firstCheck', label: 'Primul control', type: 'textarea' },
-    { key: 'enough', label: 'Cât e destul', type: 'text' },
+    { key: 'what', label: 'Ce urmărim (fără cifre)', type: 'text', required: true },
+    {
+      key: 'role',
+      label: 'Tip de măsură',
+      type: 'enum',
+      options: [
+        ['key', 'Măsura-cheie'],
+        ['delivery', 'Ce livrăm'],
+        ['longTerm', 'Schimbarea mare'],
+      ],
+    },
+    { key: 'stepId', label: 'Pasul la care se referă', type: 'ref', refs: ['preconditions', 'targetChanges'], required: true },
+    { key: 'source', label: 'De unde luăm datele', type: 'text' },
+    { key: 'counts', label: 'Ce se numără și ce nu', type: 'textarea' },
+    { key: 'routine', label: 'Cine o scoate, cât de des, în cât timp', type: 'text' },
+    { key: 'today', label: 'Cât e azi (gol = nu știm încă)', type: 'text' },
+    { key: 'firstCheck', label: 'Proba: măsurare de mână, în două săptămâni', type: 'textarea' },
+    { key: 'enough', label: 'Ce e suficient de bine', type: 'text' },
     { key: 'ifBelow', label: 'Ce faceți dacă iese sub', type: 'textarea' },
   ],
 };
+
+/** Measure fields only the key measure has; the simple roles drop them. */
+export const KEY_ONLY_FIELDS = ['counts', 'routine', 'today', 'firstCheck', 'enough', 'ifBelow'];
+
+/** Where a measure's step can come from: key and delivery point at a precondition, longTerm at a target change. */
+const measureStepSources = (role: unknown): RefSource[] => (role === 'longTerm' ? ['targetChanges'] : ['preconditions']);
 
 /** Field keys editable on the risks step; the precondition text stays read-only. */
 export const RISKS_FIELDS = ['risky', 'test'];
@@ -203,8 +219,10 @@ export function defaultData(kind: EntityKind, project: Project, step: StepId): C
     }
     case 'toFindOut':
       return { id: '', step, text: '' };
-    case 'measure':
-      return { id: '', role: 'key', stepId: '', what: '' };
+    case 'measure': {
+      const taken = new Set(project.measures.map((m) => m.role));
+      return { id: '', role: (['key', 'delivery', 'longTerm'] as const).find((r) => !taken.has(r)) ?? 'key', stepId: '', what: '' };
+    }
     case 'projectInfo':
       return { id: kind, ...project.project };
     case 'problem':
@@ -320,15 +338,26 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
   }, []);
 
   const set = (key: string, v: FormValue) => setValues((prev) => ({ ...prev, [key]: v }));
+  // A simple measure has no key-only fields.
+  const hidden = (f: Field) => kind === 'measure' && KEY_ONLY_FIELDS.includes(f.key) && values.role !== 'key';
+  const shown = fields.filter((f) => !hidden(f));
+  const optionsFor = (f: Field & { type: 'ref' }): Options =>
+    refOptions(project, kind === 'measure' && f.key === 'stepId' ? measureStepSources(values.role) : f.refs, String(data.id));
 
   function save(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, unknown> = { ...data };
-    for (const f of fields) next[f.key] = fromForm(f, values[f.key]);
+    for (const f of shown) next[f.key] = fromForm(f, values[f.key]);
+    for (const f of fields) if (hidden(f)) delete next[f.key];
 
     const errs: Record<string, string> = {};
-    for (const f of fields) {
+    for (const f of shown) {
       if ('required' in f && f.required && String(next[f.key] ?? '').trim() === '') errs[f.key] = 'Completează acest câmp.';
+    }
+    // The role decides which steps fit; a step left over from another role does not.
+    if (kind === 'measure') {
+      const stepField = fields.find((f) => f.key === 'stepId');
+      if (stepField?.type === 'ref' && !optionsFor(stepField).some(([v]) => v === next.stepId)) errs.stepId = 'Completează acest câmp.';
     }
     // A backlog item of kind "feature" must point to one of the project's features; others have none.
     if (kind === 'backlogItem' && 'kind' in next) {
@@ -348,7 +377,7 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
     }
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
-      const firstKey = fields.find((f) => errs[f.key])?.key;
+      const firstKey = shown.find((f) => errs[f.key])?.key;
       if (firstKey) document.getElementById(`${baseId}-${firstKey}`)?.focus();
       return;
     }
@@ -359,7 +388,7 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
     <form ref={formRef} onSubmit={save} noValidate className="space-y-3 rounded-xl border border-primary-line bg-surface p-4">
       <h3 className="font-semibold text-fg">{title ?? KIND_LABEL[kind]}</h3>
       {only && typeof data.text === 'string' && <p className="text-fg">{data.text}</p>}
-      {fields.map((f) => {
+      {shown.map((f) => {
         const id = `${baseId}-${f.key}`;
         const err = errors[f.key];
         const errId = `${id}-err`;
@@ -400,10 +429,12 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
           );
         }
         if (f.type === 'enum' || f.type === 'ref') {
-          const options = f.type === 'enum' ? f.options : refOptions(project, f.refs, String(data.id));
+          const options = f.type === 'enum' ? f.options : optionsFor(f);
           const showEmpty = f.nullable || f.type === 'ref';
+          // A measure's step that no longer fits its role shows as empty (and fails on save).
+          const current = kind === 'measure' && f.key === 'stepId' && !options.some(([value]) => value === v) ? '' : String(v);
           control = (
-            <select id={id} value={String(v)} onChange={(e) => set(f.key, e.target.value)} className={inputClass} {...aria}>
+            <select id={id} value={current} onChange={(e) => set(f.key, e.target.value)} className={inputClass} {...aria}>
               {showEmpty && <option value="">{f.nullable ? '— niciunul —' : '— alege —'}</option>}
               {options.map(([value, label]) => (
                 <option key={value} value={value}>

@@ -208,7 +208,8 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
     }
     if (hasPending) setHinted((h) => [...h, userMessage]);
     const streak = dontKnowStreak(chat);
-    if (streak > 0 && streak % 3 === 0 && lastAiIndex >= 0) {
+    // On the measures step "Nu știu" always goes to the AI: an unknown number is a normal answer there.
+    if (step !== 'measures' && streak > 0 && streak % 3 === 0 && lastAiIndex >= 0) {
       // F3: after the hint and the example, the question becomes "de aflat" and the dev moves on.
       const question = messages[lastAiIndex].content;
       setDraft((p) => addToFindOut(withMessages(p, step, [userMessage]), step, question));
@@ -403,9 +404,11 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
             <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={chip}>
               Nu știu
             </button>
-            <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
-              Propune acum
-            </button>
+            {(step !== 'measures' || messages.some((m) => m.role === 'user')) && (
+              <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
+                Propune acum
+              </button>
+            )}
             <span className="ml-auto hidden text-xs text-fg-subtle md:inline">Enter trimite · Shift+Enter rând nou</span>
             <button type="submit" disabled={!canSend} className={send_}>
               Trimite <span aria-hidden>↑</span>

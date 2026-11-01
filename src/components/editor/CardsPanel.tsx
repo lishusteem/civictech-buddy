@@ -5,7 +5,7 @@ import { entitiesForStep, isSingleton, savedEntitiesForStep, remainingCapacity, 
 import type { Project, StepId } from '@/lib/project/schema';
 import { Points } from '../Points';
 import { toPoints } from '@/lib/project/points';
-import { CardEditor, FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
+import { CardEditor, FIELDS, KEY_ONLY_FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
 
 export type Editing = {
   origin: 'new' | 'proposed' | 'accepted';
@@ -35,7 +35,7 @@ type Props = {
   proposalsHeadingRef?: Ref<HTMLHeadingElement>;
 };
 
-const TITLE_KEYS = ['name', 'text', 'statement'];
+const TITLE_KEYS = ['name', 'text', 'statement', 'what'];
 
 /** One detail line of a card; a text field keeps its label apart so a long value can become a list. */
 type Detail = { label?: string; text: string };
@@ -54,6 +54,7 @@ function fieldText(f: Field, value: unknown, project: Project): Detail | null {
       if (typeof value !== 'string' || value === '') return null;
       const all = [...project.actors, ...project.preconditions, ...project.targetChanges, ...project.team, ...project.features];
       const e = all.find((x) => x.id === value) as Record<string, unknown> | undefined;
+      if (!e && f.key === 'stepId') return line('Pasul nu mai există');
       return line(`${f.label}: ${String(e?.name ?? e?.text ?? value)}`);
     }
     case 'lines':
@@ -78,6 +79,7 @@ function cardView(card: Card, project: Project): { title: string; details: Detai
   const title = titleField ? String(d[titleField.key] ?? '') : '';
   const details = fields
     .filter((f) => f !== titleField)
+    .filter((f) => !(card.kind === 'measure' && d.role !== 'key' && KEY_ONLY_FIELDS.includes(f.key)))
     .map((f) => fieldText(f, d[f.key], project))
     .filter((t): t is Detail => t !== null);
   return { title, details };

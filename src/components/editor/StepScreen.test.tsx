@@ -870,6 +870,129 @@ describe('StepScreen', () => {
     });
   });
 
+  describe('măsurile', () => {
+    const withSteps = () => {
+      const draft = createEmptyProject('P');
+      draft.preconditions = [{ ...precondition, id: 'p1', text: 'Primăria acceptă' }];
+      draft.targetChanges = [{ id: 't1', text: 'Orașul e mai curat', signal: '' }];
+      return draft;
+    };
+    const addMeasure = () => fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
+    const typeUser = (draft: Project) => {
+      draft.steps.measures.messages = [
+        { role: 'assistant', content: 'Să începem.' },
+        { role: 'user', content: 'Numărăm sesizările' },
+      ];
+      return draft;
+    };
+
+    it('hides Propune acum in the chat until the user has written', () => {
+      setup('measures', withSteps());
+      expect(within(chat()).queryByRole('button', { name: 'Propune acum' })).toBeNull();
+      cleanup();
+      setup('measures', typeUser(withSteps()));
+      expect(proposeChip()).toBeTruthy();
+    });
+
+    it('keeps Propune acum on other steps from the start', () => {
+      setup('actors');
+      expect(proposeChip()).toBeTruthy();
+    });
+
+    it('sends three Nu știu to the AI and leaves toFindOut empty', async () => {
+      const fetchMock = stubFetch([]);
+      const draft = typeUser(withSteps());
+      const { last } = setup('measures', draft);
+      for (let i = 0; i < 3; i++) {
+        fireEvent.click(screen.getByRole('button', { name: 'Nu știu' }));
+        await waitFor(() => expect(aiCalls(fetchMock)).toHaveLength(i + 1));
+        await waitFor(() => expect((screen.getByRole('button', { name: 'Nu știu' }) as HTMLButtonElement).disabled).toBe(false));
+      }
+      expect(aiCalls(fetchMock)).toHaveLength(3);
+      expect(last().toFindOut).toEqual([]);
+    });
+
+    it('shows the key-only fields only for the key role', () => {
+      setup('measures', withSteps());
+      addMeasure();
+      expect(screen.getByLabelText('Ce se numără și ce nu')).toBeTruthy();
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'delivery' } });
+      expect(screen.queryByLabelText('Ce se numără și ce nu')).toBeNull();
+      expect(screen.queryByLabelText('Ce faceți dacă iese sub')).toBeNull();
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'key' } });
+      expect(screen.getByLabelText('Ce se numără și ce nu')).toBeTruthy();
+    });
+
+    it('drops the key-only values when saving a simple measure', () => {
+      const { last } = setup('measures', withSteps());
+      addMeasure();
+      fireEvent.change(screen.getByLabelText('Ce urmărim (fără cifre)'), { target: { value: 'Sesizări rezolvate' } });
+      fireEvent.change(screen.getByLabelText('Ce se numără și ce nu'), { target: { value: 'doar cele închise' } });
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'delivery' } });
+      fireEvent.change(screen.getByLabelText('Pasul la care se referă'), { target: { value: 'p1' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+      expect(last().measures).toHaveLength(1);
+      expect(last().measures[0]).toMatchObject({ role: 'delivery', stepId: 'p1', what: 'Sesizări rezolvate' });
+      expect('counts' in last().measures[0]).toBe(false);
+    });
+
+    it('offers preconditions for key and delivery, targetChanges for longTerm', () => {
+      setup('measures', withSteps());
+      addMeasure();
+      const stepOptions = () => within(screen.getByLabelText('Pasul la care se referă')).getAllByRole('option').map((o) => o.textContent);
+      expect(stepOptions()).toEqual(['— alege —', 'Primăria acceptă']);
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'delivery' } });
+      expect(stepOptions()).toEqual(['— alege —', 'Primăria acceptă']);
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'longTerm' } });
+      expect(stepOptions()).toEqual(['— alege —', 'Orașul e mai curat']);
+    });
+
+    it('fails validation when the role change leaves the step out of the options', () => {
+      const { spy } = setup('measures', withSteps());
+      addMeasure();
+      fireEvent.change(screen.getByLabelText('Ce urmărim (fără cifre)'), { target: { value: 'Ceva' } });
+      fireEvent.change(screen.getByLabelText('Pasul la care se referă'), { target: { value: 'p1' } });
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'longTerm' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+      expect(screen.getByText('Completează acest câmp.')).toBeTruthy();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('shows Pasul nu mai există without the id for a measure whose step is gone', () => {
+      const draft = withSteps();
+      draft.measures = [{ id: 'ms1', role: 'key', stepId: 'p-gone', what: 'Sesizări rezolvate' }];
+      setup('measures', draft);
+      const saved = screen.getByRole('region', { name: 'Salvate' });
+      expect(within(saved).getByText('Pasul nu mai există')).toBeTruthy();
+      expect(saved.textContent).not.toContain('p-gone');
+    });
+
+    it('titles a measure card with what', () => {
+      const draft = withSteps();
+      draft.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'Sesizări rezolvate' }];
+      setup('measures', draft);
+      const saved = screen.getByRole('region', { name: 'Salvate' });
+      expect(within(saved).getByText('Sesizări rezolvate')).toBeTruthy();
+      expect(within(saved).queryByText('Necompletat')).toBeNull();
+    });
+
+    it('hides the key-only details on a simple measure card', () => {
+      const draft = withSteps();
+      draft.measures = [{ id: 'ms1', role: 'delivery', stepId: 'p1', what: 'Livrări', counts: 'ascuns', enough: 'tot ascuns' }];
+      setup('measures', draft);
+      expect(screen.queryByText('ascuns')).toBeNull();
+      expect(screen.queryByText('tot ascuns')).toBeNull();
+    });
+
+    it('starts a new measure with the first free role', () => {
+      const draft = withSteps();
+      draft.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie' }];
+      setup('measures', draft);
+      addMeasure();
+      expect((screen.getByLabelText('Tip de măsură') as HTMLSelectElement).value).toBe('delivery');
+    });
+  });
+
   describe('Întrebări deschise', () => {
     const preconditions = [
       { ...precondition, id: 'p1', text: 'Primăria acceptă' },
