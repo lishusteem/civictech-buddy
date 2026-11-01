@@ -42,6 +42,7 @@ export const KIND_LABEL: Record<EntityKind, string> = {
   role: 'Rol',
   backlogItem: 'Element de backlog',
   toFindOut: 'De aflat',
+  measure: 'Măsură',
 };
 
 export const FIELDS: Record<EntityKind, Field[]> = {
@@ -162,6 +163,17 @@ export const FIELDS: Record<EntityKind, Field[]> = {
     { key: 'preconditionId', label: 'Precondiția la care ajută', type: 'ref', refs: ['preconditions'], nullable: true },
   ],
   toFindOut: [{ key: 'text', label: 'Întrebarea', type: 'text', required: true }],
+  measure: [
+    { key: 'what', label: 'Ce măsori', type: 'text', required: true },
+    { key: 'stepId', label: 'Pasul din drum', type: 'ref', refs: ['preconditions', 'targetChanges'], required: true },
+    { key: 'source', label: 'Cine o scoate / de unde', type: 'text' },
+    { key: 'counts', label: 'Ce se numără', type: 'textarea' },
+    { key: 'routine', label: 'Cât de des', type: 'text' },
+    { key: 'today', label: 'Cât e azi', type: 'text' },
+    { key: 'firstCheck', label: 'Primul control', type: 'textarea' },
+    { key: 'enough', label: 'Cât e destul', type: 'text' },
+    { key: 'ifBelow', label: 'Ce faceți dacă iese sub', type: 'textarea' },
+  ],
 };
 
 /** Field keys editable on the risks step; the precondition text stays read-only. */
@@ -191,6 +203,8 @@ export function defaultData(kind: EntityKind, project: Project, step: StepId): C
     }
     case 'toFindOut':
       return { id: '', step, text: '' };
+    case 'measure':
+      return { id: '', role: 'key', stepId: '', what: '' };
     case 'projectInfo':
       return { id: kind, ...project.project };
     case 'problem':

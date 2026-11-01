@@ -210,3 +210,19 @@ describe('savedEntitiesForStep', () => {
     expect(savedEntitiesForStep(p, 'target')).toHaveLength(1);
   });
 });
+
+describe('upsertEntity for measures', () => {
+  const m = (id: string, role: 'key' | 'delivery' | 'longTerm'): Card => ({
+    kind: 'measure',
+    data: { id, role, stepId: 'p1', what: 'ce' },
+  });
+
+  it('keeps one measure per role', () => {
+    let p = upsertEntity(createEmptyProject('P'), m('ms1', 'key'));
+    p = upsertEntity(p, m('ms3', 'delivery'));
+    p = upsertEntity(p, m('ms2', 'key'));
+    expect(p.measures.map((x) => x.id).sort()).toEqual(['ms2', 'ms3']);
+    expect(upsertEntity(upsertEntity(createEmptyProject('P'), m('ms1', 'key')), m('ms2', 'key')).measures.map((x) => x.id)).toEqual(['ms2']);
+  });
+});
+

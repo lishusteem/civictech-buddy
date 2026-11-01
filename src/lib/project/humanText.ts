@@ -2,7 +2,7 @@ import { allListEntities, type Card } from './entities';
 import type { Project } from './schema';
 
 /** Fields of a card that hold human-readable text (never ids). */
-export const HUMAN_TEXT_FIELDS = ['reason', 'text', 'note', 'difference', 'signal', 'assumption', 'test'] as const;
+export const HUMAN_TEXT_FIELDS = ['reason', 'text', 'note', 'difference', 'signal', 'assumption', 'test', 'what', 'source', 'counts', 'routine', 'today', 'firstCheck', 'enough', 'ifBelow'] as const;
 
 /** id -> how to call that entity in a sentence ('' when there is no short way). */
 export type NameIndex = Map<string, string>;

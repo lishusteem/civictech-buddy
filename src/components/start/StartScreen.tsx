@@ -72,7 +72,7 @@ export function StartScreen() {
 
       <section aria-labelledby="steps-heading" className="mt-10">
         <h2 id="steps-heading" className="text-xl font-semibold">
-          10 pași, 3 faze, ~{TOTAL_MINUTES} de minute
+          {STEPS.length} pași, 3 faze, ~{TOTAL_MINUTES} de minute
         </h2>
         <div className="mt-4 space-y-4">
           {PHASES.map((phase) => {

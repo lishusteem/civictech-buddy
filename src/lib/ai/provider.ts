@@ -112,6 +112,11 @@ export function defaultProposal(step: StepId, context: Card[]): string {
       if (!pre) return question('Ce precondiții ai?');
       return proposal([{ kind: 'precondition', data: { id: pre, risky: true, test: 'Test de test.' } }]);
     }
+    case 'measures': {
+      const pre = ids('precondition')[0];
+      if (!pre) return question('Ce precondiții ai?');
+      return proposal([{ kind: 'measure', data: { id: 'ms1', role: 'key', stepId: pre, what: 'Măsură de test.' } }]);
+    }
     case 'roles': {
       const ref = [...ids('precondition'), ...actors, ...ids('relation')][0];
       if (!ref) return question('Ce actori și precondiții ai?');

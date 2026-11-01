@@ -25,7 +25,7 @@ const BY_STEP: Record<StepId, string[]> = {
     'Testul jurnalistului: ce titlu ar scrie ziarul local peste doi ani, dacă reușești?',
     'Un rezultat pe termen lung e un actor + un comportament nou: cine face ce diferit.',
     '„Oamenii folosesc aplicația” e o realizare (output), nu încă o schimbare.',
-    'Un indicator bun spune: cine, câți, cât și până când.',
+    'Un semn bun se poate vedea: ce ai observa dacă s-a întâmplat?',
   ],
   actors: [
     'Schimbarea se întâmplă prin oameni și instituții. Rezultatele sunt comportamentele lor.',
@@ -50,6 +50,11 @@ const BY_STEP: Record<StepId, string[]> = {
     'Pre-mortem: e anul viitor și n-a mers. Primele trei motive sunt ipotezele tale riscante.',
     '„Lansăm și vedem” e cel mai scump test posibil.',
     'O cerere pe Legea 544 sau 5 discuții sunt teste excelente, fără cod.',
+  ],
+  measures: [
+    'Întrebarea care contează: ce faceți dacă cifra iese mică?',
+    'Procent din ce? Numitorul spune mai mult decât cifra.',
+    '„Nu știm încă” e un răspuns bun, dacă știi cum afli.',
   ],
   roles: [
     'Un dev singur nu poate face și lobby, și drept, și organizare de comunitate.',

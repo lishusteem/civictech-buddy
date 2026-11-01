@@ -15,7 +15,8 @@ export type EntityKind =
   | 'precondition'
   | 'role'
   | 'backlogItem'
-  | 'toFindOut';
+  | 'toFindOut'
+  | 'measure';
 
 export type Card = { kind: EntityKind; data: { id: string } & Record<string, unknown> };
 
@@ -35,6 +36,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, z.ZodTypeAny> = {
   role: shape.roles.element,
   backlogItem: shape.backlog.element,
   toFindOut: shape.toFindOut.element,
+  measure: shape.measures.element,
 };
 
 export const STEP_ENTITIES: Record<StepId, EntityKind[]> = {
@@ -47,6 +49,7 @@ export const STEP_ENTITIES: Record<StepId, EntityKind[]> = {
   preconditions: ['precondition', 'actor'],
   // The UI restricts this step to the `risky` and `test` fields.
   risks: ['precondition'],
+  measures: ['measure', 'toFindOut'],
   roles: ['role'],
   backlog: ['backlogItem'],
 };
@@ -63,7 +66,8 @@ type ListKey =
   | 'preconditions'
   | 'roles'
   | 'backlog'
-  | 'toFindOut';
+  | 'toFindOut'
+  | 'measures';
 
 export const LIST_KEY: Record<ListKind, ListKey> = {
   teamMember: 'team',
@@ -76,6 +80,7 @@ export const LIST_KEY: Record<ListKind, ListKey> = {
   role: 'roles',
   backlogItem: 'backlog',
   toFindOut: 'toFindOut',
+  measure: 'measures',
 };
 
 const ID_PREFIX: Record<ListKind, string> = {
@@ -89,6 +94,7 @@ const ID_PREFIX: Record<ListKind, string> = {
   role: 'o',
   backlogItem: 'b',
   toFindOut: 'q',
+  measure: 'ms',
 };
 
 /** Fields holding ids of other entities. */
@@ -101,6 +107,7 @@ export const REF_FIELDS = [
   'featureId',
   'preconditionId',
   'coveredBy',
+  'stepId',
 ] as const;
 
 type AnyEntity = { id: string } & Record<string, unknown>;
@@ -153,6 +160,10 @@ export function upsertEntity(p: Project, card: Card): Project {
     return next;
   }
   const list = listOf(next, kind);
+  if (kind === 'measure') {
+    // One measure per role: a new one replaces the old one.
+    for (let j = list.length - 1; j >= 0; j--) if (list[j].role === data.role && list[j].id !== data.id) list.splice(j, 1);
+  }
   const i = list.findIndex((e) => e.id === data.id);
   if (i >= 0) list[i] = { ...data };
   else list.push({ ...data });
@@ -187,6 +198,7 @@ function cardsOfKind(p: Project, kind: EntityKind): Card[] {
  */
 const STEP_CONTENT: Partial<Record<StepId, EntityKind[]>> = {
   preconditions: ['precondition'],
+  measures: ['measure'],
 };
 
 export function entitiesForStep(p: Project, step: StepId): Card[] {
@@ -212,6 +224,7 @@ const REF_TARGETS = {
   featureId: ['feature'],
   preconditionId: ['precondition'],
   coveredBy: ['teamMember'],
+  stepId: ['precondition', 'targetChange'],
 } as const satisfies Record<string, readonly EntityKind[]>;
 
 /** old id -> (kind of the renamed card -> its new id). */

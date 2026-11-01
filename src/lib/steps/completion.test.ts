@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/empty';
 import { STEPS } from './definitions';
 import { fill, precondition } from './completion.fixtures';
-import { effectiveStatus, firstIncompleteStep, isStepComplete, missingForStep } from './completion';
+import { effectiveStatus, firstIncompleteStep, isStepComplete, isStepUnlocked, missingForStep } from './completion';
 
 describe('isStepComplete / missingForStep', () => {
   for (const { id } of STEPS) {
@@ -72,3 +72,24 @@ describe('effectiveStatus / firstIncompleteStep', () => {
     expect(firstIncompleteStep(p)).toBeNull();
   });
 });
+
+describe('measures step', () => {
+  const upTo8 = () => {
+    const p = createEmptyProject('P');
+    for (const s of ['project', 'problem', 'existing', 'target', 'actors', 'relations', 'preconditions', 'risks'] as const) fill[s](p);
+    return p;
+  };
+
+  it('gates the roles step on the key measure', () => {
+    const p = upTo8();
+    expect(isStepUnlocked(p, 'measures')).toBe(true);
+    expect(isStepUnlocked(p, 'roles')).toBe(false);
+    p.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'ce' }];
+    expect(isStepUnlocked(p, 'roles')).toBe(true);
+  });
+
+  it('hints at the key measure', () => {
+    expect(missingForStep(upTo8(), 'measures')).toBe('Alege măsura-cheie: un pas din drum și ce urmărești la el.');
+  });
+});
+

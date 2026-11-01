@@ -21,6 +21,7 @@ export function createEmptyProject(name: string): Project {
     roles: [],
     backlog: [],
     toFindOut: [],
+    measures: [],
     alerts: [],
     stale: [],
   };

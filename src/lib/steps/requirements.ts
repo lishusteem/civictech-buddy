@@ -1,4 +1,5 @@
 import { ALERT_MESSAGES } from '../alerts/messages';
+import { isKeyMeasureSet, liveMeasures, measureState } from '../project/measures';
 import { isFeatureWorking } from '../project/features';
 import type { AlertCode, Project, StepId } from '../project/schema';
 
@@ -75,7 +76,7 @@ export const isFeatureKept = (p: Project, featureId: string) =>
 export const orphanFeatures = (p: Project) =>
   p.features.filter((f) => !isFeatureWorking(p, f.id) && !isFeatureLinked(p, f.id) && !isFeatureKept(p, f.id));
 
-/** The step-10 row names how many planned functions are left; the AI asks about them in the chat. */
+/** The step-11 row names how many planned functions are left; the AI asks about them in the chat. */
 const orphanLabel = (n: number) =>
   n === 0
     ? 'Fiecare funcție plănuită duce la un pas din drum'
@@ -95,7 +96,7 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
           { why: 'Din ele se vede ce poate duce echipa singură și ce roluri lipsesc.' },
         ),
         rec('project.features', 'Funcțiile aplicației', (x) => x.features.length >= 1, {
-          why: 'Fără ele, la pasul 10 n-avem ce ordona.',
+          why: 'Fără ele, la pasul 11 n-avem ce ordona.',
         }),
         rec('project.names', 'Numele tău, nu „tu”', (x) => everyNonEmpty(x.team, (m) => !SELF_NAME.test(m.name.trim())), {
           why: 'Apare pe pagina publică.',
@@ -176,6 +177,18 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
           (x) => everyNonEmpty(x.preconditions.filter((c) => c.risky), (c) => filled(c.test)),
           { alertCode: 'hypothesis_without_test' },
         ),
+      ];
+    case 'measures':
+      return [
+        req('measures.key', 'O măsură-cheie, legată de un pas din drum', isKeyMeasureSet),
+        rec('measures.clear', 'Măsura-cheie e clară: definiție, cine o scoate, prag, ce faceți dacă iese sub', (x) => {
+          const key = x.measures.find((m) => m.role === 'key');
+          return !!key && measureState(key) === 'clear';
+        }),
+        rec('measures.others', 'O măsură pentru ce livrați și una pentru schimbarea mare', (x) => {
+          const roles = liveMeasures(x).map((m) => m.role);
+          return roles.includes('delivery') && roles.includes('longTerm');
+        }),
       ];
     case 'roles':
       return [

@@ -21,8 +21,9 @@ export const STEPS: StepDef[] = [
   { id: 'relations', number: 6, phase: 'toc', title: 'Relațiile', minutes: 3, summary: 'Cine decide, finanțează, blochează pe cine' },
   { id: 'preconditions', number: 7, phase: 'toc', title: 'Drumul schimbării', minutes: 4, summary: 'Outputs și outcomes: de la ce livrați la ce se schimbă' },
   { id: 'risks', number: 8, phase: 'toc', title: 'Ipotezele', minutes: 3, summary: 'Assumptions: ce e cel mai nesigur și cum verifici ieftin' },
-  { id: 'roles', number: 9, phase: 'organize', title: 'Oamenii de care ai nevoie', minutes: 3, summary: 'Roluri din hartă: lobbist, jurist, organizator' },
-  { id: 'backlog', number: 10, phase: 'organize', title: 'Activitățile', minutes: 2, summary: 'Activities: ce faceți ca să existe realizările' },
+  { id: 'measures', number: 9, phase: 'toc', title: 'Cum vedem dacă merge', minutes: 8, summary: 'O măsură gândită bine și două simple' },
+  { id: 'roles', number: 10, phase: 'organize', title: 'Oamenii de care ai nevoie', minutes: 3, summary: 'Roluri din hartă: lobbist, jurist, organizator' },
+  { id: 'backlog', number: 11, phase: 'organize', title: 'Activitățile', minutes: 2, summary: 'Activities: ce faceți ca să existe realizările' },
 ];
 
 export const PHASES: { id: Phase; title: 'Contextul' | 'Teoria schimbării' | 'Organizarea' }[] = [

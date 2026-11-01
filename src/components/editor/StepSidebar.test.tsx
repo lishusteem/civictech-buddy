@@ -22,8 +22,8 @@ describe('StepSidebar', () => {
     p.steps.project.status = 'done';
     p.steps.problem.status = 'done';
     render(<StepSidebar project={p} current="existing" onSelect={() => {}} />);
-    expect(screen.getByTestId('progress-percent').textContent).toBe('20% complet');
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('20');
+    expect(screen.getByTestId('progress-percent').textContent).toBe('18% complet');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('18');
   });
 
   it('flags only steps with an open question with a ?, not checklist alerts', () => {
@@ -47,10 +47,10 @@ describe('StepSidebar', () => {
     const { container } = render(<StepSidebar project={p} current="problem" onSelect={() => {}} />);
     expect(container.querySelector('[data-step="existing"]')!.textContent).toContain('nu poți începe încă');
     expect(container.querySelector('[data-step="problem"]')!.textContent).not.toContain('nu poți începe încă');
-    expect(screen.getAllByText('nu poți începe încă')).toHaveLength(8);
+    expect(screen.getAllByText('nu poți începe încă')).toHaveLength(9);
   });
 
-  it('groups 10 steps in 3 phases and reports selection', () => {
+  it('groups 11 steps in 3 phases and reports selection', () => {
     const onSelect = vi.fn();
     const p = fillSteps(createEmptyProject('P'), ['project', 'problem', 'existing', 'target', 'actors', 'relations', 'preconditions']);
     render(<StepSidebar project={p} current="project" onSelect={onSelect} />);
@@ -63,7 +63,7 @@ describe('StepSidebar', () => {
 
   it('shows the compact mobile line and toggles the step list', () => {
     render(<StepSidebar project={createEmptyProject('P')} current="target" onSelect={() => {}} />);
-    expect(screen.getByText(/Pasul 4 din 10/)).toBeTruthy();
+    expect(screen.getByText(/Pasul 4 din 11/)).toBeTruthy();
     const toggle = screen.getByRole('button', { name: /Arată pașii/ });
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(toggle);

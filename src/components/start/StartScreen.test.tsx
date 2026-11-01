@@ -20,10 +20,10 @@ afterEach(() => {
 });
 
 describe('StartScreen', () => {
-  it('shows 10 steps and the total time', () => {
+  it('shows 11 steps and the total time', () => {
     render(<StartScreen />);
-    expect(screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-step'))).toHaveLength(10);
-    expect(screen.getByText(/~30 de minute/)).toBeTruthy();
+    expect(screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-step'))).toHaveLength(11);
+    expect(screen.getByText(/~38 de minute/)).toBeTruthy();
   });
 
   it('creates a project and redirects to the edit link', async () => {

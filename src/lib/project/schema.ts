@@ -9,6 +9,7 @@ export const StepIdSchema = z.enum([
   'relations',
   'preconditions',
   'risks',
+  'measures',
   'roles',
   'backlog',
 ]);
@@ -189,6 +190,23 @@ export const ProjectSchema = z.object({
   toFindOut: z
     .array(z.object({ id: z.string(), step: StepIdSchema, text: z.string().max(300) }))
     .max(40),
+  measures: z
+    .array(
+      z.object({
+        id: z.string(),
+        role: z.enum(['key', 'delivery', 'longTerm']),
+        stepId: z.string(),
+        what: z.string().min(1).max(300),
+        source: z.string().max(300).optional(),
+        counts: z.string().max(500).optional(),
+        routine: z.string().max(300).optional(),
+        today: z.string().max(300).optional(),
+        firstCheck: z.string().max(500).optional(),
+        enough: z.string().max(300).optional(),
+        ifBelow: z.string().max(500).optional(),
+      }),
+    )
+    .max(3),
   alerts: z.array(
     z.object({
       code: AlertCodeSchema,

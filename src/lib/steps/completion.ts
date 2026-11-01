@@ -1,3 +1,4 @@
+import { isKeyMeasureSet } from '../project/measures';
 import { StepIdSchema, type Project, type StepId } from '../project/schema';
 
 // The step checklist (UX spec §4): required rows match RULES below, recommended rows never gate.
@@ -22,6 +23,7 @@ const RULES: Record<StepId, Rule> = {
   relations: { done: (p) => p.relations.length >= 1, hint: 'Acceptă cel puțin o relație între actori.' },
   preconditions: { done: (p) => p.preconditions.length >= 1, hint: 'Acceptă cel puțin o precondiție.' },
   risks: { done: (p) => p.preconditions.some((x) => x.risky), hint: 'Marchează cel puțin o ipoteză riscantă.' },
+  measures: { done: isKeyMeasureSet, hint: 'Alege măsura-cheie: un pas din drum și ce urmărești la el.' },
   roles: { done: (p) => p.roles.length >= 1, hint: 'Acceptă cel puțin un rol.' },
   backlog: { done: (p) => p.backlog.length >= 1, hint: 'Acceptă cel puțin un element în backlog.' },
 };

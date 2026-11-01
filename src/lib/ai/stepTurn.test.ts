@@ -344,7 +344,9 @@ describe('FakeProvider default', () => {
       { id: 'a2', name: 'Primăria', type: 'institution', power: 'high', stance: 'neutral', excluded: false },
     ];
     p.targetChanges = [{ id: 't1', text: 'x', signal: 'y' }];
+    p.preconditions = [{ id: 'p1', text: 'x', actorId: null, stage: 'start', leadsTo: 't1', coveredByApp: false, assumption: '', risky: false, test: '' }];
     for (const step of StepIdSchema.options) {
+      if (step === 'measures') continue; // its prompt file arrives with the prompts task
       const turn = await runStepTurn(p, step, [], new FakeProvider());
       expect(turn.kind, step).toBe('proposal');
       if (turn.kind !== 'question') expect(turn.cards.length, step).toBeGreaterThan(0);

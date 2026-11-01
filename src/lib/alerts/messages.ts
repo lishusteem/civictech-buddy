@@ -87,19 +87,19 @@ export const ALERT_MESSAGES: Record<AlertCode, { title: string; step: number; me
   },
   all_on_one: {
     title: 'Totul pe un om',
-    step: 9,
+    step: 10,
     message: 'Ai marcat că faci tu și lobby, și juridic, și cod, în 4 ore pe săptămână. E realist?',
     why: 'Un singur om pe toate rolurile e primul motiv pentru care proiectele se opresc.',
   },
   orphan_feature: {
     title: 'Feature orfan',
-    step: 10,
+    step: 11,
     message: 'Funcția plănuită «{text}» nu duce încă la niciun pas din drum. La ce ajută? Poate aștepta.',
     why: 'O funcție care nu duce la niciun pas din drum poate aștepta; rămâne timp pentru ce mișcă proiectul acum.',
   },
   only_code: {
     title: 'Doar cod',
-    step: 10,
+    step: 11,
     message: 'Ce trebuie făcut în afara codului: întâlniri, parteneriate, teste cu oameni?',
     why: 'Întâlnirile și testele cu oameni sunt de obicei pașii care deblochează restul.',
   },

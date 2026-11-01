@@ -22,6 +22,10 @@ export const fill: Record<StepId, (p: Project) => void> = {
   },
   preconditions: (p) => void (p.preconditions = [{ ...precondition }]),
   risks: (p) => void (p.preconditions = [{ ...precondition, risky: true }]),
+  measures: (p) => {
+    if (p.preconditions.length === 0) p.preconditions = [{ ...precondition }];
+    p.measures = [{ id: 'ms1', role: 'key', stepId: p.preconditions[0].id, what: 'Măsură' }];
+  },
   roles: (p) =>
     void (p.roles = [{ id: 'o1', name: 'R', reason: 'm', reasonRefs: ['p1'], stage: 'start', status: 'seeking', coveredBy: null }]),
   backlog: (p) =>

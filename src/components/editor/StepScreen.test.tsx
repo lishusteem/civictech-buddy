@@ -460,13 +460,13 @@ describe('StepScreen', () => {
   describe('header', () => {
     it('shows the step number and phase, the summary and the explainer', () => {
       setup('actors');
-      expect(screen.getByText('Pasul 5 din 10 · Teoria schimbării')).toBeTruthy();
+      expect(screen.getByText('Pasul 5 din 11 · Teoria schimbării')).toBeTruthy();
       expect(
         screen.getByText('AI-ul îți pune întrebări până când lista „Ce cere pasul” e bifată. Ce propune apare punctat — se salvează doar ce accepți.'),
       ).toBeTruthy();
       expect(screen.getByText('AI-ul întreabă până se bifează „Ce cere pasul”. Se salvează doar ce accepți.')).toBeTruthy();
       expect(screen.queryByText(/Poți scrie liber/)).toBeNull();
-      expect(document.title).toBe('Pasul 5 din 10: Actorii');
+      expect(document.title).toBe('Pasul 5 din 11: Actorii');
     });
 
     it('adds the free-text hint on step 1 only', () => {
@@ -511,7 +511,7 @@ describe('StepScreen', () => {
       expect(primary().getAttribute('aria-disabled')).toBeNull();
     });
 
-    describe('step 10: planned functions', () => {
+    describe('step 11: planned functions', () => {
       function withFunctions() {
         const draft = createEmptyProject('P');
         draft.features = [
@@ -667,7 +667,7 @@ describe('StepScreen', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('step 10 leads to the summary', () => {
+    it('step 11 leads to the summary', () => {
       const draft = createEmptyProject('P');
       draft.backlog = [{ id: 'b1', stage: 'start', kind: 'test', featureId: null, preconditionId: null, text: 't', order: 1 }];
       setup('backlog', draft);
