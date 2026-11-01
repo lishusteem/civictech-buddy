@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Project } from '@/lib/project/schema';
 import { createEmptyProject } from '@/lib/project/empty';
+import { normalizeProject } from '@/lib/project/normalize';
 import { generateEditToken, hashToken, makeSlug } from '@/lib/tokens';
 import type { ProjectRepo, StoredProject } from './repo';
 
@@ -24,8 +25,8 @@ function toStored(row: Row): StoredProject {
   return {
     id: row.id,
     slug: row.slug,
-    draft: row.draft,
-    published: row.published,
+    draft: normalizeProject(row.draft),
+    published: row.published === null ? null : normalizeProject(row.published),
     publishedAt: row.published_at,
     draftUpdatedAt: row.draft_updated_at,
   };
@@ -84,7 +85,7 @@ export function createSupabaseRepo(db: SupabaseClient = defaultClient()): Projec
       if (error) fail('select', error);
       const row = data as Pick<Row, 'slug' | 'published' | 'published_at'> | null;
       if (!row || row.published === null || row.published_at === null) return null;
-      return { slug: row.slug, published: row.published, publishedAt: row.published_at };
+      return { slug: row.slug, published: normalizeProject(row.published), publishedAt: row.published_at };
     },
 
     async saveDraft(token, draft, expectedUpdatedAt, force) {
@@ -100,7 +101,7 @@ export function createSupabaseRepo(db: SupabaseClient = defaultClient()): Projec
       if (!row || row.status === 'invalid' || row.draft_updated_at === null) return null;
       if (row.status === 'ok') return { ok: true, draftUpdatedAt: row.draft_updated_at };
       if (row.draft === null) return null;
-      return { ok: false, conflict: { draft: row.draft, draftUpdatedAt: row.draft_updated_at } };
+      return { ok: false, conflict: { draft: normalizeProject(row.draft), draftUpdatedAt: row.draft_updated_at } };
     },
 
     async publish(token) {

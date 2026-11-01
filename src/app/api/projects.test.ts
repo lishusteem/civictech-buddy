@@ -74,6 +74,23 @@ describe('project API', () => {
     expect((await res.json()).issues.length).toBeGreaterThan(0);
   });
 
+  it('accepts an old draft without measures and stores it normalized', async () => {
+    const { editToken, got } = await setup();
+    const old = structuredClone(got.draft);
+    delete old.measures;
+    delete old.steps.measures;
+    const ok = await put(editToken, { draft: old, expectedUpdatedAt: got.draftUpdatedAt });
+    expect(ok.status).toBe(200);
+    const after = await (await get(editToken)).json();
+    expect(after.draft.measures).toEqual([]);
+    expect(after.draft.steps.measures).toEqual({ status: 'untouched', messages: [] });
+  });
+
+  it('still returns 422 for a non-object draft', async () => {
+    const { editToken, got } = await setup();
+    expect((await put(editToken, { draft: 'x', expectedUpdatedAt: got.draftUpdatedAt })).status).toBe(422);
+  });
+
   it('accepts bodies up to 2 MB and returns 413 above', async () => {
     const { editToken } = await setup();
     const big = await put(editToken, JSON.stringify({ pad: 'x'.repeat(600 * 1024) }));

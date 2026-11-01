@@ -1,6 +1,7 @@
 import { getRepo } from '@/lib/db/repo';
 import { INVALID_LINK, json } from '@/lib/http';
-import { ProjectSchema } from '@/lib/project/schema';
+import { normalizeProject } from '@/lib/project/normalize';
+import { ProjectSchema, type Project } from '@/lib/project/schema';
 
 type Ctx = { params: Promise<{ token: string }> };
 
@@ -39,7 +40,9 @@ export async function PUT(req: Request, { params }: Ctx): Promise<Response> {
     return json(422, { error: 'Corp invalid.', issues: [] });
   }
 
-  const parsed = ProjectSchema.safeParse(body.draft);
+  const parsed = ProjectSchema.safeParse(
+    typeof body.draft === 'object' && body.draft !== null ? normalizeProject(body.draft as Project) : body.draft,
+  );
   if (!parsed.success || typeof body.expectedUpdatedAt !== 'string') {
     return json(422, {
       error: 'Datele proiectului nu sunt valide.',

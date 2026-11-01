@@ -100,3 +100,32 @@ describe('supabaseRepo.getPublishedBySlug', () => {
     expect(await createSupabaseRepo(missing.client).getPublishedBySlug('nope')).toBeNull();
   });
 });
+
+function oldDraft() {
+  const d = structuredClone(createEmptyProject('Vechi')) as Record<string, unknown> & { steps: Record<string, unknown> };
+  delete d.measures;
+  delete d.steps.measures;
+  return d as never;
+}
+
+describe('supabaseRepo normalizes old rows', () => {
+  it('getByToken', async () => {
+    const row = { id: 'i', slug: 's', draft: oldDraft(), published: oldDraft(), published_at: T1, draft_updated_at: T2 };
+    const { client } = fakeClient({ from: { data: row, error: null } });
+    const res = await createSupabaseRepo(client).getByToken('tok');
+    expect(res?.draft.measures).toEqual([]);
+    expect(res?.published?.measures).toEqual([]);
+  });
+
+  it('getPublishedBySlug', async () => {
+    const { client } = fakeClient({ from: { data: { slug: 's', published: oldDraft(), published_at: T1 }, error: null } });
+    const res = await createSupabaseRepo(client).getPublishedBySlug('s');
+    expect(res?.published.steps.measures).toEqual({ status: 'untouched', messages: [] });
+  });
+
+  it('saveDraft conflict', async () => {
+    const { client } = fakeClient({ rpc: { data: [{ status: 'conflict', draft: oldDraft(), draft_updated_at: T2 }], error: null } });
+    const res = await createSupabaseRepo(client).saveDraft('tok', draft, T1);
+    expect(res && !res.ok && res.conflict.draft.measures).toEqual([]);
+  });
+});
