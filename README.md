@@ -1,6 +1,6 @@
 # Ghidul de pornire
 
-Aplicație web în română care îl ghidează pe un inițiator de proiect civic prin 10 pași (context, teoria schimbării, organizare), cu ajutorul unui AI. La final rezultă o pagină publică a proiectului, iar proiectul se editează doar cu un link secret de editare (fără cont).
+Aplicație web în română care îl ghidează pe un inițiator de proiect civic prin 11 pași (context, teoria schimbării, organizare), cu ajutorul unui AI. La final rezultă o pagină publică a proiectului, iar proiectul se editează doar cu un link secret de editare (fără cont).
 
 ## Dezvoltare locală
 

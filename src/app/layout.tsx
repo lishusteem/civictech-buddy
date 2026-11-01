@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Ghidul de pornire",
-  description: "Treci în aproximativ 30 de minute de la idee la un plan clar de schimbare.",
+  description: "Treci în aproximativ 40 de minute de la idee la un plan clar de schimbare.",
 };
 
 export const viewport: Viewport = {

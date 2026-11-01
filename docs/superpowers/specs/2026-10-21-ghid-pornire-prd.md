@@ -2,7 +2,7 @@
 
 Oct 21, 2026 · @Lish
 
-Un wizard în 10 pași, cu un AI care pune întrebări, ajută un dezvoltator solo să plece de la proiectul și echipa pe care le are deja și să ajungă, în aproximativ 30 de minute, la o teorie a schimbării simplă (ce schimbare țintește și ce trebuie să fie adevărat înainte), o hartă a actorilor, lista oamenilor de care are nevoie și un backlog de organizare pe termen scurt și mediu. Rezultatul e o pagină web publică a proiectului, pe care echipa o poate modifica oricând printr-un link privat de editare, fără cont.
+Un wizard în 11 pași, cu un AI care pune întrebări, ajută un dezvoltator solo să plece de la proiectul și echipa pe care le are deja și să ajungă, în aproximativ 40 de minute, la o teorie a schimbării simplă (ce schimbare țintește și ce trebuie să fie adevărat înainte), o hartă a actorilor, lista oamenilor de care are nevoie și un backlog de organizare pe termen scurt și mediu. Rezultatul e o pagină web publică a proiectului, pe care echipa o poate modifica oricând printr-un link privat de editare, fără cont.
 
 ## 1. Scop
 
@@ -10,7 +10,7 @@ Dezvoltatorii din grup pornesc de la soluție („hai să facem o aplicație pen
 
 **Obiective**
 
-- Un dev solo ajunge, în aproximativ 30 de minute, de la proiectul pe care îl are deja la un plan pe care îl poate arăta altora.
+- Un dev solo ajunge, în aproximativ 40 de minute, de la proiectul pe care îl are deja la un plan pe care îl poate arăta altora.
 - Își formulează pe scurt teoria schimbării: ce schimbare țintește aplicația, pentru cine, și ce precondiții trebuie îndeplinite ca ea să se întâmple.
 - Află **de ce fel de alți oameni** are nevoie proiectul, derivat din relațiile dintre actori și din ce lipsește echipei actuale (lobby la o instituție → lobbist; modificare legislativă → jurist).
 - Iese cu un backlog de organizare, doar pe termen scurt și mediu: funcțiile pe care le are deja, legate de precondiții, plus pașii de organizare și testele pentru ipotezele riscante. AI-ul nu inventează funcții noi.
@@ -19,7 +19,7 @@ Dezvoltatorii din grup pornesc de la soluție („hai să facem o aplicație pen
 
 **Ce nu facem (non-goals)**
 
-- Nu e o teorie a schimbării pentru dosare de finanțare: fără logframe, indicatori formali, export pentru finanțatori.
+- Nu e o teorie a schimbării pentru dosare de finanțare: fără logframe și fără export pentru finanțatori; măsurabilele rămân un plan light, fără urmărire în timp.
 - Nu e un tool de colaborare în timp real între membrii unei echipe.
 - Nu grupăm încă proiectele la nivel de comunitate (vezi secțiunea 10).
 - Nu căutăm oameni în locul dev-ului (matchmaking).
@@ -43,9 +43,9 @@ Utilizatorul principal e un **dezvoltator solo** din grupul civic tech. Lucreaz�
 
 Nu există un facilitator uman: AI-ul și structura wizard-ului țin locul lui. Nu există nici conturi sau parole: **cine are linkul de editare poate modifica proiectul**. Mai mulți dev-i pe aceeași idee lucrează pe același proiect trimițându-și linkul de editare, pe rând, nu simultan — *decizia mea pentru v1, vezi secțiunea 10*.
 
-## 3. Wizard-ul: 10 pași, toți vizibili de la început
+## 3. Wizard-ul: 11 pași, toți vizibili de la început
 
-Primul ecran arată toți cei 10 pași, cu numele, o propoziție despre fiecare și timpul estimat. Dev-ul vede tot drumul înainte să răspundă la prima întrebare. Pe parcurs, pașii rămân într-o bară laterală (sau sus, pe mobil), cu starea fiecăruia: neatins, în lucru, gata, gata cu alerte.
+Primul ecran arată toți cei 11 pași, cu numele, o propoziție despre fiecare și timpul estimat. Dev-ul vede tot drumul înainte să răspundă la prima întrebare. Pe parcurs, pașii rămân într-o bară laterală (sau sus, pe mobil), cu starea fiecăruia: neatins, în lucru, gata, gata cu alerte.
 
 Fiecare pas e o mini-conversație: AI-ul pune 1–3 întrebări, dev-ul răspunde liber, AI-ul propune un rezumat structurat, iar dev-ul îl acceptă sau îl corectează. Doar ce a acceptat dev-ul intră în proiect.
 
@@ -59,14 +59,15 @@ Fiecare pas e o mini-conversație: AI-ul pune 1–3 întrebări, dev-ul răspund
 | 6 | **Relațiile** | „Cine îl influențează pe cine? Cine dă bani, aprobă sau poate bloca?” | Relații tipizate între actori | 3 min |
 | 7 | **Precondițiile** | „Ca \[schimbarea țintă\] să se întâmple, ce trebuie să fie adevărat înainte? Cine trebuie să facă ce? Și înainte de asta?” | Lanț de precondiții, fiecare cu actorul care face ceva diferit, etapa (început / mediu) și dacă o acoperă aplicația | 4 min |
 | 8 | **Ipotezele riscante** | „Care din precondițiile astea e cea mai nesigură? Cum ai verifica-o în două săptămâni, fără cod?” | Top 3 ipoteze + câte un test ieftin pentru fiecare | 3 min |
-| 9 | **Oamenii de care ai nevoie** | „Uitându-te la hartă și la echipa ta, ce lipsește?” | Rolurile necesare pe început și mediu, ce acoperă echipa, ce lipsește | 3 min |
-| 10 | **Backlog de organizare** | „Care din funcțiile tale ajută la prima precondiție? Ce trebuie organizat în afara codului?” | Funcțiile tale ordonate pe început și mediu, legate de precondiții + pași de organizare + testele de la pasul 8 | 2 min |
+| 9 | **Cum vedem dacă merge** | „Dacă drumul tău se rupe, unde s-ar vedea primul? Ce urmărești acolo?” | O măsură-cheie gândită bine (ce urmărim, ce se numără, cine o scoate și cât de des, cât e azi, ce e suficient și ce faceți dacă iese sub) plus două măsuri simple, pentru o realizare și pentru rezultatul pe termen lung | 8 min |
+| 10 | **Oamenii de care ai nevoie** | „Uitându-te la hartă și la echipa ta, ce lipsește?” | Rolurile necesare pe început și mediu, ce acoperă echipa, ce lipsește | 3 min |
+| 11 | **Backlog de organizare** | „Care din funcțiile tale ajută la prima precondiție? Ce trebuie organizat în afara codului?” | Funcțiile tale ordonate pe început și mediu, legate de precondiții + pași de organizare + testele de la pasul 8 | 2 min |
 
-La final, un ecran **Rezumat** pune toate rezultatele pe o pagină și oferă exportul (secțiunea 8). Țintă: aproximativ 30 de minute în total, de validat la primul test. AI-ul pune puține întrebări și propune rezumatul devreme; dev-ul corectează mai repede decât scrie.
+La final, un ecran **Rezumat** pune toate rezultatele pe o pagină și oferă exportul (secțiunea 8). Țintă: aproximativ 40 de minute în total, de validat la primul test. AI-ul pune puține întrebări și propune rezumatul devreme; dev-ul corectează mai repede decât scrie.
 
-**Teoria schimbării, pe scurt:** pașii 4, 7 și 8 o formează. Dev-ul spune ce schimbare țintește (4), apoi merge înapoi: ce trebuie să fie adevărat înainte, și înainte de asta (7). La final alege precondițiile cele mai nesigure și un mod ieftin de a le verifica (8). Pașii 5–6 dau actorii care apar în precondiții.
+**Teoria schimbării, pe scurt:** pașii 4, 7 și 8 o formează, iar pasul 9 adaugă cum vedem dacă drumul ține. Dev-ul spune ce schimbare țintește (4), apoi merge înapoi: ce trebuie să fie adevărat înainte, și înainte de asta (7). La final alege precondițiile cele mai nesigure și un mod ieftin de a le verifica (8). Pașii 5–6 dau actorii care apar în precondiții.
 
-**Etapele** folosite în pașii 7–10, doar două *(definiții propuse de mine, de ajustat)*:
+**Etapele** folosite în pașii 7–11, doar două *(definiții propuse de mine, de ajustat)*:
 
 - **Început** (primele \~3 luni): ce trebuie să fie adevărat ca să merite să continui — primii utilizatori, primul aliat într-o instituție.
 - **Mediu** (\~3–12 luni): folosire constantă, prima schimbare vizibilă la un actor-cheie.
@@ -77,9 +78,9 @@ Termenul lung apare o singură dată, ca direcție: propoziția de la pasul 4 de
 
 ## Fluxul dintr-o privire
 
-&#91;embedded content: fluxul wizard-ului · 10 pași, 3 faze\]
+&#91;embedded content: fluxul wizard-ului · 11 pași, 3 faze\]
 
-Pașii merg de sus în jos, dar ordinea e o sugestie. Pasul 9 citește actorii, relațiile, precondițiile și echipa de la pasul 1 ca să propună roluri; pasul 10 leagă funcțiile tale de precondiții.
+Pașii merg de sus în jos, dar ordinea e o sugestie. Pasul 9 citește drumul schimbării și pașii marcați riscanți ca să propună măsurile; pasul 10 citește actorii, relațiile, precondițiile și echipa de la pasul 1 ca să propună roluri; pasul 11 leagă funcțiile tale de precondiții.
 
 ## UX și UI
 
@@ -87,7 +88,7 @@ Fiecare pas e un hibrid: o conversație scurtă scoate informația, iar rezultat
 
 | Principiu | Ce spun sursele | Cum aplicăm |
 | --- | --- | --- |
-| Pași cu nume, vizibili mereu | Etichetele pașilor arată ce urmează; punctele numerotate merg la fluxuri scurte și fixe ([Lollypop](https://lollypop.design/blog/2026/february/beyond-the-progress-bar-the-art-of-stepper-ui-design/)) | Bară laterală cu cei 10 pași, grupați pe cele 3 faze, cu starea fiecăruia |
+| Pași cu nume, vizibili mereu | Etichetele pașilor arată ce urmează; punctele numerotate merg la fluxuri scurte și fixe ([Lollypop](https://lollypop.design/blog/2026/february/beyond-the-progress-bar-the-art-of-stepper-ui-design/)) | Bară laterală cu cei 11 pași, grupați pe cele 3 faze, cu starea fiecăruia |
 | Progres onest | Indicatorul trebuie să arate efortul rămas, nu numărul de ecrane ([SaaS UI](https://www.saasui.design/blog/saas-multi-step-form-wizard-ux-patterns)) | Afișăm minutele rămase estimate, nu procente |
 | Nimic nu se pierde | „Înapoi” care șterge munca și fluxurile care nu pot fi reluate sunt eșecuri frecvente ([SaaS UI](https://www.saasui.design/blog/saas-multi-step-form-wizard-ux-patterns)) | Salvare automată la fiecare card acceptat; reluare oricând prin linkul de editare |
 | Libertate, nu tunel | Wizard-urile sunt rigide pentru utilizatorii avansați; uneori un formular scurt e mai bun ([UX Planet](https://uxplanet.org/wizard-design-pattern-8c86e14f2a38), [LogRocket](https://blog.logrocket.com/ux-design/creating-setup-wizard-when-you-shouldnt/)) | Salt la orice pas; mod formular fără AI; vedere „tot proiectul” pe o pagină |
@@ -97,8 +98,8 @@ Fiecare pas e un hibrid: o conversație scurtă scoate informația, iar rezultat
 
 **Ecranele** *(propunerea mea)*:
 
-- **Start** — o propoziție despre ce obții, cei 10 pași pe 3 faze cu timpul, butonul Începe.
-- **Pas** — pe desktop, trei zone: bara de pași (stânga), conversația (centru), cardurile rezultatului (dreapta). Pe mobil: pașii devin o bară compactă sus („Pasul 4 din 10 · \~16 min rămase”), conversația, apoi cardurile dedesubt.
+- **Start** — o propoziție despre ce obții, cei 11 pași pe 3 faze cu timpul, butonul Începe.
+- **Pas** — pe desktop, trei zone: bara de pași (stânga), conversația (centru), cardurile rezultatului (dreapta). Pe mobil: pașii devin o bară compactă sus („Pasul 4 din 11 · \~26 min rămase”), conversația, apoi cardurile dedesubt.
 - **Tot proiectul** — aceeași structură ca pagina publică, dar editabilă; util pentru revenirile ulterioare, când dev-ul vrea să schimbe un singur lucru fără conversație.
 - **Păstrează-ți linkurile** — cele două linkuri, butonul de email și butoanele de copiere (F6).
 - **Pagina publică** — read-only, se citește de sus în jos (secțiunea 8).
@@ -111,7 +112,7 @@ Cardul propus de AI rămâne punctat până când dev-ul îl acceptă; doar card
 
 Rolurile necesare nu vin dintr-o listă generică, ci din harta actorilor: fiecare rol propus are atașată relația sau schimbarea care îl cere. Dacă dev-ul șterge relația, rolul dispare sau devine opțional.
 
-**Cum funcționează (pasul 9):**
+**Cum funcționează (pasul 10):**
 
 1. AI-ul citește actorii (pasul 5), relațiile (pasul 6), precondițiile (pasul 7) și echipa actuală (pasul 1).
 2. Aplică regulile din tabelul de mai jos și propune roluri, fiecare cu motivul în limbaj normal: „Ai nevoie de cineva care face lobby, pentru că *Primăria X* trebuie să-și schimbe procedura (pasul 7) și nu ai încă nicio relație cu ea (pasul 6).”
@@ -153,11 +154,11 @@ O alertă e o notă scurtă lângă răspuns, cu o întrebare și două butoane:
 | Actor puternic uitat | 6–7 | Actorul cu cea mai mare putere nu are nicio relație și nu apare în nicio precondiție | „*Ministerul X* e cel mai puternic din hartă, dar nu apare nicăieri. E aliat, obstacol sau neutru?” | Cod |
 | Salt magic | 7 | Între o precondiție și ce urmează după ea lipsește mecanismul | „De ce ar duce A la B? Ce trebuie să fie adevărat?” | LLM |
 | Totul prin aplicație | 7 | Toate precondițiile sunt marcate „o acoperă aplicația” | „Ce trebuie să se întâmple fără cod? Pe cine trebuie să convingi?” | Cod |
-| „Dacă o construim, vin” | 7–10 | Nicio precondiție despre cum ajung oamenii la aplicație | „Cum află primii 50 de oameni de aplicație?” | LLM |
+| „Dacă o construim, vin” | 7–11 | Nicio precondiție despre cum ajung oamenii la aplicație | „Cum află primii 50 de oameni de aplicație?” | LLM |
 | Ipoteză fără test | 8 | O ipoteză riscantă nu are niciun test | „Cum ai afla în două săptămâni dacă e adevărat?” | Cod |
-| Totul pe un om | 9 | Echipa are un singur om, marcat la toate rolurile | „Ai marcat că faci tu și lobby, și juridic, și cod, în 4 ore pe săptămână. E realist?” | Cod |
-| Feature orfan | 10 | O funcție din lista ta nu ajută la nicio precondiție | „La ce ajută funcția asta? Poate așteaptă în lista „mai târziu”.” | Cod |
-| Doar cod | 10 | Backlog-ul nu are niciun pas de organizare | „Ce trebuie făcut în afara codului: întâlniri, parteneriate, teste cu oameni?” | Cod |
+| Totul pe un om | 10 | Echipa are un singur om, marcat la toate rolurile | „Ai marcat că faci tu și lobby, și juridic, și cod, în 4 ore pe săptămână. E realist?” | Cod |
+| Feature orfan | 11 | O funcție din lista ta nu ajută la nicio precondiție | „La ce ajută funcția asta? Poate așteaptă în lista „mai târziu”.” | Cod |
+| Doar cod | 11 | Backlog-ul nu are niciun pas de organizare | „Ce trebuie făcut în afara codului: întâlniri, parteneriate, teste cu oameni?” | Cod |
 
 **Tonul:** curios, nu evaluativ. Fără „greșit”, „naiv” sau „slab” în mesaje. Numele intern „alertă de naivitate” nu apare în interfață; acolo e un semn discret, de exemplu „întrebare deschisă”.
 
@@ -170,7 +171,7 @@ Prioritate: **M** = obligatoriu în v1 de test, **S** = ar fi bine în v1, **C**
 | ID | Ca... | vreau să... | ca să... | Prio |
 | --- | --- | --- | --- | --- |
 | **Pornire, proiectul și echipa** |  |  |  |  |
-| US-01 | dev | văd toți cei 10 pași și cât durează înainte să încep | știu în ce mă bag și pot împărți munca în mai multe sesiuni | M |
+| US-01 | dev | văd toți cei 11 pași și cât durează înainte să încep | știu în ce mă bag și pot împărți munca în mai multe sesiuni | M |
 | US-02 | dev | încep descriind aplicația sau ideea pe care o am deja, cu funcțiile ei | tool-ul pornește de la ce am, nu de la zero | M |
 | US-03 | dev | lipesc lista de funcții din README sau issues și AI-ul să o împartă în elemente | nu le rescriu de mână | M |
 | US-04 | dev | descriu echipa actuală: cine, ce știe, câte ore pe săptămână | rolurile necesare țin cont de ce avem deja | M |
@@ -238,7 +239,7 @@ Prioritate: **M** = obligatoriu în v1 de test, **S** = ar fi bine în v1, **C**
 
 **F1 — Prima intrare**
 
-1. Ecran de start: titlu, o propoziție despre ce obții, cei 10 pași cu timpul estimat (\~30 de minute).
+1. Ecran de start: titlu, o propoziție despre ce obții, cei 11 pași cu timpul estimat (\~40 de minute).
 2. Două butoane: **Începe un proiect nou** sau **Continuă un proiect** (lipești linkul de editare).
 3. Proiect nou → pasul 1, Proiectul și echipa: dev-ul descrie aplicația, stadiul și echipa, apoi lipește lista de funcții (din README, issues sau scrisă liber); AI-ul o împarte în elemente pe care dev-ul le confirmă.
 
@@ -270,21 +271,21 @@ Prioritate: **M** = obligatoriu în v1 de test, **S** = ar fi bine în v1, **C**
 2. La pasul 7, AI-ul ia prima schimbare țintă și întreabă „ce trebuie să fie adevărat chiar înainte?”. Fiecare răspuns devine o precondiție legată de ce urmează după ea. Se repetă de 2–3 ori, până la ceva ce echipa poate începe acum.
 3. Fiecare precondiție primește: actorul care face ceva diferit (din pasul 5 sau unul nou, adăugat automat în hartă), etapa (început / mediu) și dacă o acoperă aplicația.
 4. Se repetă pentru celelalte schimbări țintă; precondițiile comune se leagă, nu se dublează.
-5. La pasul 8, dev-ul alege cele mai nesigure 3 precondiții. AI-ul propune câte un test ieftin, fără cod (interviuri, o cerere 544, o întâlnire). Testele intră în backlog la pasul 10.
+5. La pasul 8, dev-ul alege cele mai nesigure 3 precondiții. AI-ul propune câte un test ieftin, fără cod (interviuri, o cerere 544, o întâlnire). Testele intră în backlog la pasul 11.
 
-**F5 — Derivarea rolurilor (pasul 9)**
+**F5 — Derivarea rolurilor (pasul 10)**
 
 1. AI-ul aplică regulile din secțiunea 4 pe actori, relații și precondiții → lista de roluri, fiecare cu motivul și elementul din hartă care îl cere.
 2. Compară lista cu echipa de la pasul 1 și marchează rolurile deja acoperite.
 3. Dev-ul corectează și marchează restul (caut / partener / nu e nevoie).
 4. Alerta „Totul pe un om” rulează; un rol propus fără element din hartă atașat nu e afișat deloc.
 
-**F5b — Backlog-ul de organizare (pasul 10)**
+**F5b — Backlog-ul de organizare (pasul 11)**
 
 1. AI-ul ia funcțiile de la pasul 1 și propune, pentru fiecare, precondiția de la pasul 7 la care ajută. Nu propune funcții noi.
 2. Funcțiile fără nicio precondiție primesc alerta „Feature orfan”; dev-ul le păstrează, le mută în „mai târziu” sau le șterge.
 3. Funcțiile rămase se ordonează pe început și mediu, după etapa precondiției pe care o susțin.
-4. AI-ul adaugă pașii de organizare: testele de la pasul 8, câte un pas pentru fiecare rol marcat „caut” sau „partener” (pasul 9) și pentru fiecare precondiție pe care aplicația nu o acoperă.
+4. AI-ul adaugă pașii de organizare: testele de la pasul 8, câte un pas pentru fiecare rol marcat „caut” sau „partener” (pasul 10) și pentru fiecare precondiție pe care aplicația nu o acoperă.
 5. Întrebările rămase „de aflat” intră tot ca pași de organizare.
 6. Dev-ul reordonează, editează sau șterge orice element.
 
@@ -403,12 +404,12 @@ Stack: Vercel și Supabase sunt alegerea ta. Propunerea mea pentru aplicație e 
 
 ## 10. Scope v1, mai târziu, întrebări deschise
 
-V1 e o versiune de test: cei 10 pași cap-coadă, cu toate user stories marcate **M**, pe câțiva dev-i reali din grup.
+V1 e o versiune de test: cei 11 pași cap-coadă, cu toate user stories marcate **M**, pe câțiva dev-i reali din grup.
 
 | În v1 | Mai târziu |
 | --- | --- |
 | Ecran de start cu toți pașii, navigare liberă | Colaborare în timp real între dev-i |
-| Cei 10 pași cu bucla AI + mod formular | Hartă vizuală a relațiilor (US-21), grila putere/interes (US-22) |
+| Cei 11 pași cu bucla AI + mod formular | Hartă vizuală a relațiilor (US-21), grila putere/interes (US-22) |
 | Actori și relații ca listă editabilă | Potrivire cu oameni din comunitate care au rolurile căutate |
 | Derivarea rolurilor din hartă și din echipă | Email trimis de server și recuperarea linkului (când există domeniu) |
 | Alertele din secțiunea 5 | Istoricul versiunilor paginii publice (US-50) |
