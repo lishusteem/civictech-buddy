@@ -400,6 +400,13 @@ describe('ProjectView — measures', () => {
     expect(text()).not.toContain('Câte asociații trimit o sesizare');
   });
 
+  it('shows no card and no blank row for a measure with a blank what', () => {
+    render(<ProjectView project={withMeasures([keyM({ what: '   ' })])} publishedAt={T} />);
+    expect(screen.queryByRole('region', { name: 'Cum vedem dacă merge' })).toBeNull();
+    expect(text()).not.toContain('Urmărim:');
+    expect(text()).not.toContain('Măsura-cheie');
+  });
+
   it('renders a project without measures as before', () => {
     render(<ProjectView project={fullProject()} publishedAt={T} />);
     expect(screen.queryByRole('region', { name: 'Cum vedem dacă merge' })).toBeNull();

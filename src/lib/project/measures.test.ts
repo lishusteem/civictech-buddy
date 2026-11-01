@@ -38,6 +38,8 @@ describe('measureState', () => {
 describe('liveMeasures / measureFor', () => {
   it('drops measures whose step is gone', () => {
     expect(liveMeasures(withMeasures([{ ...key, stepId: 'sters' }]))).toEqual([]);
+    expect(liveMeasures(withMeasures([{ ...key, what: '   ' }]))).toEqual([]);
+    expect(measureFor(withMeasures([{ ...key, what: '   ' }]), 'p1')).toBeUndefined();
     expect(liveMeasures(withMeasures([{ ...key, role: 'longTerm', stepId: 't1' }])).length).toBe(1);
     expect(measureFor(withMeasures([key]), 'p1')?.id).toBe('ms1');
     expect(measureFor(withMeasures([key]), 'p2')).toBeUndefined();
@@ -52,6 +54,10 @@ describe('indicatorLine', () => {
     expect(indicatorLine(withMeasures([]), 'p1', 'semnal')).toBe('Indicator: semnal');
     expect(indicatorLine(withMeasures([]), 'p1', '  ')).toBeNull();
     expect(indicatorLine(withMeasures([]), 'p1', undefined)).toBeNull();
+  });
+
+  it('falls back to the indicator when the measure has a blank what', () => {
+    expect(indicatorLine(withMeasures([{ ...key, what: '   ' }]), 'p1', 'semnal')).toBe('Indicator: semnal');
   });
 
   it('falls back to the indicator when the measure’s step was deleted', () => {

@@ -4,9 +4,9 @@ export type Measure = Project['measures'][number];
 
 const filled = (s: string | undefined) => (s ?? '').trim() !== '';
 
-/** Measures whose step (a precondition or a long-term result) still exists. */
+/** Measures with text whose step (a precondition or a long-term result) still exists. */
 export function liveMeasures(p: Project): Measure[] {
-  return p.measures.filter((m) => p.preconditions.some((x) => x.id === m.stepId) || p.targetChanges.some((t) => t.id === m.stepId));
+  return p.measures.filter((m) => filled(m.what) && (p.preconditions.some((x) => x.id === m.stepId) || p.targetChanges.some((t) => t.id === m.stepId)));
 }
 
 /** The live measure of a step. */
@@ -29,6 +29,6 @@ export function measureState(m: Measure): 'clear' | 'sketch' | null {
 /** The line under a step or long-term result: its measure, else the free-text indicator, else nothing. */
 export function indicatorLine(p: Project, stepId: string, signal: string | undefined): string | null {
   const m = measureFor(p, stepId);
-  if (m && filled(m.what)) return `Urmărim: ${m.what.trim()}`;
+  if (m) return `Urmărim: ${m.what.trim()}`;
   return filled(signal) ? `Indicator: ${(signal ?? '').trim()}` : null;
 }
