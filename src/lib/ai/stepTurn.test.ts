@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/empty';
 import { ProjectSchema, StepIdSchema, type Project } from '../project/schema';
 import { FakeProvider, type ChatMessage, type ChatProvider } from './provider';
-import { buildMessages } from './prompts';
+import { buildMessages, loadPrompt } from './prompts';
 import { runStepTurn, summarizeProject } from './stepTurn';
 
 /** Replies with the given strings in order and records every call. */
@@ -346,7 +346,6 @@ describe('FakeProvider default', () => {
     p.targetChanges = [{ id: 't1', text: 'x', signal: 'y' }];
     p.preconditions = [{ id: 'p1', text: 'x', actorId: null, stage: 'start', leadsTo: 't1', coveredByApp: false, assumption: '', risky: false, test: '' }];
     for (const step of StepIdSchema.options) {
-      if (step === 'measures') continue; // its prompt file arrives with the prompts task
       const turn = await runStepTurn(p, step, [], new FakeProvider());
       expect(turn.kind, step).toBe('proposal');
       if (turn.kind !== 'question') expect(turn.cards.length, step).toBeGreaterThan(0);
@@ -459,5 +458,74 @@ describe('backlog step', () => {
     const turn = await runStepTurn(p, 'backlog', [], provider);
     expect(turn.kind).toBe('proposal');
     if (turn.kind !== 'question') expect(turn.cards.map((c) => c.data.featureId)).toEqual(['f2']);
+  });
+});
+
+describe('measures step', () => {
+  function measuresProject(): Project {
+    const p = createEmptyProject('Parcul');
+    p.team = [{ id: 'm1', name: 'Dev', skills: [], hoursPerWeek: 5 }];
+    p.targetChanges = [{ id: 't1', text: 'Primăria răspunde.', signal: '' }];
+    p.preconditions = [
+      { id: 'p1', level: 'outcome', text: 'Primăria publică datele', actorId: null, stage: 'start', leadsTo: 't1', coveredByApp: false, assumption: '', risky: false, test: '' },
+      { id: 'p2', level: 'output', text: 'Lansăm clasamentul', actorId: 'm1', stage: 'start', leadsTo: 'p1', coveredByApp: true, assumption: '', risky: false, test: '' },
+    ];
+    return p;
+  }
+  const measure = (role: string, stepId: string) =>
+    JSON.stringify({
+      kind: 'proposal',
+      text: 'Măsura.',
+      cards: [{ kind: 'measure', data: { id: 'ms1', role, stepId, what: 'Ce urmărim.' } }],
+    });
+  const good = measure('key', 'p1');
+
+  it('accepts a key measure on a pathway step', async () => {
+    const { provider, calls } = scripted(good);
+    const turn = await runStepTurn(measuresProject(), 'measures', [], provider);
+    expect(calls).toHaveLength(1);
+    expect(turn.kind).toBe('proposal');
+    if (turn.kind !== 'question') expect(turn.cards.map((c) => c.kind)).toEqual(['measure']);
+  });
+
+  it.each([
+    ['key', 't1'],
+    ['delivery', 't1'],
+    ['longTerm', 'p1'],
+    ['delivery', 'p1'],
+    ['key', 'nu-exista'],
+  ])('retries on role %s with stepId %s', async (role, stepId) => {
+    const { provider, calls } = scripted(measure(role, stepId), good);
+    const turn = await runStepTurn(measuresProject(), 'measures', [], provider);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][calls[1].length - 1].content).toContain(stepId);
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('accepts delivery on an output and longTerm on a target change', async () => {
+    for (const [role, stepId] of [['delivery', 'p2'], ['longTerm', 't1']]) {
+      const { provider, calls } = scripted(measure(role, stepId));
+      const turn = await runStepTurn(measuresProject(), 'measures', [], provider);
+      expect(calls, role).toHaveLength(1);
+      expect(turn.kind, role).toBe('proposal');
+    }
+  });
+
+  it('accepts a toFindOut card', async () => {
+    const reply = JSON.stringify({
+      kind: 'proposal',
+      text: 'De aflat.',
+      cards: [{ kind: 'toFindOut', data: { id: 'q1', step: 'measures', text: 'Cât e azi?' } }],
+    });
+    const { provider, calls } = scripted(reply);
+    const turn = await runStepTurn(measuresProject(), 'measures', [], provider);
+    expect(calls).toHaveLength(1);
+    expect(turn.kind).toBe('proposal');
+  });
+
+  it('has the facilitation prompt', () => {
+    const text = loadPrompt('steps/measures.md');
+    expect(text).toContain('Dacă drumul tău se rupe, unde s-ar vedea primul?');
+    expect(text).toContain('cel mult de două ori');
   });
 });

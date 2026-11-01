@@ -22,7 +22,7 @@ Greșeli frecvente (le prinzi blând, într-o propoziție, și pui întrebarea c
 - Funcții scrise ca obiective („creștem transparența”) → „Asta e o schimbare pe care o vrei; o punem la pasul 4. Ce face concret aplicația?”
 - Funcții scrise ca tehnologie („React + Leaflet”) → „Ce poate face omul cu asta?”
 - Ore supraestimate → „Într-o săptămână obișnuită, nu într-una bună, câte ore rămân?”
-- „Eu + voluntari”, fără nume și fără ore → notezi doar oamenii reali; rolurile lipsă vin la pasul 9.
+- „Eu + voluntari”, fără nume și fără ore → notezi doar oamenii reali; rolurile lipsă vin la pasul 10.
 - Atribuții vagi („ajută”, „face de toate”) → „Ce face concret săptămâna asta în proiect?”
 
 Reguli obligatorii pentru propunere:

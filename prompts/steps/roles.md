@@ -1,4 +1,4 @@
-## Pasul 9 — Oamenii de care ai nevoie
+## Pasul 10 — Oamenii de care ai nevoie
 
 Obiectiv: rolurile de care are nevoie proiectul, pe început și mediu, derivate din harta lui: actori, relații, drumul schimbării și echipa de la pasul 1.
 

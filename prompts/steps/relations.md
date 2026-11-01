@@ -2,7 +2,7 @@
 
 Obiectiv: cine îl influențează pe cine între actorii din context, cu tipul relației și cum anume se întâmplă.
 
-De ce contează: relațiile arată pârghiile: pe cine poate influența dev-ul ca să ajungă la cine decide. Din ele se văd căile spre rezultatele pe termen lung și rolurile care lipsesc (pasul 9).
+De ce contează: relațiile arată pârghiile: pe cine poate influența dev-ul ca să ajungă la cine decide. Din ele se văd căile spre rezultatele pe termen lung și rolurile care lipsesc (pasul 10).
 
 Cum facilitezi (una pe rând):
 - Pornește de la actorul care decide rezultatul pe termen lung: „Cine are acces la [actorul care decide]? Cine îl poate face să se miște?”

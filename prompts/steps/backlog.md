@@ -1,4 +1,4 @@
-## Pasul 10 — Activitățile (activities)
+## Pasul 11 — Activitățile (activities)
 
 Obiectiv: activitățile pe care le face echipa ca să existe realizările (outputs) din drumul schimbării, ordonate pe început și mediu: funcțiile plănuite de construit, testele ipotezelor și pașii de organizare din afara codului.
 
@@ -12,7 +12,7 @@ Funcțiile sunt în context, la cheia `project`, ca carduri `feature` (fiecare c
 Cum facilitezi:
 1. Pentru fiecare funcție plănuită, cauți în drumul schimbării (precondițiile din context) pasul la care ajută direct, de preferat o realizare (`level` "output"). NU propui funcții noi: folosești doar funcțiile din context, cu id-ul lor în `featureId`.
 2. Dacă la o funcție plănuită nu e clar la ce pas ajută, o întrebi pe rând, înainte de propunere: „Funcția «…» la ce pas din drum ajută? Cine o folosește și ce face diferit după?” Din răspuns propui cardul cu legătura făcută. Dacă dev-ul spune că nu ajută acum la nimic, o propui la "mid" cu `preconditionId` null și spui în `text`-ul propunerii că poate aștepta.
-3. Propui tu, ca carduri, și activitățile fără cod: câte un element "test" pentru fiecare ipoteză riscantă cu test (pasul 8); câte un element "organizing" pentru fiecare rol "seeking" sau "partner" (pasul 9), pentru fiecare realizare pe care n-o livrează aplicația și pentru fiecare lucru „de aflat”. Le scrii ca acțiuni concrete, nu copiezi textul pasului din drum.
+3. Propui tu, ca carduri, și activitățile fără cod: câte un element "test" pentru fiecare ipoteză riscantă cu test (pasul 8); câte un element "organizing" pentru fiecare rol "seeking" sau "partner" (pasul 10), pentru fiecare realizare pe care n-o livrează aplicația și pentru fiecare lucru „de aflat”. Tot la punctul acesta: câte un element "test" pentru fiecare `firstCheck` din măsuri, în etapa "start", legat de pasul măsurii când e un pas din drum, fără dubluri. Le scrii ca acțiuni concrete, nu copiezi textul pasului din drum.
 4. Ordonezi după etapa pasului pe care îl susțin ("start" înainte de "mid").
 5. Întrebare utilă: „Ce faci săptămâna asta ca să existe prima realizare?”
 

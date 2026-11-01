@@ -13,6 +13,7 @@ import {
 import { isFeatureWorking } from '../project/features';
 import { nameIndex, polishCard, scrubCardIds, scrubIds } from '../project/humanText';
 import type { Message, Project, StepId } from '../project/schema';
+import { levelOf } from '../project/pathway';
 import { buildMessages, contextMessage, loadPrompt } from './prompts';
 import { RECAP_MARKER, type ChatMessage, type ChatProvider } from './provider';
 
@@ -123,7 +124,7 @@ function idIndex(p: Project, cards: Card[]): HasId {
 }
 
 /** A dangling reference makes the card invalid. */
-function refError(card: Card, has: HasId): string | null {
+function refError(card: Card, has: HasId, p: Project, batch: Card[]): string | null {
   const d = card.data;
   const bad = (field: string, what: string) =>
     `Cardul ${card.kind} (${d.id}): ${field} "${String(d[field])}" nu e id-ul unui ${what} din context sau din propunere.`;
@@ -152,6 +153,25 @@ function refError(card: Card, has: HasId): string | null {
       }
       if (d.preconditionId !== null && !has(d.preconditionId, 'precondition')) return bad('preconditionId', 'precondiții');
       return null;
+    case 'measure': {
+      if (d.role === 'longTerm') {
+        return has(d.stepId, 'targetChange')
+          ? null
+          : `Cardul measure (${d.id}): măsura "longTerm" se leagă de un rezultat pe termen lung (targetChange), iar stepId "${String(d.stepId)}" nu e unul din context sau din propunere.`;
+      }
+      if (!has(d.stepId, 'precondition')) {
+        return `Cardul measure (${d.id}): măsura "${String(d.role)}" se leagă de un pas din drum (precondiție), iar stepId "${String(d.stepId)}" nu e unul din context sau din propunere.`;
+      }
+      if (d.role === 'delivery') {
+        const step =
+          batch.find((c) => c.kind === 'precondition' && c.data.id === d.stepId)?.data ??
+          p.preconditions.find((c) => c.id === d.stepId);
+        if (step && levelOf(p, step as Project['preconditions'][number]) === 'outcome') {
+          return `Cardul measure (${d.id}): măsura "delivery" se leagă de o realizare (pas de nivel output), iar stepId "${String(d.stepId)}" e un rezultat (outcome).`;
+        }
+      }
+      return null;
+    }
     default:
       return null;
   }
@@ -191,7 +211,7 @@ function checkBatch(p: Project, step: StepId, cards: Card[]): { cards: Card[]; e
   const known = new Set(p.preconditions.map((c) => c.id));
   const referenced = cards.filter((c) => {
     if (step === 'risks' && known.has(c.data.id)) return true;
-    const e = refError(c, has);
+    const e = refError(c, has, p, cards);
     if (e) errors.push(e);
     return !e;
   });
