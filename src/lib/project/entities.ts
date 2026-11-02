@@ -236,6 +236,37 @@ function mapRef(value: unknown, pick: (oldId: string) => string | undefined): un
   return value;
 }
 
+/**
+ * The ids of proposed cards that say nothing about what they update. A „De aflat” proposal is always a new
+ * question (the AI can't see the saved ones). A measure belongs to its role: it updates the measure holding
+ * that role, and an id another role uses is not a reason to overwrite it. Run this only on proposals and
+ * new cards: a saved measure edited in the form may change its role and keep its id.
+ */
+export function reconcileProposalIds(p: Project, cards: Card[]): Card[] {
+  const roleOfId = new Map<string, unknown>(p.measures.map((m) => [m.id, m.role]));
+  return cards.map((card) => {
+    if (card.kind === 'toFindOut') return { kind: card.kind, data: { ...card.data, id: '' } };
+    if (card.kind !== 'measure') return card;
+    const { id, role } = card.data;
+    const holder = p.measures.find((m) => m.role === role);
+    const clash = roleOfId.has(id) && roleOfId.get(id) !== role;
+    const next = holder ? holder.id : clash ? '' : id;
+    if (next !== '') roleOfId.set(next, role);
+    return { kind: card.kind, data: { ...card.data, id: next } };
+  });
+}
+
+/** New proposals join the pending ones, replacing the pending card they stand for. */
+export function mergeProposed(pending: Card[], incoming: Card[]): Card[] {
+  const sameCard = (a: Card, b: Card) => {
+    if (a.kind !== b.kind) return false;
+    if (a.kind === 'measure') return a.data.role === b.data.role;
+    if (a.kind === 'toFindOut') return a.data.text === b.data.text;
+    return a.data.id === b.data.id;
+  };
+  return [...pending.filter((c) => !incoming.some((n) => sameCard(n, c))), ...incoming];
+}
+
 export function normalizeCardIds(p: Project, cards: Card[]): Card[] {
   // id -> kind, for every entity already in the project (and earlier in the batch).
   const taken = new Map<string, EntityKind>();
@@ -245,6 +276,9 @@ export function normalizeCardIds(p: Project, cards: Card[]): Card[] {
     allIds.push(entity.id);
   }
   for (const c of cards) if (typeof c.data.id === 'string') allIds.push(c.data.id);
+  // The step of an orphaned measure stays reserved: a new card with that id would reattach the measure to it.
+  const orphanSteps = new Set(p.measures.map((m) => m.stepId).filter((id) => !taken.has(id)));
+  allIds.push(...orphanSteps);
 
   const counters = new Map<string, number>();
   const nextId = (prefix: string): string => {
@@ -268,7 +302,7 @@ export function normalizeCardIds(p: Project, cards: Card[]): Card[] {
     const oldId = card.data.id;
     const has = typeof oldId === 'string' && oldId !== '';
     const owner = has ? taken.get(oldId) : undefined;
-    if (has && (owner === undefined || owner === card.kind)) {
+    if (has && !orphanSteps.has(oldId) && (owner === undefined || owner === card.kind)) {
       taken.set(oldId, card.kind);
       return { kind: card.kind, data: { ...card.data } };
     }

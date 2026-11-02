@@ -46,6 +46,15 @@ describe('liveMeasures / measureFor', () => {
   });
 });
 
+describe('measureFor with two measures on a step', () => {
+  it('prefers the key measure, in either order', () => {
+    const delivery: Measure = { id: 'ms2', role: 'delivery', stepId: 'p1', what: 'Livrări' };
+    expect(measureFor(withMeasures([delivery, key]), 'p1')?.id).toBe('ms1');
+    expect(measureFor(withMeasures([key, delivery]), 'p1')?.id).toBe('ms1');
+    expect(measureFor(withMeasures([delivery]), 'p1')?.id).toBe('ms2');
+  });
+});
+
 describe('indicatorLine', () => {
   it('prefers the measure of the step, then the free indicator, then nothing', () => {
     const p = withMeasures([key]);

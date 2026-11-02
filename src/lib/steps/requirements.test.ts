@@ -106,7 +106,7 @@ describe('requirementsFor', () => {
     expect(row('relations', p, 'relations.any').why).toBeUndefined();
   });
 
-  it('step 10 orphan row: done when each feature is linked or its alert was kept', () => {
+  it('step 11 orphan row: done when each feature is linked or its alert was kept', () => {
     const p = fillSteps(createEmptyProject('P'), ['backlog']);
     p.features = [{ id: 'f1', text: 'Harta' }, { id: 'f2', text: 'Export' }];
     p.preconditions = [{ ...precondition }];
@@ -114,8 +114,19 @@ describe('requirementsFor', () => {
     expect(orphans.done(p)).toBe(false);
     p.backlog.push({ id: 'b2', stage: 'start', kind: 'feature', featureId: 'f1', preconditionId: 'p1', text: 'Harta', order: 2 });
     expect(orphans.done(p)).toBe(false);
-    p.alerts = [{ code: 'orphan_feature', step: 10, refs: ['f2'], status: 'dismissed', message: 'm' }];
+    p.alerts = [{ code: 'orphan_feature', step: 11, refs: ['f2'], status: 'dismissed', message: 'm' }];
     expect(orphans.done(p)).toBe(true);
+  });
+
+  it('measures.clear looks at the live key measure, not one whose step is gone', () => {
+    const p = fillSteps(createEmptyProject('P'), ['measures']);
+    const full = { source: 's', counts: 'c', routine: 'r', today: '0', enough: 'e', ifBelow: 'i' };
+    p.measures = [{ ...p.measures[0], ...full }];
+    const clear = row('measures', p, 'measures.clear');
+    expect(clear.done(p)).toBe(true);
+    p.measures[0].stepId = 'sters';
+    expect(row('measures', p, 'measures.key').done(p)).toBe(false);
+    expect(clear.done(p)).toBe(false);
   });
 
   it('every-item rows need at least one item', () => {

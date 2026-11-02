@@ -1,5 +1,5 @@
 import { ALERT_MESSAGES } from '../alerts/messages';
-import { isKeyMeasureSet, liveMeasures, measureState } from '../project/measures';
+import { isKeyMeasureSet, liveKeyMeasure, liveMeasures, measureState } from '../project/measures';
 import { isFeatureWorking } from '../project/features';
 import type { AlertCode, Project, StepId } from '../project/schema';
 
@@ -182,7 +182,7 @@ export function requirementsFor(step: StepId, p: Project): Requirement[] {
       return [
         req('measures.key', 'O măsură-cheie, legată de un pas din drum', isKeyMeasureSet),
         rec('measures.clear', 'Măsura-cheie e clară: definiție, cine o scoate, prag, ce faceți dacă iese sub', (x) => {
-          const key = x.measures.find((m) => m.role === 'key');
+          const key = liveKeyMeasure(x);
           return !!key && measureState(key) === 'clear';
         }),
         rec('measures.others', 'O măsură pentru ce livrați și una pentru schimbarea mare', (x) => {

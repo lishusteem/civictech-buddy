@@ -7,7 +7,9 @@ import { ALERT_MESSAGES, isQuestionAlert } from '@/lib/alerts/messages';
 import {
   fitsInList,
   isSingleton,
+  mergeProposed,
   normalizeCardIds,
+  reconcileProposalIds,
   removeEntity,
   STEP_ENTITIES,
   upsertEntity,
@@ -22,7 +24,7 @@ import { ActionBar } from './ActionBar';
 import { AlertList, alertKey } from './AlertList';
 import { defaultData } from './CardEditor';
 import { CardsPanel, type Editing } from './CardsPanel';
-import { AskTracker, ChatPanel, MAX_MESSAGES, PROPOSE_NOW, type ChatHandle } from './ChatPanel';
+import { AskTracker, ChatPanel, hasTeamReplied, MAX_MESSAGES, PROPOSE_NOW, type ChatHandle } from './ChatPanel';
 import { ProjectIntake } from './ProjectIntake';
 import { ProposalDigest } from './ProposalDigest';
 import { checklistProgress, StepChecklist } from './StepChecklist';
@@ -35,7 +37,7 @@ type Props = {
   draft: Project;
   setDraft: SetDraft;
   token: string;
-  /** Called after "Treci la pasul următor"; the Editor moves to the next step (or the summary after step 10). */
+  /** Called after "Treci la pasul următor"; the Editor moves to the next step (or the summary after the last step). */
   onNext: () => void;
   /** useAutosave().flush: the AI routes read the server-saved draft, so pending edits are saved first. */
   flush?: () => Promise<void>;
@@ -68,6 +70,9 @@ function acceptCards(p: Project, step: StepId, cards: Card[]): Project {
   const next = normalizeCardIds(p, cards).reduce((acc, card) => (fitsInList(acc, card) ? upsertEntity(acc, card) : acc), p);
   return next.steps[step].status === 'untouched' ? withStatus(next, step, 'in_progress') : next;
 }
+
+/** Proposals and new cards; their ids may have gone stale since the AI sent them. */
+const acceptProposals = (p: Project, step: StepId, cards: Card[]) => acceptCards(p, step, reconcileProposalIds(p, cards));
 
 /** Re-renders when the tracker's in-flight calls change; returns whether this step's AI call is running. */
 function useBusy(tracker: AskTracker, step: StepId): boolean {
@@ -114,11 +119,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   function onTurn(turn: AiTurn) {
     setSavedLine(null);
     if (turn.kind === 'question') return;
-    // New cards join the pending ones; a pending card with the same kind and id is replaced.
-    setProposed((list) => [
-      ...list.filter((c) => !turn.cards.some((n) => n.kind === c.kind && n.data.id === c.data.id)),
-      ...turn.cards,
-    ]);
+    setProposed((list) => mergeProposed(list, turn.cards));
     if (turn.kind === 'fallback' && turn.cards.length === 0) openForm();
   }
 
@@ -140,14 +141,16 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   }
 
   function saveEdit(e: Editing, data: Card['data']) {
-    setDraft((p) => acceptCards(p, stepId, [{ kind: e.card.kind, data }]));
+    // Only a saved card keeps its id whatever changed: a measure may move to a free role.
+    const save = e.origin === 'accepted' ? acceptCards : acceptProposals;
+    setDraft((p) => save(p, stepId, [{ kind: e.card.kind, data }]));
     if (e.origin === 'proposed') setProposed((list) => list.filter((_, i) => i !== e.index));
     setEditing(null);
   }
 
   function accept(index: number) {
     const card = proposed[index];
-    setDraft((p) => acceptCards(p, stepId, [card]));
+    setDraft((p) => acceptProposals(p, stepId, [card]));
     setProposed((list) => list.filter((_, i) => i !== index));
     if (editing?.origin === 'proposed') setEditing(null);
   }
@@ -155,10 +158,10 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   /** Accepts every pending proposal; returns whether the step is complete afterwards. */
   function acceptAll(): boolean {
     const cards = proposed;
-    setDraft((p) => acceptCards(p, stepId, cards));
+    setDraft((p) => acceptProposals(p, stepId, cards));
     setProposed([]);
     if (editing?.origin === 'proposed') setEditing(null);
-    return isStepComplete(acceptCards(draft, stepId, cards), stepId);
+    return isStepComplete(acceptProposals(draft, stepId, cards), stepId);
   }
 
   function discard(index: number) {
@@ -182,7 +185,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
   /** P0-3: a short "da" saves the proposals; if something required is still missing, the AI asks about it. */
   function onAffirm(chat: Message[]) {
     const n = proposed.length;
-    const after = acceptCards(draft, stepId, proposed);
+    const after = acceptProposals(draft, stepId, proposed);
     const complete = acceptAll();
     const text = `✓ Am salvat ${elements(n)}. ${complete ? 'Poți trece la pasul următor.' : `Mai lipsește: ${firstMissingRequired(after, stepId)}.`}`;
     setSavedLine({ text, complete });
@@ -252,7 +255,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
 
   const pending = proposed.length;
   const complete = isStepComplete(draft, stepId);
-  const afterAccept = pending > 0 ? acceptCards(draft, stepId, proposed) : draft;
+  const afterAccept = pending > 0 ? acceptProposals(draft, stepId, proposed) : draft;
   const completeAfterAccept = pending > 0 && isStepComplete(afterAccept, stepId);
   const missing = firstMissingRequired(draft, stepId);
   const isLast = step.number === STEPS.length;
@@ -429,6 +432,7 @@ export function StepScreen({ step, draft, setDraft, token, onNext, flush = noFlu
           say(`Ca să treci mai departe: ${missing}.`);
         }}
         onProposeNow={() => chatRef.current?.send(PROPOSE_NOW)}
+        canProposeNow={hasTeamReplied(stepId, draft.steps[stepId].messages)}
       />
     </div>
   );

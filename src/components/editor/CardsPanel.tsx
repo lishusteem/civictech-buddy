@@ -4,8 +4,9 @@ import { useState, type ReactNode, type Ref } from 'react';
 import { entitiesForStep, isSingleton, savedEntitiesForStep, remainingCapacity, STEP_ENTITIES, type Card, type EntityKind } from '@/lib/project/entities';
 import type { Project, StepId } from '@/lib/project/schema';
 import { Points } from '../Points';
+import { KEY_ONLY_FIELDS } from '@/lib/project/measures';
 import { toPoints } from '@/lib/project/points';
-import { CardEditor, FIELDS, KEY_ONLY_FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
+import { CardEditor, FIELDS, KIND_LABEL, RISKS_FIELDS, relationLabel, type Field } from './CardEditor';
 
 export type Editing = {
   origin: 'new' | 'proposed' | 'accepted';
@@ -123,7 +124,8 @@ function CardBody({ card, project, saved = false }: { card: Card; project: Proje
 
 export function CardsPanel(props: Props) {
   const { step, draft, proposed, editing, setEditing, onSaveEdit } = props;
-  const listKinds = STEP_ENTITIES[step].filter((k) => !isSingleton(k));
+  // On the measures step a saved „De aflat” never shows up in this panel, so it isn't offered here either.
+  const listKinds = STEP_ENTITIES[step].filter((k) => !isSingleton(k) && !(step === 'measures' && k === 'toFindOut'));
   const [addKind, setAddKind] = useState<EntityKind | undefined>(listKinds[0]);
   const accepted = entitiesForStep(draft, step);
   // An empty singleton (project info, problem) is listed so it can be edited, but is not counted as saved.

@@ -3,6 +3,7 @@ import { createEmptyProject } from './empty';
 import {
   entitiesForStep,
   listMax,
+  mergeProposed,
   normalizeCardIds,
   remainingCapacity,
   removeEntity,
@@ -226,3 +227,49 @@ describe('upsertEntity for measures', () => {
   });
 });
 
+describe('normalizeCardIds and orphaned measures', () => {
+  const orphaned = () => {
+    const p = createEmptyProject('T');
+    p.preconditions = [precondition('p1', { leadsTo: 't1' }).data as never];
+    p.measures = [{ id: 'ms1', role: 'key', stepId: 'p3', what: 'Cheie' }];
+    return p;
+  };
+
+  it('does not give a new card the id of a deleted step a measure still points to', () => {
+    const [card] = normalizeCardIds(orphaned(), [precondition('', { leadsTo: 'p1' })]);
+    expect(card.data.id).toBe('p4');
+  });
+
+  it('renames a new card the AI gave that id, and the references to it', () => {
+    const [a, b] = normalizeCardIds(orphaned(), [precondition('p3', { leadsTo: 'p1' }), precondition('p5', { leadsTo: 'p3' })]);
+    expect(a.data.id).not.toBe('p3');
+    expect(b.data.leadsTo).toBe(a.data.id);
+  });
+
+  it('keeps the id of a step that still exists', () => {
+    const p = orphaned();
+    p.measures[0].stepId = 'p1';
+    const [card] = normalizeCardIds(p, [precondition('p1', { leadsTo: 't1', text: 'nou' })]);
+    expect(card.data.id).toBe('p1');
+  });
+});
+
+describe('mergeProposed', () => {
+  const measure = (id: string, role: string, what = 'x'): Card => ({ kind: 'measure', data: { id, role, stepId: 'p1', what } });
+  const question = (id: string, text: string): Card => ({ kind: 'toFindOut', data: { id, step: 'measures', text } });
+
+  it('replaces a pending card with the same kind and id, keeps the others', () => {
+    expect(mergeProposed([actor('a1', 'Unu'), actor('a2', 'Doi')], [actor('a1', 'Nou')])).toEqual([actor('a2', 'Doi'), actor('a1', 'Nou')]);
+    expect(mergeProposed([actor('a1')], [precondition('a1')])).toHaveLength(2);
+  });
+
+  it('matches measures by role, not by id', () => {
+    expect(mergeProposed([measure('ms1', 'key')], [measure('ms1', 'delivery')])).toHaveLength(2);
+    expect(mergeProposed([measure('ms1', 'key', 'vechi')], [measure('ms9', 'key', 'nou')])).toEqual([measure('ms9', 'key', 'nou')]);
+  });
+
+  it('matches questions by text, not by id', () => {
+    expect(mergeProposed([question('q1', 'A?')], [question('q1', 'B?')])).toHaveLength(2);
+    expect(mergeProposed([question('q1', 'A?')], [question('q2', 'A?')])).toEqual([question('q2', 'A?')]);
+  });
+});

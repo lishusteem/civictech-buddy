@@ -39,6 +39,8 @@ type Props = {
   /** A click on the aria-disabled primary of state D. */
   onBlocked: () => void;
   onProposeNow: () => void;
+  /** Whether state D offers „Propune acum”. */
+  canProposeNow: boolean;
 };
 
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
@@ -129,7 +131,7 @@ export function ActionBar(p: Props) {
             Doar acceptă
           </button>
         )}
-        {state === 'D' && (
+        {state === 'D' && p.canProposeNow && (
           <button type="button" disabled={p.busy} onClick={p.onProposeNow} className={secondaryClass}>
             Propune acum
           </button>

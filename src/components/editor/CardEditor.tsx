@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ZodIssue } from 'zod';
 import { ENTITY_SCHEMAS, type Card, type EntityKind } from '@/lib/project/entities';
+import { KEY_ONLY_FIELDS } from '@/lib/project/measures';
+import { levelOf } from '@/lib/project/pathway';
 import type { Project, StepId } from '@/lib/project/schema';
 
 type RefSource = 'actors' | 'preconditions' | 'targetChanges' | 'team' | 'features' | 'relations';
@@ -186,9 +188,6 @@ export const FIELDS: Record<EntityKind, Field[]> = {
   ],
 };
 
-/** Measure fields only the key measure has; the simple roles drop them. */
-export const KEY_ONLY_FIELDS = ['counts', 'routine', 'today', 'firstCheck', 'enough', 'ifBelow'];
-
 /** Where a measure's step can come from: key and delivery point at a precondition, longTerm at a target change. */
 const measureStepSources = (role: unknown): RefSource[] => (role === 'longTerm' ? ['targetChanges'] : ['preconditions']);
 
@@ -341,8 +340,19 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
   // A simple measure has no key-only fields.
   const hidden = (f: Field) => kind === 'measure' && KEY_ONLY_FIELDS.includes(f.key) && values.role !== 'key';
   const shown = fields.filter((f) => !hidden(f));
-  const optionsFor = (f: Field & { type: 'ref' }): Options =>
-    refOptions(project, kind === 'measure' && f.key === 'stepId' ? measureStepSources(values.role) : f.refs, String(data.id));
+  const optionsFor = (f: Field & { type: 'ref' }): Options => {
+    if (kind !== 'measure' || f.key !== 'stepId') return refOptions(project, f.refs, String(data.id));
+    const options = refOptions(project, measureStepSources(values.role), String(data.id));
+    if (values.role !== 'delivery') return options;
+    // A delivery measure follows what the team delivers, so an outcome is not on offer.
+    const outcomes = new Set(project.preconditions.filter((c) => levelOf(project, c) === 'outcome').map((c) => c.id));
+    return options.filter(([id]) => !outcomes.has(id));
+  };
+  // One measure per role: a role another measure holds would replace that measure.
+  const enumOptions = (f: Field & { type: 'enum' }): Options =>
+    kind === 'measure' && f.key === 'role'
+      ? f.options.filter(([role]) => role === data.role || !project.measures.some((m) => m.role === role && m.id !== data.id))
+      : f.options;
 
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -429,7 +439,7 @@ export function CardEditor({ kind, data, project, onSave, onCancel, only, title 
           );
         }
         if (f.type === 'enum' || f.type === 'ref') {
-          const options = f.type === 'enum' ? f.options : optionsFor(f);
+          const options = f.type === 'enum' ? enumOptions(f) : optionsFor(f);
           const showEmpty = f.nullable || f.type === 'ref';
           // A measure's step that no longer fits its role shows as empty (and fails on save).
           const current = kind === 'measure' && f.key === 'stepId' && !options.some(([value]) => value === v) ? '' : String(v);

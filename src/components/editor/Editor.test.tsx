@@ -221,7 +221,7 @@ describe('Editor', () => {
     expect(saved.steps.project.status).toBe('done');
   });
 
-  it('renders the step screen and moves on when the step is complete, to the summary after step 10', async () => {
+  it('renders the step screen and moves on when the step is complete, to the summary after the last step', async () => {
     const fetchMock = stubFetch(() => ({ alerts: [], text: '' }));
     const draft = fillSteps(createEmptyProject('P'), ALL);
     render(<Editor token="t" slug="s" initial={{ draft, draftUpdatedAt: T1 }} publishedAt={T1} />);

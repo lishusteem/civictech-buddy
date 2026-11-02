@@ -873,10 +873,17 @@ describe('StepScreen', () => {
   describe('măsurile', () => {
     const withSteps = () => {
       const draft = createEmptyProject('P');
-      draft.preconditions = [{ ...precondition, id: 'p1', text: 'Primăria acceptă' }];
+      draft.preconditions = [{ ...precondition, id: 'p1', text: 'Primăria acceptă', level: 'output' }];
       draft.targetChanges = [{ id: 't1', text: 'Orașul e mai curat', signal: '' }];
       return draft;
     };
+    const measureCard = (id: string, role: string, what: string, stepId = role === 'longTerm' ? 't1' : 'p1'): Card => ({
+      kind: 'measure',
+      data: { id, role, stepId, what },
+    });
+    const question = (id: string, text: string): Card => ({ kind: 'toFindOut', data: { id, step: 'measures', text } });
+    const proposalsRegion = () => screen.getByRole('region', { name: 'Propuneri' });
+    const acceptAllCards = () => fireEvent.click(within(proposalsRegion()).getByRole('button', { name: 'Acceptă tot' }));
     const addMeasure = () => fireEvent.click(screen.getByRole('button', { name: 'Adaugă manual' }));
     const typeUser = (draft: Project) => {
       draft.steps.measures.messages = [
@@ -897,6 +904,184 @@ describe('StepScreen', () => {
     it('keeps Propune acum on other steps from the start', () => {
       setup('actors');
       expect(proposeChip()).toBeTruthy();
+      expect(within(bar()).getByRole('button', { name: 'Propune acum' })).toBeTruthy();
+    });
+
+    it('shows no Propune acum anywhere on the screen before the first reply', () => {
+      setup('measures', withSteps());
+      expect(screen.queryByRole('button', { name: 'Propune acum' })).toBeNull();
+    });
+
+    it('does not count the Propune acum message as a reply', () => {
+      const draft = withSteps();
+      draft.steps.measures.messages = [
+        { role: 'assistant', content: 'Să începem.' },
+        { role: 'user', content: 'Propune rezumatul acum.' },
+      ];
+      setup('measures', draft);
+      expect(screen.queryByRole('button', { name: 'Propune acum' })).toBeNull();
+    });
+
+    it('shows Propune acum in the chat and in the bar after the first reply', () => {
+      setup('measures', typeUser(withSteps()));
+      expect(proposeChip()).toBeTruthy();
+      expect(within(bar()).getByRole('button', { name: 'Propune acum' })).toBeTruthy();
+    });
+
+    it('sends a "da" to the AI when the AI just asked a question, keeping the card pending', async () => {
+      const fetchMock = stubFetch([{ body: { kind: 'question', text: 'Când faci proba.' } }]);
+      const draft = withSteps();
+      draft.steps.measures.messages = [{ role: 'assistant', content: 'Vrei să facem o probă în două săptămâni?' }];
+      const { last } = setup('measures', draft, undefined, { proposed: [measureCard('ms1', 'key', 'Răspunsuri')] });
+      say('da');
+      await screen.findByText('Când faci proba.');
+      expect(aiCalls(fetchMock)).toHaveLength(1);
+      expect(bodyOf(fetchMock, 0).chat.at(-1)).toEqual({ role: 'user', content: 'da' });
+      expect(last().measures).toEqual([]);
+      expect(within(proposalsRegion()).getByText('Răspunsuri')).toBeTruthy();
+    });
+
+    it('still saves on a "da" when the last AI message is not a question', async () => {
+      const fetchMock = stubFetch([]);
+      const draft = withSteps();
+      draft.steps.measures.messages = [{ role: 'assistant', content: 'Uite ce am înțeles.' }];
+      const { last } = setup('measures', draft, undefined, { proposed: [measureCard('ms1', 'key', 'Răspunsuri')] });
+      say('da');
+      expect(last().measures.map((m) => m.what)).toEqual(['Răspunsuri']);
+      await Promise.resolve();
+      expect(aiCalls(fetchMock)).toHaveLength(0);
+    });
+
+    it('on other steps a "da" after a question still saves', () => {
+      const draft = createEmptyProject('P');
+      draft.steps.actors.messages = [{ role: 'assistant', content: 'E bine așa?' }];
+      stubFetch([]);
+      const { last } = setup('actors', draft, undefined, { proposed: two });
+      say('da');
+      expect(last().actors).toHaveLength(2);
+    });
+
+    it('accepting a delivery proposal with the id of the saved key measure keeps both', () => {
+      const draft = withSteps();
+      draft.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie', counts: 'doar în termen' }];
+      const { last } = setup('measures', draft, undefined, { proposed: [measureCard('ms1', 'delivery', 'Livrări')] });
+      fireEvent.click(within(proposalsRegion()).getByRole('button', { name: 'Acceptă' }));
+      expect(last().measures.map((m) => [m.id, m.role, m.what])).toEqual([
+        ['ms1', 'key', 'Cheie'],
+        ['ms2', 'delivery', 'Livrări'],
+      ]);
+      expect(last().measures[0].counts).toBe('doar în termen');
+    });
+
+    it('accepting key and delivery with the same id, pending together, keeps both', () => {
+      const { last } = setup('measures', withSteps(), undefined, {
+        proposed: [measureCard('ms1', 'key', 'Cheie'), measureCard('ms1', 'delivery', 'Livrări')],
+      });
+      acceptAllCards();
+      expect(last().measures.map((m) => [m.id, m.role])).toEqual([
+        ['ms1', 'key'],
+        ['ms2', 'delivery'],
+      ]);
+    });
+
+    it('a proposal for a role that is taken updates that measure even when the list is full', () => {
+      const draft = withSteps();
+      draft.measures = [
+        { id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie' },
+        { id: 'ms2', role: 'delivery', stepId: 'p1', what: 'Livrări' },
+        { id: 'ms3', role: 'longTerm', stepId: 't1', what: 'Mare' },
+      ];
+      const { last } = setup('measures', draft, undefined, { proposed: [measureCard('ms1', 'delivery', 'Livrări noi')] });
+      fireEvent.click(within(proposalsRegion()).getByRole('button', { name: 'Acceptă' }));
+      expect(last().measures.map((m) => [m.id, m.role, m.what])).toEqual([
+        ['ms1', 'key', 'Cheie'],
+        ['ms2', 'delivery', 'Livrări noi'],
+        ['ms3', 'longTerm', 'Mare'],
+      ]);
+    });
+
+    it('proposals from two turns: same id with different roles both stay pending, same role replaces', async () => {
+      stubFetch([
+        { body: { kind: 'proposal', text: 'Unu.', cards: [measureCard('ms1', 'key', 'Cheie')] } },
+        { body: { kind: 'proposal', text: 'Doi.', cards: [measureCard('ms1', 'delivery', 'Livrări')] } },
+        { body: { kind: 'proposal', text: 'Trei.', cards: [measureCard('ms9', 'key', 'Cheie nouă')] } },
+      ]);
+      const { last } = setup('measures', typeUser(withSteps()));
+      fireEvent.click(proposeChip());
+      await screen.findByText('Unu.');
+      fireEvent.click(proposeChip());
+      await screen.findByText('Doi.');
+      expect(within(proposalsRegion()).getByText('Cheie')).toBeTruthy();
+      expect(within(proposalsRegion()).getByText('Livrări')).toBeTruthy();
+      fireEvent.click(proposeChip());
+      await screen.findByText('Trei.');
+      expect(within(proposalsRegion()).queryByText('Cheie')).toBeNull();
+      acceptAllCards();
+      expect(last().measures.map((m) => m.what).sort()).toEqual(['Cheie nouă', 'Livrări']);
+      expect(new Set(last().measures.map((m) => m.id)).size).toBe(2);
+    });
+
+    it('de aflat proposals from two turns stay separate and never overwrite a saved question', async () => {
+      const draft = typeUser(withSteps());
+      draft.toFindOut = [{ id: 'q1', step: 'problem', text: 'Veche' }];
+      stubFetch([
+        { body: { kind: 'proposal', text: 'Unu.', cards: [question('q2', 'Cât e azi la Cluj?')] } },
+        { body: { kind: 'proposal', text: 'Doi.', cards: [question('q2', 'Cât e azi la Turda?')] } },
+      ]);
+      const { last } = setup('measures', draft);
+      fireEvent.click(proposeChip());
+      await screen.findByText('Unu.');
+      fireEvent.click(proposeChip());
+      await screen.findByText('Doi.');
+      expect(within(proposalsRegion()).getAllByText('propus')).toHaveLength(2);
+      fireEvent.click(within(proposalsRegion()).getAllByRole('button', { name: 'Acceptă' })[0]);
+      fireEvent.click(within(proposalsRegion()).getByRole('button', { name: 'Acceptă' }));
+      expect(last().toFindOut.map((q) => q.text)).toEqual(['Veche', 'Cât e azi la Cluj?', 'Cât e azi la Turda?']);
+      expect(new Set(last().toFindOut.map((q) => q.id)).size).toBe(3);
+    });
+
+    it('offers only the free roles and the card’s own, and a role change keeps the measure’s id', () => {
+      const draft = withSteps();
+      draft.measures = [
+        { id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie' },
+        { id: 'ms2', role: 'delivery', stepId: 'p1', what: 'Livrări' },
+      ];
+      const { last } = setup('measures', draft);
+      const roleOptions = () => within(screen.getByLabelText('Tip de măsură')).getAllByRole('option').map((o) => (o as HTMLOptionElement).value);
+      addMeasure();
+      expect(roleOptions()).toEqual(['longTerm']);
+      fireEvent.click(screen.getByRole('button', { name: 'Renunță' }));
+      fireEvent.click(within(screen.getByRole('region', { name: 'Salvate' })).getAllByRole('button', { name: 'Editează' })[1]);
+      expect(roleOptions()).toEqual(['delivery', 'longTerm']);
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'longTerm' } });
+      fireEvent.change(screen.getByLabelText('Pasul la care se referă'), { target: { value: 't1' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+      expect(last().measures.map((m) => [m.id, m.role])).toEqual([
+        ['ms1', 'key'],
+        ['ms2', 'longTerm'],
+      ]);
+    });
+
+    it('offers only output steps to a delivery measure, and every step to a key measure', () => {
+      const draft = withSteps();
+      draft.preconditions.push({ ...precondition, id: 'p2', text: 'Instituția reacționează', level: 'outcome' });
+      setup('measures', draft);
+      addMeasure();
+      const stepOptions = () => within(screen.getByLabelText('Pasul la care se referă')).getAllByRole('option').map((o) => o.textContent);
+      expect(stepOptions()).toEqual(['— alege —', 'Primăria acceptă', 'Instituția reacționează']);
+      fireEvent.change(screen.getByLabelText('Tip de măsură'), { target: { value: 'delivery' } });
+      expect(stepOptions()).toEqual(['— alege —', 'Primăria acceptă']);
+    });
+
+    it('does not offer De aflat under Ce adaugi', () => {
+      setup('measures', withSteps());
+      expect(screen.queryByLabelText('Ce adaugi')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Adaugă manual' })).toBeTruthy();
+    });
+
+    it('keeps the kind choice on the preconditions step', () => {
+      setup('preconditions');
+      expect(screen.getByLabelText('Ce adaugi')).toBeTruthy();
     });
 
     it('sends three Nu știu to the AI and leaves toFindOut empty', async () => {

@@ -90,6 +90,14 @@ type Props = {
   ref?: Ref<ChatHandle>;
 };
 
+/** On the measures step the team answers first: „Propune acum” waits for a reply, and asking for it isn't one. */
+export function hasTeamReplied(step: StepId, messages: Message[]): boolean {
+  return step !== 'measures' || messages.some((m) => m.role === 'user' && m.content !== PROPOSE_NOW);
+}
+
+/** The AI's message ends in a question (closing quotes and brackets aside), so a short reply answers it. */
+const asksQuestion = (message: Message | undefined) => !!message && /\?[\s"'”»)]*$/.test(message.content);
+
 const isDontKnow = (text: string) => normalizeReply(text) === 'nu stiu';
 
 /** Number of consecutive "Nu știu" answers at the end of the chat (AI messages in between don't break it). */
@@ -201,7 +209,9 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
     const chat = [...messages, userMessage].slice(-MAX_MESSAGES);
     setNotice(false);
     setPlaceholder(PLACEHOLDER);
-    if (hasPending && isAffirmative(content)) {
+    // On the measures step a "da" to the AI's question (the probe, say) is an answer, not an accept.
+    const answersQuestion = step === 'measures' && asksQuestion(messages[lastAiIndex]);
+    if (hasPending && isAffirmative(content) && !answersQuestion) {
       setDraft((p) => withMessages(p, step, [userMessage]));
       onAffirm(chat);
       return;
@@ -404,7 +414,7 @@ export function ChatPanel({ step, tracker, token, messages, setDraft, flush, onT
             <button type="button" onClick={() => send(DONT_KNOW)} disabled={pending} className={chip}>
               Nu știu
             </button>
-            {(step !== 'measures' || messages.some((m) => m.role === 'user')) && (
+            {hasTeamReplied(step, messages) && (
               <button type="button" onClick={() => send(PROPOSE_NOW)} disabled={pending} className={chip}>
                 Propune acum
               </button>

@@ -5,12 +5,14 @@ import {
   isSingleton,
   listMax,
   normalizeCardIds,
+  reconcileProposalIds,
   STEP_ENTITIES,
   type Card,
   type EntityKind,
   type ListKind,
 } from '../project/entities';
 import { isFeatureWorking } from '../project/features';
+import { KEY_ONLY_FIELDS } from '../project/measures';
 import { nameIndex, polishCard, scrubCardIds, scrubIds } from '../project/humanText';
 import type { Message, Project, StepId } from '../project/schema';
 import { levelOf } from '../project/pathway';
@@ -108,7 +110,8 @@ function validateCard(raw: unknown, p: Project, step: StepId): CardResult {
   const candidate = isSingleton(kind) ? data : { ...data, id: typeof data.id === 'string' ? data.id : '' };
   const r = ENTITY_SCHEMAS[kind].safeParse(candidate);
   if (!r.success) return { error: issuesText(kind, data.id, r.error) };
-  const parsed = r.data as Record<string, unknown>;
+  const parsed = { ...(r.data as Record<string, unknown>) };
+  if (kind === 'measure' && parsed.role !== 'key') for (const f of KEY_ONLY_FIELDS) delete parsed[f];
   return { card: { kind, data: { ...parsed, id: isSingleton(kind) ? kind : String(parsed.id) } } };
 }
 
@@ -293,7 +296,7 @@ function parseTurn(raw: string, p: Project, step: StepId): Parsed {
     if ('card' in r) cards.push(r.card);
     else if ('error' in r) errors.push(r.error);
   }
-  const batch = checkBatch(p, step, cards);
+  const batch = checkBatch(p, step, reconcileProposalIds(p, cards));
   errors.push(...batch.errors);
   if (step === 'project') errors.push(...projectStepErrors(p, batch.cards));
   const text = typeof obj.text === 'string' ? obj.text : '';

@@ -523,6 +523,66 @@ describe('measures step', () => {
     expect(turn.kind).toBe('proposal');
   });
 
+  const proposalOf = (...cards: unknown[]) => JSON.stringify({ kind: 'proposal', text: 'Măsuri.', cards });
+  const measureData = (id: string, role: string, stepId: string, extra: Record<string, unknown> = {}) => ({
+    kind: 'measure',
+    data: { id, role, stepId, what: 'Ce urmărim.', ...extra },
+  });
+  const cardsOf = async (p: Project, ...cards: unknown[]) => {
+    const { provider, calls } = scripted(proposalOf(...cards));
+    const turn = await runStepTurn(p, 'measures', [], provider);
+    expect(calls).toHaveLength(1);
+    if (turn.kind !== 'proposal') throw new Error(`expected a proposal, got ${turn.kind}`);
+    return turn.cards;
+  };
+
+  it('gives a fresh id to a measure that reuses a saved measure’s id with another role', async () => {
+    const p = measuresProject();
+    p.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie', counts: 'doar în termen' }];
+    const [card] = await cardsOf(p, measureData('ms1', 'delivery', 'p2'));
+    expect(card.data.id).toBe('ms2');
+  });
+
+  it('gives a fresh id to the second of two roles sharing an id in one batch', async () => {
+    const cards = await cardsOf(measuresProject(), measureData('ms1', 'key', 'p1'), measureData('ms1', 'delivery', 'p2'));
+    expect(cards.map((c) => [c.data.id, c.data.role])).toEqual([
+      ['ms1', 'key'],
+      ['ms2', 'delivery'],
+    ]);
+  });
+
+  it('points a proposal at the measure holding its role, without a cap error on a full list', async () => {
+    const p = measuresProject();
+    p.measures = [
+      { id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie' },
+      { id: 'ms2', role: 'delivery', stepId: 'p2', what: 'Livrări' },
+      { id: 'ms3', role: 'longTerm', stepId: 't1', what: 'Mare' },
+    ];
+    const [card] = await cardsOf(p, measureData('ms1', 'delivery', 'p2'));
+    expect(card.data.id).toBe('ms2');
+  });
+
+  it('keeps the id of a measure updating itself', async () => {
+    const p = measuresProject();
+    p.measures = [{ id: 'ms1', role: 'key', stepId: 'p1', what: 'Cheie' }];
+    const [card] = await cardsOf(p, measureData('ms1', 'key', 'p1'));
+    expect(card.data.id).toBe('ms1');
+  });
+
+  it('gives a toFindOut proposal a new id, whatever id the AI sent', async () => {
+    const p = measuresProject();
+    p.toFindOut = [{ id: 'q1', step: 'problem', text: 'Veche' }];
+    const [card] = await cardsOf(p, { kind: 'toFindOut', data: { id: 'q1', step: 'measures', text: 'Cât e azi?' } });
+    expect(card.data.id).toBe('q2');
+  });
+
+  it('strips the key-only fields from a simple measure and keeps them on the key one', async () => {
+    const extra = { source: 's', counts: 'c', routine: 'r', today: '0', firstCheck: 'f', enough: 'e', ifBelow: 'i' };
+    const [delivery, key] = await cardsOf(measuresProject(), measureData('ms2', 'delivery', 'p2', extra), measureData('ms1', 'key', 'p1', extra));
+    expect(delivery.data).toEqual({ id: 'ms2', role: 'delivery', stepId: 'p2', what: 'Ce urmărim.', source: 'S' });
+    expect(key.data).toMatchObject({ counts: 'C', routine: 'R', today: '0', firstCheck: 'F', enough: 'E', ifBelow: 'I' });
+  });
+
   it('has the facilitation prompt', () => {
     const text = loadPrompt('steps/measures.md');
     expect(text).toContain('Dacă drumul tău se rupe, unde s-ar vedea primul?');

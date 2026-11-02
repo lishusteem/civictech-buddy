@@ -2,6 +2,9 @@ import type { Project } from './schema';
 
 export type Measure = Project['measures'][number];
 
+/** Measure fields only the key measure has; the simple roles drop them. */
+export const KEY_ONLY_FIELDS: string[] = ['counts', 'routine', 'today', 'firstCheck', 'enough', 'ifBelow'];
+
 const filled = (s: string | undefined) => (s ?? '').trim() !== '';
 
 /** Measures with text whose step (a precondition or a long-term result) still exists. */
@@ -9,14 +12,20 @@ export function liveMeasures(p: Project): Measure[] {
   return p.measures.filter((m) => filled(m.what) && (p.preconditions.some((x) => x.id === m.stepId) || p.targetChanges.some((t) => t.id === m.stepId)));
 }
 
-/** The live measure of a step. */
+/** The live measure of a step; the key measure when the step has more than one. */
 export function measureFor(p: Project, stepId: string): Measure | undefined {
-  return liveMeasures(p).find((m) => m.stepId === stepId);
+  const onStep = liveMeasures(p).filter((m) => m.stepId === stepId);
+  return onStep.find((m) => m.role === 'key') ?? onStep[0];
 }
 
-/** The completion rule: a key measure with text, tied to a step of the path. */
+/** The key measure, when it has text and is tied to a step of the path. */
+export function liveKeyMeasure(p: Project): Measure | undefined {
+  return p.measures.find((m) => m.role === 'key' && filled(m.what) && p.preconditions.some((x) => x.id === m.stepId));
+}
+
+/** The completion rule. */
 export function isKeyMeasureSet(p: Project): boolean {
-  return p.measures.some((m) => m.role === 'key' && filled(m.what) && p.preconditions.some((x) => x.id === m.stepId));
+  return liveKeyMeasure(p) !== undefined;
 }
 
 /** How well the key measure is thought through; the simple measures have no state. */

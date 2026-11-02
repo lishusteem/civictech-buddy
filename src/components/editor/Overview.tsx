@@ -29,7 +29,7 @@ function cardLabel(project: Project, card: Card): string {
     const name = (id: unknown) => project.actors.find((a) => a.id === id)?.name ?? '?';
     return `${name(d.from)} ${RELATION_LABEL[String(d.type)] ?? String(d.type)} ${name(d.to)}`;
   }
-  for (const key of ['name', 'text', 'statement']) {
+  for (const key of ['name', 'text', 'statement', 'what']) {
     const v = d[key];
     if (typeof v === 'string' && v.trim() !== '') return v;
   }
