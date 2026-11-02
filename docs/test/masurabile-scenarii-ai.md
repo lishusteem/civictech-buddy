@@ -104,6 +104,25 @@ Pentru fiecare scenariu notezi: trecut sau picat, plus mesajul AI-ului care l-a 
 
 **Pică dacă:** același `firstCheck` produce mai mult de un test, nu produce niciunul, sau testul nu e în etapa „start”.
 
+## 7. A treia oară „nu știu” trece mai departe și lasă câmpul gol
+
+**Pregătire:** măsura-cheie are deja `what` și `source`. AI-ul tocmai a întrebat „Ce e suficient de bine?”.
+
+**Intrare** (apăsând butonul „Nu știu” de trei ori):
+
+1. `Nu știu`
+2. `Nu știu`
+3. `Nu știu`
+
+**Așteptat**
+
+- După primul „Nu știu” dă un indiciu legat de proiect.
+- După al doilea dă un exemplu dintr-un alt domeniu, spus clar că e inventat.
+- După al treilea trece mai departe (de exemplu la „Ce faceți dacă iese sub?”), iar `enough` rămâne `""`.
+- Nu apare niciun card `toFindOut` cu întrebarea despre „suficient”. La acest pas, „De aflat” e doar pentru `today`.
+
+**Pică dacă:** apare un card `toFindOut` pentru altă întrebare decât „Cât e azi?”, dacă `enough` primește conținut pe care dev-ul nu l-a spus sau dacă AI-ul mai pune aceeași întrebare a patra oară.
+
 ## Formular pentru testul cu 3–5 echipe
 
 Sesiuni observate, cu echipe reale. Observatorul notează timpul și abandonul; aplicația nu are instrumentare. Câte o fișă pe echipă.
