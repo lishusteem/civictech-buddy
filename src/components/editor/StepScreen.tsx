@@ -43,7 +43,7 @@ type Props = {
   flush?: () => Promise<void>;
   /** Owned by the Editor so the automatic first question is asked once per step per session. */
   askTracker?: AskTracker;
-  /** Unaccepted AI proposals of this step; the Editor keeps them per step for the session. */
+  /** Unaccepted AI proposals of this step; the Editor keeps them per step in this browser. */
   proposed: Card[];
   setProposed: Dispatch<SetStateAction<Card[]>>;
 };

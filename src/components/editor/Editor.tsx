@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import type { Card } from '@/lib/project/entities';
 import { firstIncompleteStep, isStepUnlocked } from '@/lib/steps/completion';
 import { STEPS, type StepDef } from '@/lib/steps/definitions';
 import type { Project, StepId } from '@/lib/project/schema';
@@ -15,6 +14,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { StepSidebar } from './StepSidebar';
 import { Summary } from './Summary';
 import { REJECTED_TEXT, useAutosave, type SaveStatus } from './useAutosave';
+import { usePendingProposals } from './usePendingProposals';
 
 export type RenderStep = (step: StepDef, draft: Project, setDraft: SetDraft, onNext: () => void) => ReactNode;
 
@@ -57,8 +57,8 @@ export function Editor({ token: initialToken, slug, initial, publishedAt: initia
       : null,
   );
   const [updatedNotice, setUpdatedNotice] = useState(false);
-  // Unaccepted AI proposals per step; kept while the user moves between steps (lost on reload).
-  const [proposals, setProposals] = useState<Partial<Record<StepId, Card[]>>>({});
+  // Unaccepted AI proposals per step; kept in this browser across steps and reloads.
+  const [proposals, setProposals] = usePendingProposals(slug);
   const [askTracker] = useState(() => new AskTracker());
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuError, setMenuError] = useState(false);

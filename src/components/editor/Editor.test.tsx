@@ -16,6 +16,7 @@ const withFeature = (p: Project): Project => ({ ...p, features: [{ id: 'f1', tex
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  window.localStorage.clear();
 });
 
 function stubFetch(handler: (url: string) => unknown) {
@@ -31,6 +32,16 @@ const ALL = STEPS.map((s) => s.id);
 const BEFORE_BACKLOG = ALL.slice(0, -1);
 
 describe('Editor', () => {
+  it('brings back unaccepted proposals after a reload, and forgets them once accepted', async () => {
+    stubFetch(() => ({}));
+    const card = { kind: 'feature', data: { id: 'f2', text: 'Alerte pe email' } };
+    window.localStorage.setItem('ghid:propuneri:s', JSON.stringify({ project: [card] }));
+    render(<Editor token="t" slug="s" initial={{ draft: withFeature(createEmptyProject('P')), draftUpdatedAt: T1 }} publishedAt={T1} />);
+    expect(await screen.findByText(/1 propunere, încă nesalvată/)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: /Acceptă tot/ })[0]);
+    await waitFor(() => expect(window.localStorage.getItem('ghid:propuneri:s')).toBeNull());
+  });
+
   it('opens on step 1 when no step is done and skips the summary call', () => {
     const fetchMock = stubFetch(() => ({}));
     render(<Editor token="t" slug="s" initial={{ draft: createEmptyProject('P'), draftUpdatedAt: T1 }} publishedAt={T1} />);
